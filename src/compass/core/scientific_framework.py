@@ -11,6 +11,10 @@ from enum import Enum
 from typing import Any, Dict, List
 import uuid
 
+from compass.observability import get_tracer
+
+tracer = get_tracer(__name__)
+
 
 class InvestigativeAction(Enum):
     """Types of investigative actions that can be taken."""
@@ -189,12 +193,20 @@ class Hypothesis:
         Args:
             evidence: Evidence object to add
         """
-        if evidence.supports_hypothesis:
-            self.supporting_evidence.append(evidence)
-        else:
-            self.contradicting_evidence.append(evidence)
+        with tracer.start_as_current_span("hypothesis.add_evidence") as span:
+            span.set_attribute("evidence.quality", evidence.quality.value)
+            span.set_attribute("evidence.confidence", evidence.confidence)
+            span.set_attribute("evidence.supports", evidence.supports_hypothesis)
+            span.set_attribute("hypothesis.id", self.id)
 
-        self._recalculate_confidence()
+            if evidence.supports_hypothesis:
+                self.supporting_evidence.append(evidence)
+            else:
+                self.contradicting_evidence.append(evidence)
+
+            self._recalculate_confidence()
+
+            span.set_attribute("hypothesis.confidence_after", self.current_confidence)
 
     def add_disproof_attempt(self, attempt: DisproofAttempt) -> None:
         """
@@ -203,18 +215,27 @@ class Hypothesis:
         Args:
             attempt: DisproofAttempt object to add
         """
-        self.disproof_attempts.append(attempt)
+        with tracer.start_as_current_span("hypothesis.add_disproof") as span:
+            span.set_attribute("disproof.strategy", attempt.strategy)
+            span.set_attribute("disproof.disproven", attempt.disproven)
+            span.set_attribute("hypothesis.id", self.id)
 
-        if attempt.disproven:
-            # Hypothesis was disproven
-            self.status = HypothesisStatus.DISPROVEN
-            self.current_confidence = 0.0
-            self.confidence_reasoning = (
-                f"Hypothesis disproven by {attempt.strategy}: {attempt.reasoning}"
-            )
-        else:
-            # Hypothesis survived disproof attempt
-            self._recalculate_confidence()
+            self.disproof_attempts.append(attempt)
+
+            if attempt.disproven:
+                # Hypothesis was disproven
+                self.status = HypothesisStatus.DISPROVEN
+                self.current_confidence = 0.0
+                self.confidence_reasoning = (
+                    f"Hypothesis disproven by {attempt.strategy}: {attempt.reasoning}"
+                )
+                span.set_attribute("hypothesis.status", "disproven")
+            else:
+                # Hypothesis survived disproof attempt
+                self._recalculate_confidence()
+                span.set_attribute("hypothesis.status", "survived_disproof")
+
+            span.set_attribute("hypothesis.confidence_after", self.current_confidence)
 
     def _recalculate_confidence(self) -> None:
         """
@@ -231,45 +252,57 @@ class Hypothesis:
            - Capped at +0.3 maximum
         4. Final confidence clamped between 0.0 and 1.0
         """
-        # Calculate evidence contribution (70% of final score)
-        evidence_score = 0.0
+        with tracer.start_as_current_span("hypothesis.calculate_confidence") as span:
+            span.set_attribute("confidence.before", self.current_confidence)
+            span.set_attribute(
+                "evidence.supporting_count", len(self.supporting_evidence)
+            )
+            span.set_attribute(
+                "evidence.contradicting_count", len(self.contradicting_evidence)
+            )
+            span.set_attribute("disproof.count", len(self.disproof_attempts))
 
-        for evidence in self.supporting_evidence:
-            weight = self._evidence_quality_weight(evidence.quality)
-            evidence_score += evidence.confidence * weight
-
-        for evidence in self.contradicting_evidence:
-            weight = self._evidence_quality_weight(evidence.quality)
-            evidence_score -= evidence.confidence * weight
-
-        # Normalize evidence score to 0-1 range
-        # Using simple average if we have evidence
-        total_evidence_count = len(self.supporting_evidence) + len(
-            self.contradicting_evidence
-        )
-        if total_evidence_count > 0:
-            evidence_score = evidence_score / total_evidence_count
-        else:
+            # Calculate evidence contribution (70% of final score)
             evidence_score = 0.0
 
-        # Calculate disproof survival bonus (up to +0.3)
-        survived_disproofs = len(
-            [attempt for attempt in self.disproof_attempts if not attempt.disproven]
-        )
-        disproof_bonus = min(0.3, survived_disproofs * 0.05)
+            for evidence in self.supporting_evidence:
+                weight = self._evidence_quality_weight(evidence.quality)
+                evidence_score += evidence.confidence * weight
 
-        # Combine scores
-        final_confidence = (
-            self.initial_confidence * 0.3  # Initial confidence (30%)
-            + evidence_score * 0.7  # Evidence score (70%)
-            + disproof_bonus  # Disproof survival bonus
-        )
+            for evidence in self.contradicting_evidence:
+                weight = self._evidence_quality_weight(evidence.quality)
+                evidence_score -= evidence.confidence * weight
 
-        # Clamp to valid range [0.0, 1.0]
-        self.current_confidence = max(0.0, min(1.0, final_confidence))
+            # Normalize evidence score to 0-1 range
+            # Using simple average if we have evidence
+            total_evidence_count = len(self.supporting_evidence) + len(
+                self.contradicting_evidence
+            )
+            if total_evidence_count > 0:
+                evidence_score = evidence_score / total_evidence_count
+            else:
+                evidence_score = 0.0
 
-        # Update confidence reasoning
-        self._update_confidence_reasoning()
+            # Calculate disproof survival bonus (up to +0.3)
+            survived_disproofs = len(
+                [attempt for attempt in self.disproof_attempts if not attempt.disproven]
+            )
+            disproof_bonus = min(0.3, survived_disproofs * 0.05)
+
+            # Combine scores
+            final_confidence = (
+                self.initial_confidence * 0.3  # Initial confidence (30%)
+                + evidence_score * 0.7  # Evidence score (70%)
+                + disproof_bonus  # Disproof survival bonus
+            )
+
+            # Clamp to valid range [0.0, 1.0]
+            self.current_confidence = max(0.0, min(1.0, final_confidence))
+
+            # Update confidence reasoning
+            self._update_confidence_reasoning()
+
+            span.set_attribute("confidence.after", self.current_confidence)
 
     def _evidence_quality_weight(self, quality: EvidenceQuality) -> float:
         """
