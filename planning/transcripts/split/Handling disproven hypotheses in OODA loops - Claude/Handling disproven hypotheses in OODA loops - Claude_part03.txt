@@ -1,0 +1,203 @@
+# Part 3/8
+# Lines 401-600 of 1599
+
+"| Time | Actor | Decision | Agreed with AI? | Confidence |\n"
+"|------|-------|----------|-----------------|------------|\n"
+# Hypotheses investigated - grouped by investigator
+"#### 🤖 AI-Led Investigations\n\n"
+"*AI agents tested these hypotheses through automated data gathering*\n\n"
+# Human investigations - EMPHASIZED
+"#### 👤 Human-Led Investigations\n\n"
+"*These paths required human expertise, intuition, or context*\n\n"
+# Find the original decision
+_find_decision_for_hypothesis
+f"**Diverged from AI:**
+f"**Human Analysis:**\n
+# Show tacit knowledge if available
+f"**Expertise Applied:**\n"
+f"**Key Insights for Future:**\n"
+# Show where humans and AI agreed/disagreed
+"### Human-AI Collaboration Analysis\n\n"
+f"- **Total decisions:**
+f"- **Human-AI agreement:**
+f"- **Human overrides:**
+"**Reasons for human overrides:**\n"
+Key Differentiators in Practice
+: Regular text, blue/cyan, 🤖 icon
+: Bold text, yellow/red, 👤 icon
+: Highlighted with ⚠️ and explanation
+Human decisions capture:
+Respect for Expertise
+Never call human decisions "wrong" - call them "different paths"
+Document tacit knowledge explicitly
+Show when human intuition was right
+Learn from human overrides
+Focus on process, not blame
+Document "why" not just "what"
+Treat disagreements as learning opportunities
+Build knowledge base from human reasoning
+Would you like me to develop:
+How to handle cases where human was wrong (without blame)?
+Machine learning from human decisions to improve AI suggestions?
+Real-time collaboration features (multiple humans, chat integration)?
+I like all of these suggestions! Let's focus on the first one though, How to handle cases where human was wrong (without blame)
+Synthesized blame-free frameworks using systems thinking and scientific methodology.
+This is a really important question because it gets at the heart of building a learning culture vs. a blame culture. The research Ivan has on Learning Teams shows that shifting focus from "who was wrong" to "why did the system allow this to happen" generates much better outcomes.
+Never call it "wrong" - use neutral language like "unexpected outcome" or "hypothesis disproven"
+Focus on SYSTEM factors that led to the decision, not individual failure
+Capture what information was missing or misleading
+Use it as a learning opportunity for both humans AND AI
+Recognize that "being wrong" in incident investigation is actually valuable data - it's part of the scientific method
+The Learning Teams research about removing blame
+The scientific method approach - disproved hypotheses are successes, not failures
+The "Problem with Root Cause Analysis" paper about how RCA creates blame culture
+Systems thinking - look at what system factors contributed
+Let me design a comprehensive approach that treats human "mistakes" as valuable system learning opportunities.
+Excellent choice! This is
+for building a learning culture. The research on Learning Teams shows that when we shift from "who was wrong" to "what system factors contributed," we get 57% more actionable improvements.
+Core Philosophy: There Are No "Wrong" Decisions, Only Unexpected Outcomes
+When a human's hypothesis is disproven or their decision doesn't lead to resolution, we treat it as
+valuable data about system complexity
+, not individual failure.
+"""Neutral language for outcomes"""
+"hypothesis_supported"
+# NOT: "WRONG", "INCORRECT", "FAILED", "MISTAKE"
+"""Factors that influenced the decision"""
+INCOMPLETE_OBSERVABILITY
+"incomplete_observability"
+"multiple_root_causes"
+SIMILAR_PAST_INCIDENT
+"similar_past_incident"
+# Led to pattern matching
+HumanDecisionRetrospective
+Retrospective analysis of a human decision
+Focus: What can THE SYSTEM learn, not what the human did wrong
+why_hypothesis_seemed_reasonable
+# CRITICAL: Validate their thinking
+what_evidence_supported_it
+# What was discovered
+why_different_from_hypothesis
+# System factors (NOT human factors)
+contributing_system_factors
+what_information_was_missing
+what_information_was_misleading
+what_would_have_changed_decision
+# Learning opportunities
+# What data should we add?
+# What should we document?
+# How should we change process?
+# How should AI improve?
+# Human perspective (optional, collected later)
+# How long until pivot?
+# What did we learn that's valuable?
+What the SYSTEM learns from unexpected outcomes
+similar_past_incidents
+new_patterns_discovered
+observability_gaps_identified
+documentation_improvements_needed
+# How to recognize this scenario
+disambiguation_checks
+# How to differentiate from similar scenarios
+recommended_investigation_approach
+Retrospective Analysis System
+Conducts blameless retrospective on human decisions
+Focus on system factors, not individual performance
+analyze_decision_outcome
+Analyze a human decision with unexpected outcome
+GOAL: Learn what the system should change
+# Determine outcome type
+# Build retrospective focusing on system factors
+_analyze_reasonableness
+_extract_supporting_evidence
+_identify_system_factors
+_identify_missing_info
+_identify_misleading_info
+_identify_decision_changers
+_calculate_time_to_pivot
+_calculate_exploration_cost
+# Generate improvement recommendations
+_recommend_observability_improvements
+_recommend_documentation_improvements
+_recommend_process_improvements
+_recommend_ai_improvements
+_assess_learning_value
+CRITICAL: Explain WHY the human's hypothesis was reasonable given the context
+This validates their thinking and focuses on what information they had
+# What evidence did they have?
+f"AI also recommended this hypothesis with
+f"While AI suggested differently, the human had
+confidence based on their reasoning"
+# What did the symptoms suggest?
+get_observations_at_time
+f"Observed symptoms included:
+# Similar past incidents?
+_find_similar_past_incidents
+f"Similar to past incident(s):
+# What was the context?
+hypotheses had been ruled out"
+# Human's own reasoning
+"Given the available information, this hypothesis was reasonable because: "
+Identify SYSTEM factors that contributed to the unexpected outcome
+# Check for incomplete observability
+_had_missing_critical_data
+# Check for misleading metrics
+_had_misleading_signals
+# Check for time pressure
+# Check for ambiguous symptoms
+_symptoms_were_ambiguous
+# Check for multiple root causes
+# Check for documentation gaps
+_had_documentation_gaps
+# Check for pattern matching to similar incidents
+What information would have helped but wasn't available?
+# Compare what they had vs what we know now
+_get_available_data_at_time
+actual_root_cause_data
+What information LOOKED like it supported the hypothesis but didn't?
+# Look at evidence that supported the hypothesis
+'supporting_evidence'
+# Check if this evidence could be explained by the actual root cause
+_is_explained_by_actual_cause
+- appeared to support hypothesis "
+f"but was actually caused by
+What metrics/logs/traces should we add to prevent this confusion?
+# For each missing piece of information, suggest observability
+f"Add monitoring/logging for:
+# For misleading information, suggest disambiguation
+f"Add metric to distinguish:
+How should AI improve to help humans make better decisions?
+# If AI agreed with human and both were wrong
+"AI pattern recognition: Add this scenario as 'confusable case' "
+# If AI was right but human disagreed
+"AI confidence calibration: AI was correct but human chose differently. "
+"Improve explanation of AI reasoning to build trust."
+# If time pressure was a factor
+"Quick disambiguation: Create fast check for this scenario"
+What did we GAIN from exploring this hypothesis?
+Reframe as positive learning
+# Did we rule something out definitively?
+f"Definitively ruled out
+"narrowing the solution space"
+# Did we discover observability gaps?
+"gaps that would have helped"
+# Did we find confusable cases?
+"Discovered symptoms that can be misleading - valuable for "
+"future incident response"
+# Did we learn about system behavior?
+f"with symptoms similar to
+f"Low-cost exploration ($
+"with high learning value"
+Interactive Human Reflection (Optional, No Pressure)
+Optional tool for humans to reflect on their decisions
+Completely voluntary, focused on learning
+offer_reflection_opportunity
+Gently offer the human a chance to reflect
+Make it clear this is optional and for learning only
+"[bold cyan]Optional: Reflection Opportunity[/]"
+"\n[dim]The system has completed a retrospective analysis of your "
+"decision. This is NOT about being right or wrong - it's about "
+"what we can all learn.\n\n"
+"Would you like to see the analysis and optionally share your "
+"perspective? This is completely optional and only for learning.[/]\n"
+"See retrospective analysis?"
+# Show the system-focused analysis

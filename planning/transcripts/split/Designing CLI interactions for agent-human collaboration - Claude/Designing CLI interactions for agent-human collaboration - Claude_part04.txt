@@ -1,0 +1,203 @@
+# Part 4/5
+# Lines 601-800 of 892
+
+9.1 Psychological Safety Manager
+PsychologicalSafetyManager
+Ensures interface promotes learning culture
+Implements Learning Teams methodology
+BlameLanguageDetector
+ensure_safe_interaction
+"""Transform interactions to promote psychological safety"""
+# Detect and reframe blame language
+I've reframed that slightly to focus on learning rather than blame.
+Instead of 'Who broke this?', we ask 'What can we learn?'
+"""Reframe questions to promote learning"""
+"What factors contributed to this?"
+"Why didn't you catch this?"
+"What made this hard to detect?"
+"Whose fault is this?"
+"What can we learn from this?"
+"Why did you do that?"
+"What made that seem like the right choice?"
+"Who made this mistake?"
+"How did our system allow this?"
+facilitate_learning_review
+"""Facilitate blameless post-incident review"""
+"Let's learn from this incident together. "
+"Remember: we're looking at systems, not people."
+"What went well during this incident?"
+"What made sense at the time but didn't work out?"
+"What would help next time?"
+"What patterns have we seen before?"
+participation_prompts
+, you were involved in
+f"What did you observe from your perspective?"
+learning_capture_template
+### Work-As-Done vs Work-As-Imagined
+- How work actually happens: ___________
+- How we thought it happened: __________
+- Gap because: ________________________
+### Contributing Factors (System Level)
+1. ____________________________________
+2. ____________________________________
+3. ____________________________________
+### Improvements (No names, just systems)
+9.2 Learning Capture System
+Captures organizational learning from every incident
+Builds knowledge base for future investigations
+# Extract learnings from multiple sources
+# From investigation path
+_extract_from_investigation
+# From human decisions
+_extract_from_decisions
+# From failed hypotheses
+_extract_from_failures
+# From review discussion
+# Categorize by system level
+_categorize_learnings
+# Generate actionable improvements
+_generate_improvements
+# Update knowledge base
+knowledge_base_updates
+"""Failed hypotheses are valuable learning artifacts"""
+'false_positive_pattern'
+10. Integration Points
+10.1 Orchestrator Integration
+Interface to COMPASS orchestrator and agent system
+Manages all AI agent interactions
+"""Start new investigation with orchestrator"""
+"""Get current hypotheses from orchestrator"""
+submit_human_decision
+"""Send human decision back to orchestrator"""
+10.2 Knowledge Base Integration
+Interface to enterprise knowledge and learning repository
+Provides context and historical patterns
+"""Retrieve relevant historical context"""
+# Search for similar incidents
+search_similar_incidents
+# Get service-specific knowledge
+get_service_knowledge
+# Get recent learnings
+"""Find similar past incidents using semantic search"""
+# Build embedding from symptoms
+11. Implementation Guidelines
+11.1 Technology Stack
+# Async, WebSocket support, OpenAPI
+# For visual canvas if needed
+# Intent classification and generation
+'text-embedding-ada-002'
+# Fast session management
+# Long-term audit storage
+# Semantic search for knowledge base
+# Alternative to WebSocket
+# Distributed tracing
+'Structured Logging (JSON)'
+11.2 Deployment Architecture
+ORCHESTRATOR_URL=http
+DATABASE_URL=postgresql
+"http://localhost:8080/health"
+POSTGRES_DB=compass_audit
+/var/lib/postgresql/data
+/etc/prometheus/prometheus.yml
+11.3 Security Considerations
+Ensures interface security and compliance
+"""Validate and sanitize user input"""
+# Check for injection attempts
+"Potential injection detected"
+# Check length limits
+"""Enforce rate limits per user"""
+"Rate limit exceeded"
+12. Performance Requirements
+12.1 Response Time Targets
+PERFORMANCE_REQUIREMENTS
+# User-facing latencies
+'natural_language_response'
+'hypothesis_generation'
+# Background operations
+'status_update_frequency'
+'investigations_per_second'
+'messages_per_second'
+12.2 Cost Optimization
+Optimizes token usage and API costs
+# Use smaller model for simple intents
+# Count tokens and estimate cost
+Comprehensive testing for interface components
+test_natural_language_understanding
+"""Test NLU across various input styles"""
+"HELP! Product service is completely down!!!"
+"What's happening with the payment service?"
+"investigate database-timeout --confidence >0.7"
+"We learned that feature flags need gradual rollout"
+"""Test psychological safety features"""
+"Who broke the service?"
+"Why did John deploy bad code?"
+"This is Sarah's fault"
+'PO with no training can start investigation'
+'< 30 seconds to first hypothesis'
+'Time from input to first result'
+'Senior engineer can use advanced features'
+'50% reduction in investigation time'
+'Compare with manual investigation'
+'Post-incident review generates improvements'
+'> 5 system improvements per incident'
+'Count actionable improvements generated'
+'Complete investigation can be reconstructed'
+'100% of decisions captured with reasoning'
+'Audit completeness check'
+14. Migration and Rollout Plan
+'Alpha - Internal Testing'
+'Development team only'
+'Natural language input'
+'Basic investigation'
+'Can complete investigation end-to-end'
+'Beta - Limited Release'
+'+ Structured commands'
+'80% user satisfaction, 50% MTTR reduction'
+'GA - General Availability'
+'All engineering teams'
+'+ Adaptive complexity'
+'90% adoption, 67% MTTR reduction'
+'Advanced - Full Platform'
+'Entire organization'
+'+ Autonomous actions'
+'90% incident prevention'
+14.2 Training and Documentation
+Materials for user onboarding and training
+# COMPASS Quick Start
+## For Everyone (No Training Required)
+Just type what you need:
+- "What's happening with the database?"
+- "Show me recent incidents for user-api"
+COMPASS will guide you through the investigation.
+Use commands for more control:
+- `hypothesis add "Cache invalidation issue"`
+- `focus database --confidence high`
+- `explain reasoning --verbose`
+## Remember: It's About Learning, Not Blame
+We ask "What happened?" not "Who did it?"
+We ask "What made sense?" not "Why did you fail?"
+"01_first_investigation.mp4"
+"02_understanding_hypotheses.mp4"
+"03_capturing_learnings.mp4"
+"04_advanced_commands.mp4"
+15.1 Key Performance Indicators
+'Percentage of incidents using COMPASS'
+'> 90% within 3 months'
+'Incident tickets with COMPASS investigation'
+'Mean Time to Resolution (MTTR)'
+'Time from alert to resolution'
+'Improvements per incident'
+'> 7.5 average (Learning Teams benchmark)'
+'Count of implemented improvements'
+'System-focused actions'
+'> 57% (Learning Teams benchmark)'
+'Ratio of system vs person actions'
+'Incident reporting rate'
+'200% increase (more psychological safety)'
+'Near-misses and minor incidents reported'
+'User satisfaction score'
+'Post-investigation survey'
+This architecture provides a comprehensive interface system that makes COMPASS accessible to everyone while preserving power for experts. By prioritizing natural language interaction, psychological safety, and complete auditability, we create a system that not only reduces MTTR but fundamentally improves organizational culture.
+The interface serves as more than just a communication layer - it's an active participant in building a learning organization, where every incident becomes an opportunity for system improvement rather than blame assignment.
+Through progressive enhancement and adaptive complexity, we ensure that a Product Owner can get help immediately while a Senior Engineer can dive deep into scientific investigation. Most importantly, every interaction is captured, reasoned about, and learned from, building an ever-improving knowledge base that makes future investigations faster and more effective.
+This is how we change enterprise culture: one conversation at a time, one investigation at a time, one learning at a time.

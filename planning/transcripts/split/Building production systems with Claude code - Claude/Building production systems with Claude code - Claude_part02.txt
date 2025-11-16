@@ -1,0 +1,203 @@
+# Part 2/4
+# Lines 201-400 of 689
+
+Every feature now follows this discipline:
+Step 1: "Write comprehensive FAILING tests for [component]..."
+Step 2: Run tests, verify they fail ❌
+Step 3: "Implement [component] to make all tests pass with MINIMUM code..."
+Step 4: Run tests, verify they pass ✅
+Step 5: "Refactor for production quality while keeping tests green..."
+Step 6: Run tests, verify still pass ✅
+Example from the Reconciled Day 1:
+"Create the MCP abstraction layer"
+"Following TDD, write comprehensive FAILING tests for the MCP protocol abstraction layer... Make sure tests fail initially since we haven't implemented the code yet."
+"Now implement the MCP abstraction layer to make all tests pass... Focus on making tests pass with the SIMPLEST implementation that works."
+Your Day 1 Action Plan:
+reconciled Day 1 guide
+TDD Workflow Reference
+Follow the hour-by-hour plan exactly
+Never skip the "verify tests fail" step
+Commit frequently with test status
+The reconciled documentation ensures you'll build a production-ready system with confidence from the very first line of code. Every component will be tested, every test will be written first, and you'll have a safety net for refactoring from Day 1.
+Ready to start? Use the Day 1 guide and remember:
+Red → Green → Refactor!
+Compass day1 reconciled
+Reconciliation summary
+Claude can make mistakes.
+Please double-check responses.
+COMPASS Development - Day 1 Complete Startup Guide (Reconciled)
+Prerequisites Checklist
+Claude Code installed and accessible via terminal
+GitHub account with SSH keys configured
+Python 3.11+ installed
+Docker Desktop running
+Git configured with your identity
+Access to your observability stack (or plan to use local mocks)
+OpenAI/Anthropic API keys ready for testing
+Hour 1: Complete Project Setup
+Step 1: GitHub Repository Setup (10 minutes)
+# Create repo on GitHub first (via web interface or gh CLI)
+gh repo create compass-platform --public --description
+"COMPASS: AI-powered incident investigation platform"
+# Clone and enter the repository
+clone git@github.com:YOUR_USERNAME/compass-platform.git
+# Create initial branch structure
+push -u origin develop
+Step 2: Configure Claude Code (5 minutes)
+# Copy the provided claude.md to your project root
+/path/to/provided/claude.md
+# Create initial .gitignore
+# Virtual environments
+# Commit the foundation
+"[PHASE-0] Foundation: Initial repository setup with Claude configuration"
+Step 3: Initialize Project with TDD Approach (30 minutes)
+Start Claude Code and use this comprehensive prompt:
+Initial Project Setup Prompt:
+Initialize the COMPASS project with production-ready Python setup following Test-Driven Development.
+Create the following structure:
+1. Use Poetry for dependency management with these dependencies:
+- pytest, pytest-asyncio, pytest-cov for testing
+- black, ruff, mypy for code quality
+- pydantic for data validation
+- redis for state management
+- structlog for logging
+- opentelemetry packages for observability
+2. Set up pre-commit hooks for code quality
+3. Create this project structure:
+│   ├── orchestrator/
+│   │   ├── __init__.py
+│   └── observability/
+4. Create Makefile with these targets:
+- install: Set up development environment
+- test: Run tests with coverage
+- test-watch: Run tests in watch mode
+- lint: Run all linters
+- format: Format code
+- type-check: Run mypy
+- docker-build: Build Docker images
+- docker-up: Start local stack
+- docker-down: Stop local stack
+5. Create docker-compose.yml for local development with:
+- Redis for state management
+- PostgreSQL for persistence
+- Grafana for dashboards
+- Loki for logs (we'll add more later)
+6. Create GitHub Actions workflow (.github/workflows/ci.yml) that:
+- Runs on all PRs and pushes to develop/main
+- Sets up Python with Poetry
+- Runs tests with coverage report
+- Builds Docker images
+7. Create a comprehensive README.md with:
+- Project description
+- Architecture overview
+- Development workflow
+Step 4: Verify and Commit Setup (15 minutes)
+# Verify the setup works
+# Create initial tests to verify structure
+"[PHASE-0] Foundation: Complete project structure with TDD setup
+- Poetry configuration with all dependencies
+- Pre-commit hooks for code quality
+- Docker compose for local development
+- GitHub Actions CI/CD pipeline
+- Makefile for common commands
+- Test structure (unit/integration/e2e)
+- Initial README with setup instructions"
+Hour 2: TDD for First Component (MCP Abstraction)
+Step 5: Write Failing Tests First (20 minutes)
+TDD Prompt #1 - Write Tests:
+Following TDD, let's start with the MCP abstraction. First, write comprehensive FAILING tests for the MCP protocol abstraction layer.
+Create tests/unit/integrations/mcp/test_base.py that test:
+1. Abstract base class enforces interface implementation
+2. Connection pooling maintains pool size limits
+3. Retry logic follows exponential backoff
+4. Circuit breaker opens after consecutive failures
+6. Timeout handling works correctly
+7. Resource cleanup happens on context exit
+8. Telemetry is properly emitted
+Also create tests/unit/integrations/mcp/test_mock.py for a mock implementation that:
+1. Implements the base interface correctly
+2. Simulates various failure modes
+3. Tracks call history for testing
+4. Supports configurable responses
+Make sure tests fail initially since we haven't implemented the code yet. Include clear test names that describe the expected behavior.
+Step 6: Run Tests to Confirm They Fail (5 minutes)
+# Run the tests - they should all fail
+# Or run specific test file
+pytest tests/unit/integrations/mcp/test_base.py -v
+Step 7: Implement Code to Pass Tests (20 minutes)
+TDD Prompt #2 - Implementation:
+Now implement the MCP abstraction layer to make all tests pass:
+1. Create compass/integrations/mcp/base.py with:
+- Abstract base class MCPTool with required methods
+- Connection pooling using asyncio
+- Retry decorator with exponential backoff
+- Circuit breaker pattern implementation
+- Simple LRU cache for responses
+- OpenTelemetry instrumentation hooks
+2. Create compass/integrations/mcp/mock.py with:
+- MockMCPTool that inherits from MCPTool
+- Configurable responses for testing
+- Failure simulation capabilities
+- Call history tracking
+3. Create compass/integrations/mcp/exceptions.py with:
+- Custom exception hierarchy
+Focus on making tests pass with the SIMPLEST implementation that works. We can refactor later.
+Step 8: Verify Tests Pass and Refactor (15 minutes)
+TDD Prompt #3 - Refactor:
+All tests should now pass. Let's refactor for production quality:
+1. Add comprehensive docstrings
+3. Add type hints everywhere
+4. Extract magic numbers to constants
+5. Add logging statements for debugging
+6. Ensure thread safety where needed
+Run tests after each change to ensure nothing breaks. The tests are our safety net.
+# Verify all tests pass
+compass.integrations.mcp tests/unit/integrations/mcp/
+# Commit the working component
+"[PHASE-1] MCP: TDD implementation of MCP abstraction layer
+- Comprehensive test suite with 95% coverage
+- Abstract base class with connection pooling
+- Retry logic with exponential backoff
+- Circuit breaker pattern
+- Mock implementation for testing"
+Hour 3: TDD for Loki Integration
+Step 9: Write Integration Tests First (20 minutes)
+TDD Prompt #4 - Integration Tests:
+Write comprehensive FAILING tests for the Loki integration following TDD.
+Create tests/integration/integrations/observability/test_loki.py that tests:
+2. Connection pooling reuses connections
+3. Retry logic handles transient failures
+4. Circuit breaker opens after multiple failures
+5. Query results are cached appropriately
+6. Large result sets are paginated correctly
+7. Authentication works properly
+8. Rate limiting is respected
+9. Timeout handling for slow queries
+10. Resource cleanup on shutdown
+Also create tests/unit/integrations/observability/test_loki.py for unit tests:
+1. Query building logic
+4. Cache key generation
+Create a docker-compose.test.yml that includes a Loki instance for integration testing.
+These tests should fail initially since LokiIntegration doesn't exist yet.
+Step 10: Implement Loki Integration (25 minutes)
+TDD Prompt #5 - Loki Implementation:
+Implement the Loki integration to make all tests pass:
+1. Create compass/integrations/observability/loki.py:
+- LokiIntegration class inheriting from MCPTool
+- Query builder for LogQL
+- Response parser for log entries
+- Pagination support for large results
+- Proper authentication handling
+- Rate limiting adherence
+2. Update docker-compose.yml to include Loki with test data
+3. Create compass/integrations/observability/config.py:
+- Configuration dataclasses using Pydantic
+- Validation of settings
+Remember: implement the MINIMUM code needed to pass tests. Don't add features that aren't tested.
+Step 11: Verify Integration Tests (15 minutes)
+# Start test infrastructure
+-f docker-compose.test.yml up -d
+# Run integration tests
+pytest tests/integration/integrations/observability/test_loki.py -v
+# Run all tests to ensure nothing broke
+# Stop test infrastructure

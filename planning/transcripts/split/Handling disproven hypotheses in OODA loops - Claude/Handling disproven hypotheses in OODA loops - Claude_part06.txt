@@ -1,0 +1,203 @@
+# Part 6/8
+# Lines 1001-1200 of 1599
+
+is the authoritative record of everything that happened during an investigation. It's not just a log - it's a structured, queryable artifact that supports:
+Real-time investigation state visualization
+Learning from disproven hypotheses
+Blameless retrospectives
+Post-mortem generation
+Pattern recognition across incidents
+Chronicle is append-only (events never deleted) but can be annotated (retrospectives add context).
+A hypothesis that has been ruled out through evidence
+Key insight: This is NOT a failure - it's valuable data that
+narrows the solution space and teaches us about the system
+# For human-led investigations
+is_human_investigation
+"""Check if this was investigated by a human"""
+A single event in the investigation timeline
+Used for visualization and retrospective analysis
+# "observation", "hypothesis_generated", "hypothesis_disproven",
+# "human_decision", "phase_transition", "data_request"
+# "database_agent", "human:alice@company.com", "orchestrator"
+# "what", "where", "why"
+"""Check if this event was triggered by a human"""
+"""Check if this event represents a disproven hypothesis"""
+This is the authoritative record for:
+- Real-time investigation state
+- Learning from disproven hypotheses
+- Blameless retrospectives
+- Post-mortem generation
+# "investigating", "resolved", "escalated"
+# Hypotheses tracking
+# Constraints learned from disproofs
+# Human-led investigations
+# For retrospective analysis
+'HumanDecisionRetrospective'
+Add a disproven hypothesis and update constraints
+This is a key method - it preserves the learning and makes it
+available to all agents still investigating
+# Remove from active if present
+"""Add an event to the timeline"""
+"""Get observations that were available at a specific time"""
+# Extract observations from events
+# Implementation depends on how observations are stored in events
+get_ai_disproven_count
+"""Count hypotheses disproven by AI agents"""
+get_human_disproven_count
+"""Count hypotheses disproven by humans"""
+get_human_decisions_count
+"""Count total human decisions"""
+get_human_ai_agreement_rate
+"""Calculate percentage of times human agreed with AI"""
+"""Generate explanation of why hypothesis was disproven"""
+# Implementation: summarize evidence that contradicts hypothesis
+f"Evidence contradicts hypothesis:
+3.3 Integration Contract
+Chronicle Provider Interface:
+Interface for components that need access to investigation chronicle
+"""Get chronicle for an incident"""
+"""Persist chronicle updates"""
+Manages investigation chronicles
+Provides thread-safe access and persistence
+"""Create new investigation chronicle"""
+"""Get existing chronicle"""
+- Receives chronicle in constructor, updates after each loop
+- Receives chronicle in constructor, updates on state transitions
+- Receives chronicle as parameter to
+generate_hypotheses()
+- Receive chronicle to render current state
+RetrospectiveAnalyzer
+- Receives chronicle to analyze decisions
+- Receives chronicle to generate comprehensive post-mortem
+4. Disproven Hypothesis Management
+When a hypothesis is disproven (either by AI or human), it's not discarded. Instead, it becomes a
+Constrains future hypotheses
+- Agents won't regenerate similar ideas
+Narrows solution space
+- We know what it's NOT
+Teaches pattern recognition
+- Similar symptoms might not mean what we thought
+Identifies system gaps
+- What observability/docs would have helped?
+4.2 Agent Knowledge Context Builder
+Provide agents with context from disproven hypotheses so they generate better hypotheses.
+Builds investigation context for agents
+This context is prepended to agent prompts to prevent
+regenerating disproven hypotheses
+"WHAT WE'VE RULED OUT:\n"
+"AI-Investigated Paths (ruled out):\n"
+"Human-Investigated Paths (ruled out):\n"
+f"     Human insight:
+# Still investigating
+CURRENTLY INVESTIGATING:
+Generate new hypotheses that:
+1. Explain the observed symptoms
+2. DON'T repeat any of the disproven paths above
+5. Are distinct from hypotheses currently being investigated
+build_disproof_context
+Build context for attempting to disprove a hypothesis
+Includes similar hypotheses that were disproven
+HYPOTHESIS TESTING CONTEXT
+# Find similar disproven hypotheses
+_find_similar_disproven
+"SIMILAR HYPOTHESES THAT WERE RULED OUT:\n"
+f"    How it was disproven:
+"Learn from these past attempts when designing your disproof queries.\n\n"
+Find disproven hypotheses similar to current one
+Uses simple keyword matching; could be enhanced with embeddings
+4.3 Lessons Learned Extraction
+Automatically extract what a disproven hypothesis teaches us.
+LessonsLearnedExtractor
+Extracts structured lessons from disproven hypotheses
+Use LLM to extract what this disproof teaches us
+A hypothesis was disproven during incident investigation:
+CONTRADICTING EVIDENCE:
+Extract 3-5 clear lessons about what this teaches us about the system
+and the problem space. Format as constraints that prevent similar
+wrong hypotheses in the future.
+Examples of good lessons:
+- "Connection pool has available capacity, so issue is not resource exhaustion"
+- "Issue affects only US-EAST region, so not a global configuration problem"
+Return as JSON array of strings:
+extract_lessons_from_human_investigation
+Extract lessons from human-led investigation
+Prioritizes human-provided lessons but supplements with automatic extraction
+# Human explicitly provided lessons
+# Extract from tacit knowledge
+# Extract from conclusion
+4.4 Integration Contract
+"""Interface for components that generate hypotheses"""
+# Must include chronicle
+"""Generate hypotheses constrained by disproven paths"""
+"""Interface for components that test hypotheses"""
+"""Test hypothesis with awareness of past attempts"""
+(Database, Network, etc.) implements
+provides chronicle to all agents
+is injected into all agents that need context
+5. Human Decisions as First-Class Entities
+Human decisions are not just data points - they are
+Rich context (what information was available)
+Explicit reasoning (why the human chose this path)
+Agreement tracking (did human agree with AI?)
+Retrospective analysis (what happened after)
+Learning extraction (what should we learn?)
+Every human decision is an opportunity to learn, whether it leads to resolution or requires pivoting.
+5.2 Human Decision Point Data Model
+# Human has their own theory
+A point where human judgment was required
+Captures the full context, reasoning, and outcome
+This is a RICH entity that preserves the complete decision context
+for learning and retrospective analysis
+# Investigation state at time of decision
+# WHY they chose it (CRITICAL!)
+# Outcome tracking (filled in later during retrospective)
+"""Check if human overrode AI recommendation"""
+"""Get human-readable summary of decision"""
+Different from AI investigation - captures human process and expertise
+'ExternalDataResponse'
+5.3 Human Decision Capture Interface
+Terminal UI for capturing rich human decision context.
+Terminal interface that makes human decisions clear and captures reasoning
+- Make context visible
+- Capture reasoning, not just choice
+- Show AI recommendation clearly
+- No pressure, just structured thinking
+Returns: Updated decision point with human's choice and reasoning
+# Show options and get choice
+# Show recent disproven paths (last 3)
+"""Capture a hypothesis from human"""
+"\n[bold green]Describe your hypothesis:[/]"
+"[cyan]Hypothesis[/]"
+"[cyan]Why do you think this?[/]"
+# Create hypothesis object
+# Note: This would integrate with existing Hypothesis class
+# Medium confidence by default
+"\n[bold cyan]📝 Capture Your Reasoning[/]"
+"✓ Decision Recorded"
+5.4 Integration Contract
+Required Integration Points:
+"""Interface for investigation UI components"""
+present_hypotheses_for_selection
+"""Present hypotheses to human for selection"""
+request_human_investigation
+"""Request human to manually investigate a hypothesis"""
+show_investigation_state
+"""Show current investigation state"""
+Integration with Existing Components:
+IInvestigationUI.present_hypotheses_for_selection()
+Transitions to ACT phase after decision recorded
+Uses human reasoning in subsequent hypothesis generation
+Tracks human vs AI agreement rate
+Provides query methods for retrospective analysis
+Exports decision timeline for post-mortem
+6. Terminal UI: Investigation Visualization
+The terminal UI provides
+real-time visualization
+of the investigation journey, showing:
+Current investigation state
+Active vs disproven hypotheses
+Decision points and reasoning
+Cost and time tracking
+Make the investigation process transparent and understandable at a glance.
+6.2 Investigation Map View
+Render a visual map of the investigation showing all paths explored

@@ -1,0 +1,831 @@
+# Multi-agent coordination and knowledge integration - Claude
+
+Multi-agent coordination and knowledge integration - Claude
+Building COMPASS: project foundation and architecture
+MVP to enterprise architecture roadmap
+Enterprise tool feasibility and architect review
+Building the ultimate SRE investigation tool
+Designing CLI interactions for agent-human collaboration
+Agent behavior refinement and performance tracking
+Getting back into DJ mixing on Mac
+Agent hypothesis validation through falsification
+Handling disproven hypotheses in OODA loops
+Accessing previous post-mortem project documents
+Agent-driven post mortem documentation design
+Building production systems with Claude code
+Multi-agent coordination and knowledge integration
+Kubernetes web app with MCP server
+Photo storage setup for Synology NAS
+AI tools for product ownership efficiency
+Comparing three facial massagers
+Maastricht weekend family trip
+Application design planning
+Morning routines for ADHD management
+Risotto without wine techniques
+Best YouTube comedy series
+Detective shows like Monk on Netflix
+90s Superman TV series streaming
+Psychological roots of toxic masculinity
+Streaming "Big" in the Netherlands
+Story of the little prince
+Incident investigation MCP application
+please review the document and previous chat. I want to continue where the chat left off, so the next step was: 'Continue with Part 4: Knowledge Integration, Learning System, and Multi-Agent Coordination'
+Orchestrating continuation toward multi-agent coordination framework.
+Let me review the document and understand what we need to continue with. The user is asking to continue where a previous chat left off, and mentions that the next step was "Part 4: Knowledge Integration, Learning System, and Multi-Agent Coordination."
+Looking at the document, it's about "Designing ICS-Based Multi-Agent AI Systems for Incident Investigation" and covers topics like:
+ICS organizational principles for multi-agent systems
+Hierarchical multi-agent architecture
+OODA loops for investigation
+Communication protocols
+Resource tracking and cost management
+Real-world implementations
+Implementation roadmap
+Since I need to check previous conversations to understand the context of what "Part 4" refers to, I should search for our previous discussions about this document or related implementation plans.
+I'll search for our previous conversation about this implementation plan to understand the context and continue where we left off.
+Select Kubernetes web app with MCP server
+Excavated prior work and charted next implementation phase.
+Great! I found the previous conversation. The user was working on implementing a COMPASS system (Comprehensive Observability Multi-Agent Platform for Adaptive System Solutions) based on the ICS principles from the document. They had completed Parts 1-3 covering:
+Part 1: Architecture foundations and Observe phase
+Part 2: Orient phase (hypothesis generation) and Decide phase
+Part 3: Act phase and investigation state management
+Now they want to continue with Part 4: Knowledge Integration, Learning System, and Multi-Agent Coordination.
+Let me proceed with Part 4, maintaining the same technical depth and implementation focus as the previous parts.
+Perfect! Let me continue with Part 4, building on the foundation we've established. This section will cover the critical aspects of knowledge integration, learning systems, and multi-agent coordination that make the COMPASS system truly adaptive and scalable.
+COMPASS: Comprehensive Observability Multi-Agent Platform for Adaptive System Solutions
+Architecture & Implementation Guide - Part 4 of 5
+Continuing from Part 3...
+Part 4: Knowledge Integration, Learning System, and Multi-Agent Coordination
+4.1 Knowledge Integration Architecture
+The system must integrate multiple knowledge sources while maintaining context coherence and preventing information overflow.
+4.1.1 External Knowledge Sources
+# Code, issues, PRs, workflows
+# Documentation, runbooks
+# Team communications, incident history
+# Alert history, escalation patterns
+# Dashboard definitions, annotations
+# Log patterns, saved searches
+# Monitor definitions, SLO configs
+# External documentation
+"""Represents an external knowledge source"""
+# "api_key", "oauth", "basic"
+# requests per minute
+# 1-5, higher = more important
+"""Manages integration with external knowledge sources"""
+# Simple in-memory cache
+# Vector embeddings for semantic search
+search_github_for_patterns
+# Search issues for similar problems
+_calculate_issue_relevance
+# Find PRs that fixed similar issues
+search_confluence_runbooks
+"""Search Confluence for relevant runbooks and documentation"""
+# Build CQL (Confluence Query Language) query
+f'space="ENGINEERING" AND (title ~ "
+# Add symptom keywords
+_get_confluence_content
+_extract_relevant_sections
+"troubleshooting_steps"
+_extract_known_issues
+# Calculate relevance score
+_calculate_runbook_relevance
+"""Search Slack for relevant discussions about similar incidents"""
+"incident_discussions"
+"resolution_messages"
+# Search messages in channel
+# Analyze message threads for incident patterns
+_is_incident_discussion
+_calculate_thread_duration
+# Track expert involvement
+# Identify top experts for this type of issue
+"""Calculate relevance score for code match"""
+# Check pattern matches
+# Recent modifications get higher score
+# File path relevance
+4.1.2 Knowledge Caching and Indexing
+"""Intelligent caching system for external knowledge"""
+# TTL per knowledge type
+"""Get from cache or fetch and cache"""
+# Check L1 memory cache
+# Check L2 Redis cache if available
+# Store in both caches
+# Generate embeddings for semantic search if needed
+"""Search cached knowledge using semantic similarity"""
+# Threshold for relevance
+"""Generate and store embeddings for semantic search"""
+# Extract text content based on data type
+# Generate embedding using OpenAI/local model
+4.2 Learning System Architecture
+The learning system enables the platform to improve over time by capturing patterns, feedback, and outcomes.
+4.2.1 Pattern Recognition and Storage
+"""Represents a learned incident pattern"""
+# "database_deadlock", "memory_leak", etc.
+# Pattern characteristics
+# Observable symptoms
+# Metric thresholds/patterns
+# Historical root causes
+successful_remediations
+# Confidence and validation
+# 0-1 confidence in pattern
+auto_remediate_approved
+"""Manages pattern learning and recognition"""
+active_learning_queue
+"""Learn patterns from completed incident"""
+# Extract pattern features
+_extract_metric_patterns
+_extract_log_patterns
+# Check if this matches existing pattern
+_match_existing_pattern
+# Update existing pattern
+# Create new pattern if sufficiently unique
+# Add to active learning queue for validation
+# Update pattern confidence scores
+_recalculate_confidence_scores
+suggest_from_patterns
+"""Suggest hypotheses based on learned patterns"""
+_calculate_match_score
+# Threshold for suggestion
+# Top 5 pattern matches
+"""Update pattern with new incident data"""
+# Update occurrence statistics
+# Update resolution data
+# Update success rate
+# Update average resolution time
+# Update confidence based on feedback
+# Exponential moving average for confidence
+# Check for human validation
+# Store updated pattern
+4.2.2 Feedback Integration
+"""Captures human feedback on investigation"""
+# Quality ratings (1-5)
+# Resolution feedback
+approved_for_automation
+"""Processes and integrates human feedback"""
+"""Process feedback and update learning system"""
+# Update hypothesis accuracy tracking
+_update_hypothesis_accuracy
+# Update agent performance metrics
+_update_agent_performance
+# Identify systematic issues
+_identify_systematic_issues
+_create_improvement_tasks
+# Update automation approval status
+_update_automation_eligibility
+# Trigger retraining if needed
+_should_trigger_retraining
+"""Track hypothesis accuracy over time"""
+_record_hypothesis_result
+"""Identify patterns in feedback indicating systematic issues"""
+# Check recent feedback for patterns
+# Pattern: Consistently missing certain types of clues
+_analyze_missed_clues
+"missed_clue_pattern"
+f"Consistently missing:
+"Add specialized agent or improve prompts"
+# Pattern: Low accuracy for specific incident types
+_find_low_accuracy_types
+# Less than 60% accuracy
+"Retrain models or adjust patterns"
+4.3 Multi-Agent Coordination Patterns
+Implementing robust coordination patterns that handle failures, conflicts, and complex interactions.
+4.3.1 Coordination Protocols
+"""Agent coordination strategies"""
+# Strict command chain
+# Direct agent communication
+# Auction/bidding for tasks
+# Indirect coordination via environment
+"""Manages multi-agent coordination"""
+coordinate_investigation
+"""Coordinate multi-agent investigation"""
+_hierarchical_coordination
+_blackboard_coordination
+"""ICS-style hierarchical coordination"""
+# Create command structure
+# Initialize investigation
+# Orchestrator creates investigation plan
+create_investigation_plan
+# Distribute tasks to managers
+# Manager coordinates workers for their task group
+_manager_coordinate_workers
+# Wait for all managers to complete
+# Orchestrator synthesizes results
+"""Blackboard pattern - shared workspace coordination"""
+# Initialize blackboard with incident data
+# Which agent is working on what
+# Agents independently observe blackboard and contribute
+_agent_blackboard_loop
+# Run until convergence or timeout
+_wait_for_convergence
+"[Coordinator] Investigation timeout, gathering results"
+# Build investigation from blackboard
+_build_investigation_from_blackboard
+"""Market-based coordination with task bidding"""
+_decompose_incident_to_tasks
+# Agents bid on tasks
+# Award task to best bidder
+# Execute awarded tasks in parallel
+# Build investigation from task results
+_build_investigation_from_tasks
+"""Manager coordinates workers for a task group"""
+# Manager decomposes task group
+# Assign subtasks to workers
+# Monitor progress with timeout per worker
+f"[Manager] Worker timeout on task"
+# Manager synthesizes worker results
+synthesize_worker_results
+# Update investigation
+4.3.2 Agent Communication Patterns
+"""Types of inter-agent messages"""
+"""Inter-agent communication message"""
+# 1-5, higher is more important
+# For request-response
+"""Asynchronous message bus for agent communication"""
+"""Publish message to bus"""
+# Route to recipient(s)
+# Handle request-response pattern
+"""Send response to a request message"""
+AgentCommunicationMixin
+"""Mixin for agents to handle communication"""
+"""Handle incoming message"""
+_handle_information_share
+_handle_status_update
+"""Request help from other agents"""
+# Wait for responses with timeout
+] No help received in time"
+"""Share finding with other agents"""
+4.4 Handling Failures and Edge Cases
+4.4.1 Failure Detection and Recovery
+"""Handles agent failures and recovery"""
+"""Handle agent failure with appropriate recovery"""
+# Check circuit breaker
+# Circuit is open, don't retry with this agent
+_find_alternative_agent
+# Determine failure type and recovery strategy
+# Retry with exponential backoff
+# Find different agent type
+# Mark agent as failed and find alternative
+"""Find alternative agent for task"""
+# Get list of available agents
+# Filter by capability
+# Select best alternative
+# No alternatives, degrade gracefully
+_create_degraded_task
+"""Circuit breaker pattern for agent failures"""
+# closed, open, half-open
+"""Check if circuit is open"""
+# Check if recovery timeout has passed
+"""Record a failure"""
+f"[CircuitBreaker] Opened after
+"""Record a success"""
+f"[CircuitBreaker] Closed after successful recovery"
+4.4.2 Consensus and Conflict Resolution
+"""Resolves conflicts between agent findings"""
+resolve_hypothesis_conflicts
+"""Resolve conflicts between competing hypotheses"""
+# Group hypotheses by root cause category
+# Multiple hypotheses in same category - need resolution
+_resolve_group_conflict
+"""Resolve conflict within a hypothesis group"""
+# Strategy 1: Weighted voting based on agent expertise
+_can_use_expertise_voting
+_expertise_weighted_vote
+# Strategy 2: Evidence-based resolution
+_have_sufficient_evidence
+_evidence_based_resolution
+# Strategy 3: Statistical consensus
+_statistical_consensus
+# Fallback: Highest confidence
+"""Vote weighted by agent expertise"""
+# Get agent expertise weight for this category
+_get_expertise_weight
+# Select highest voted root cause
+# Return hypothesis with winning root cause
+This completes the knowledge integration, learning system, and multi-agent coordination covering:
+External knowledge source integration (GitHub, Confluence, Slack)
+Knowledge caching and semantic search
+Pattern recognition and learning from incidents
+Human feedback integration
+Multi-agent coordination protocols (hierarchical, blackboard, market-based)
+Inter-agent communication patterns
+Failure handling and recovery strategies
+Consensus building and conflict resolution
+To continue, please prompt me with:
+"Continue with Part 5: Production Deployment, Monitoring, and Optimization"
+This final part will cover:
+Production deployment strategies
+Performance monitoring and observability
+Cost optimization techniques
+Security considerations
+Testing and validation frameworks
+Would you like me to proceed with Part 5 now?
+Continue with Part 5: Production Deployment, Monitoring, and Optimization
+Architected comprehensive deployment guide spanning monitoring, scaling, and operational excellence.
+The user wants me to continue with Part 5 of the COMPASS implementation guide. This is the final part that should cover production deployment, monitoring, and optimization. Based on the established pattern, I need to provide detailed, practical implementation code and guidance for:
+I should maintain the same detailed, code-heavy approach with practical examples that has been used throughout the previous parts.
+Architecture & Implementation Guide - Part 5 of 5
+Continuing from Part 4...
+Part 5: Production Deployment, Monitoring, and Optimization
+5.1 Production Deployment Architecture
+A phased rollout strategy with comprehensive monitoring ensures safe deployment to production.
+5.1.1 Deployment Pipeline
+DeploymentEnvironment
+"""Deployment environments with increasing scope"""
+# Pre-production validation
+# Limited production (5% traffic)
+# Parallel non-impacting run
+"""Production deployment configuration"""
+max_agents_per_incident
+max_cost_per_incident
+max_investigation_time
+require_human_approval
+auto_remediation_enabled
+# Rollout configuration
+incident_type_whitelist
+# low, medium, high, critical
+"""Manages production deployment of COMPASS"""
+"""Load deployment configuration from YAML"""
+"""Deploy to specified environment with safety checks"""
+f"[Deploy] Starting deployment to
+# Pre-deployment checks
+_pre_deployment_checks
+"Pre-deployment checks failed"
+# Update configuration for environment
+_apply_environment_limits
+# Initialize components
+_initialize_components
+# Start with shadow mode if production
+_shadow_mode_validation
+# Progressive rollout
+# Post-deployment validation
+_post_deployment_validation
+"Post-deployment validation failed"
+f"[Deploy] Successfully deployed to
+"""Run pre-deployment safety checks"""
+# Check system health
+# Check resource availability
+# Check previous deployment success rate
+_check_deployment_history
+# Validate configuration
+_validate_configuration
+_run_deployment_tests
+# Check for ongoing incidents
+_check_ongoing_incidents
+"""Progressive rollout with monitoring"""
+# Start with 1% traffic
+# Full rollout for non-production
+f"[Deploy] Rolling out to
+_update_load_balancer
+f"[Deploy] Issues detected at
+% rollout successful"
+"""Run in shadow mode to validate without impact"""
+f"[Deploy] Starting shadow mode validation (
+"investigations_shadowed"
+"performance_metrics"
+# Get next production incident
+# Run shadow investigation
+_run_shadow_investigation
+# Compare with production result
+differs_from_production
+_update_shadow_metrics
+# Validate shadow results
+f"Shadow mode validation failed: too many differences"
+f"[Deploy] Shadow mode validation passed:
+5.1.2 Infrastructure as Code
+InfrastructureProvisioner
+"""Provisions infrastructure for COMPASS deployment"""
+_generate_k8s_manifests
+"""Generate Terraform configuration"""
+# COMPASS Infrastructure - Production
+source  = "hashicorp/aws"
+source  = "hashicorp/kubernetes"
+# EKS Cluster for COMPASS
+name     = "compass-production"
+role_arn = aws_iam_role.compass_cluster.arn
+subnet_ids = var.private_subnet_ids
+endpoint_private_access = true
+endpoint_public_access  = false
+security_group_ids = [aws_security_group.compass_cluster.id]
+key_arn = aws_kms_key.compass.arn
+resources = ["secrets"]
+enabled_cluster_log_types = [
+"api", "audit", "authenticator", "controllerManager", "scheduler"
+# Node groups for different agent types
+cluster_name    = aws_eks_cluster.compass.name
+node_group_name = "compass-orchestrator"
+node_role_arn   = aws_iam_role.compass_node.arn
+subnet_ids      = var.private_subnet_ids
+instance_types = ["m6i.xlarge"]  # 4 vCPU, 16 GB RAM
+"compass/tier" = "orchestrator"
+"compass/role" = "control"
+key    = "compass/orchestrator"
+effect = "NO_SCHEDULE"
+node_group_name = "compass-worker"
+instance_types = ["m6i.large"]  # 2 vCPU, 8 GB RAM
+"compass/tier" = "worker"
+"compass/role" = "compute"
+# Redis for state management
+replication_group_id       = "compass-redis"
+description               = "Redis for COMPASS state and caching"
+node_type                = "cache.r6g.large"
+number_cache_clusters    = 2
+automatic_failover_enabled = true
+multi_az_enabled          = true
+subnet_group_name = aws_elasticache_subnet_group.compass.name
+security_group_ids = [aws_security_group.compass_redis.id]
+at_rest_encryption_enabled = true
+transit_encryption_enabled = true
+auth_token                = random_password.redis_auth.result
+snapshot_retention_limit = 7
+snapshot_window          = "03:00-05:00"
+# S3 for artifact storage
+Environment = var.environment
+Purpose     = "Investigation artifacts and logs"
+bucket = aws_s3_bucket.compass_artifacts.id
+kms_master_key_id = aws_kms_key.compass.arn
+sse_algorithm     = "aws:kms"
+# DynamoDB for pattern storage
+name           = "compass-incident-patterns"
+billing_mode   = "PAY_PER_REQUEST"
+hash_key       = "pattern_id"
+range_key      = "version"
+name = "incident_type"
+name            = "IncidentTypeIndex"
+hash_key        = "incident_type"
+projection_type = "ALL"
+kms_key_arn = aws_kms_key.compass.arn
+"""Generate Kubernetes manifests"""
+environment: production
+name: compass-orchestrator
+apiVersion: rbac.authorization.k8s.io/v1
+resources: ["pods", "services", "configmaps", "secrets"]
+verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["batch"]
+verbs: ["get", "list", "watch", "create", "delete"]
+# Orchestrator Deployment
+"10-orchestrator.yaml"
+app: compass-orchestrator
+serviceAccountName: compass-orchestrator
+compass/tier: orchestrator
+- key: compass/orchestrator
+image: compass/orchestrator:latest
+- containerPort: 8080
+- containerPort: 9090
+- name: MAX_COST_PER_INCIDENT
+initialDelaySeconds: 30
+initialDelaySeconds: 10
+"20-worker-pool.yaml"
+name: compass-worker-pool
+image: compass/worker:latest
+# Specialized workers for different agent types
+name: compass-database-workers
+app: compass-worker-database
+- name: SPECIALIZATION
+value: "postgresql,mysql,mongodb"
+name: compass-metrics
+prometheus.io/scrape: "true"
+prometheus.io/port: "9090"
+apiVersion: monitoring.coreos.com/v1
+5.2 Performance Monitoring and Observability
+Comprehensive monitoring ensures system health and enables optimization.
+5.2.1 Metrics Collection
+"""Collects and exposes metrics for monitoring"""
+# Investigation metrics
+'compass_investigations_total'
+'Total number of investigations'
+investigation_duration
+'compass_investigation_duration_seconds'
+'Investigation duration in seconds'
+'compass_hypothesis_accuracy'
+'Hypothesis accuracy rate'
+'compass_agents_active'
+'Number of active agents'
+'compass_agent_task_duration_seconds'
+'Agent task execution duration'
+'compass_agent_failures_total'
+'Total agent failures'
+'compass_llm_tokens_total'
+'Total LLM tokens used'
+'compass_investigation_cost_usd'
+'Investigation cost in USD'
+'compass_redis_operations_total'
+'compass_external_api_calls_total'
+'compass_human_feedback_score'
+'Human feedback scores'
+'compass_mttr_reduction_percentage'
+'MTTR reduction compared to baseline'
+"""Record investigation metrics"""
+"""Record agent task execution"""
+"""Record LLM token usage"""
+"""Manages distributed tracing for investigations"""
+# Configure Jaeger exporter
+start_investigation_trace
+"""Start trace for new investigation"""
+start_as_current_span
+"""Trace individual agent task"""
+5.2.2 Dashboards and Alerts
+"""Generates monitoring dashboards"""
+generate_grafana_dashboard
+"""Generate Grafana dashboard JSON"""
+"COMPASS Operations Dashboard"
+"rate(compass_investigations_total[5m])"
+"Investigation Duration (p95)"
+"histogram_quantile(0.95, compass_investigation_duration_seconds)"
+"Cost per Investigation"
+"compass_investigation_cost_usd"
+"compass_agents_active"
+"LLM Token Usage Rate"
+"rate(compass_llm_tokens_total[5m])"
+"rate(compass_agent_failures_total[5m])"
+"""Generate Prometheus alert rules"""
+"HighInvestigationFailureRate"
+"High investigation failure rate"
+"InvestigationCostExceeded"
+"compass_investigation_cost_usd > 10"
+"Investigation cost exceeded threshold"
+"compass_agents_active / compass_agents_total > 0.9"
+"Agent pool nearly exhausted"
+"rate(compass_llm_tokens_total[1h]) > 1000000"
+"High LLM token usage detected"
+5.3 Cost Optimization
+Implementing strategies to minimize operational costs while maintaining performance.
+5.3.1 Intelligent Caching
+"""Optimizes costs across the system"""
+IntelligentCacheManager
+"""Optimize LLM request for cost"""
+f"[Optimizer] Cache hit, saved $
+# Select cheapest capable model
+# Make request with optimized settings
+_get_optimized_settings
+"""Get optimized settings for model"""
+# Deterministic for caching
+# Limit output length
+"""Routes requests to appropriate models based on requirements"""
+"""Select cheapest model that meets requirements"""
+# Check context window
+# Assume 500 token output
+f"No model available within budget $
+# Return cheapest eligible model
+"""Optimizes prompts to reduce token usage"""
+"""Optimize prompt for token efficiency"""
+# Remove redundant whitespace
+# Use abbreviations for common terms
+"mean time to resolution"
+# Remove unnecessary examples if present
+# Keep only first example
+# Compress JSON if present
+5.4 Security Implementation
+Security measures to protect the system and prevent abuse.
+5.4.1 Security Controls
+"""Manages security controls for COMPASS"""
+AuthenticationManager
+"""Validate investigation request for security"""
+# Authentication and authorization
+"Authentication failed"
+"Rate limit exceeded"
+"100 requests per hour"
+"Malformed request data"
+# Prompt injection detection
+"prompt_injection_attempt"
+"Security violation detected"
+# Resource access validation
+_validate_resource_access
+"Insufficient permissions"
+"read access to specified resources"
+"""Validate user has access to requested resources"""
+# Check service access
+# Check data access levels
+include_sensitive_data
+"sensitive_data_access"
+"""Validates prompts for injection attacks"""
+r"ignore previous instructions"
+r"disregard all prior"
+"""Check for prompt injection attempts"""
+# Check for known injection patterns
+# Check for suspicious token sequences
+_check_suspicious_tokens
+# Check for encoding tricks
+"encoding manipulation detected"
+"""Check for suspicious token sequences"""
+# Check for control characters
+# Check for excessive special characters
+"excessive_special_chars"
+"""Logs security and compliance events"""
+"""Log security event for audit trail"""
+# Store in immutable audit log
+# Alert on critical events
+"unauthorized_access"
+5.5 Testing and Validation Framework
+Comprehensive testing ensures reliability and correctness.
+5.5.1 Integration Testing
+"""Integration tests for COMPASS system"""
+test_end_to_end_investigation
+"""Test complete investigation flow"""
+# Setup test incident
+_create_test_incident
+_initialize_test_compass
+# Validate hypothesis quality
+# Validate action plan
+test_agent_coordination
+"""Test multi-agent coordination"""
+# Validate coordination
+test_failure_recovery
+"""Test failure handling and recovery"""
+# Create test scenario with failing agent
+"""Load testing for COMPASS"""
+test_concurrent_investigations
+"""Test system under concurrent load"""
+_initialize_production_compass
+# Create concurrent investigations
+_create_random_incident
+# Run investigations concurrently
+# Validate performance
+# Complete within 2 minutes
+# Validate resource usage
+# Average cost under $5
+f"Load test completed:
+5.6 Operational Runbooks
+Standardized procedures for operating COMPASS in production.
+5.6.1 Incident Response Runbook
+"""Operational procedures for COMPASS"""
+"""Get runbook for operational scenario"""
+"high_cost_investigation"
+# High Cost Investigation Runbook
+## Alert: Investigation cost exceeds threshold ($10)
+### Immediate Actions:
+1. Check investigation dashboard for incident_id
+2. Verify if investigation is still active:
+kubectl get pods -n compass -l investigation_id=<ID>
+1. Check investigation complexity:
+kubectl logs -n compass compass-orchestrator-<POD> | grep <incident_id>
+2. If runaway investigation (>20 agents or >30 minutes):
+- Terminate investigation:
+kubectl exec -n compass compass-orchestrator-<POD> -- \
+compass-cli terminate-investigation <incident_id>
+3. If legitimate complex investigation:
+- Notify on-call if cost exceeds $20
+### Root Cause Analysis:
+1. Review investigation trace in Jaeger
+- Infinite loops in agent coordination
+- Excessive LLM calls
+- Large context windows
+3. File bug report if systemic issue
+- Update cost limits in config
+- Add incident type to monitoring
+"agent_pool_exhaustion"
+# Agent Pool Exhaustion Runbook
+## Alert: >90% of agent pool in use
+1. Check current agent utilization:
+kubectl top pods -n compass | grep compass-worker
+2. Scale worker pool:
+kubectl scale deployment compass-worker-pool --replicas=20 -n compass
+1. Check for stuck investigations:
+SELECT incident_id, started_at, agent_count
+WHERE status = 'active'
+AND started_at < NOW() - INTERVAL '30 minutes';
+2. Review agent failure rate:
+Check Grafana dashboard: COMPASS > Agent Health
+1. If agents are stuck:
+- Restart worker pods:
+kubectl rollout restart deployment compass-worker-pool -n compass
+2. If legitimate high load:
+- Enable auto-scaling:
+kubectl autoscale deployment compass-worker-pool \
+--min=10 --max=50 --cpu-percent=70 -n compass
+- Review capacity planning
+- Adjust agent timeout settings
+"investigation_failures"
+# Investigation Failure Runbook
+## Alert: >10% investigation failure rate
+1. Identify failure pattern:
+SELECT incident_type, failure_reason, COUNT(*)
+WHERE status = 'failed'
+AND completed_at > NOW() - INTERVAL '1 hour'
+GROUP BY incident_type, failure_reason;
+2. Check system health:
+- LLM API availability
+- Kubernetes cluster health
+- Check API keys and quotas
+- Verify network connectivity
+- Switch to backup LLM provider
+#### Resource Timeouts:
+- Increase timeout settings
+- Check database performance
+- Review query optimization
+#### Agent Coordination Failures:
+- Check message bus (Redis)
+- Review agent logs for deadlocks
+- Restart orchestrator if needed
+1. Retry failed investigations:
+compass-cli retry-failed --last-hour
+2. If systematic issue:
+- Enable fallback mode
+- Route to manual investigation
+- Page on-call engineer
+- Add retry logic for transient failures
+- Implement circuit breakers
+"No runbook available for scenario"
+END OF IMPLEMENTATION GUIDE
+This completes the comprehensive COMPASS implementation guide covering:
+Part 1: Foundation & OODA Loop Structure
+System architecture and design principles
+Incident classification and routing
+Observe phase implementation with parallel data gathering
+Part 2: Orient & Decide Phases
+Hypothesis generation and synthesis
+Pattern recognition from observations
+Human decision interface
+Investigation plan creation
+Part 3: Act Phase & State Management
+Systematic hypothesis testing
+Falsification and evidence gathering
+Investigation state machine
+Cost tracking and budget controls
+Part 4: Knowledge & Coordination
+External knowledge integration (GitHub, Confluence, Slack)
+Learning system and pattern recognition
+Multi-agent coordination protocols
+Failure handling and consensus building
+Part 5: Production Operations
+Deployment pipeline and infrastructure
+Comprehensive monitoring and alerting
+Cost optimization strategies
+Security controls and validation
+Key Implementation Takeaways
+Start Simple, Scale Gradually
+: Begin with single-agent automation, progressively add complexity
+Maintain Human Control
+: AI augments but doesn't replace human judgment
+Cost Management is Critical
+: Token usage multiplies with agents - implement strict controls
+: You can't optimize what you can't measure
+Learn from Every Incident
+: Continuous improvement through pattern recognition
+: Validate inputs, audit actions, implement defense in depth
+: Integration, load, and failure testing prevent production issues
+: Clear runbooks enable rapid response
+The COMPASS system demonstrates how ICS principles, OODA loop methodology, and modern AI capabilities can combine to create a powerful incident investigation platform that reduces MTTR by 67-90% while maintaining safety, accountability, and cost-effectiveness.
+Claude can make mistakes.
+Please double-check responses.
+compass-day1-startup.md
+compass-quick-reference.md
+compass-claude-code-instructions.md
+(self.__next_f=self.__next_f||[]).push([0])
+self.__next_f.push([1,"1:\"$Sreact.fragment\"\n3:I[4887541324,[],\"ClientSegmentRoot\"]\n"])
+self.__next_f.push([1,"4:I[2696530841,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"54129\",\"static/chunks/7bf36345-53d6eab5e0cf9a8a.js\",\"67598\",\"static/chunks/9af238c7-8ca88233f67b9298.js\",\"11194\",\"static/chunks/22747d63-9aa5d0bb65e8d18d.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"53724\",\"static/chunks/53724-94dc6469f933b1ee.js\",\"92999\",\"static/chunks/92999-cfe83e88599dcc9d.js\",\"98577\",\"static/chunks/98577-a7207317cdef341d.js\",\"60963\",\"static/chunks/60963-0c57b3a930dc258e.js\",\"81752\",\"static/chunks/81752-ab1f694811ac9b9a.js\",\"54130\",\"static/chunks/54130-c29009f478088df6.js\",\"65024\",\"static/chunks/65024-32ac1095d9aa8112.js\",\"42598\",\"static/chunks/42598-969e7a93967c176d.js\",\"40936\",\"static/chunks/40936-f799654067ee9591.js\",\"623\",\"static/chunks/623-df993cfdd0cbe80c.js\",\"1414\",\"static/chunks/1414-458c9c6360efcfae.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"48579\",\"static/chunks/48579-2160516b29586249.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"64853\",\"static/chunks/64853-7bf38699936659d0.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"48862\",\"static/chunks/48862-7e820ae4a7c69d9f.js\",\"88059\",\"static/chunks/88059-1f4d64b9183eb287.js\",\"12693\",\"static/chunks/12693-b708a9db359060b1.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"66175\",\"static/chunks/66175-c026e7bff59880bc.js\",\"89128\",\"static/chunks/89128-c106b1a35852a02c.js\",\"56443\",\"static/chunks/56443-9670a624238a337f.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"1684\",\"static/chunks/1684-98ff0f21102ed2c1.js\",\"88423\",\"static/chunks/88423-64f9bb184f807663.js\",\"91848\",\"static/chunks/91848-c4ddc934658a4dd4.js\",\"61121\",\"static/chunks/61121-674f601d6aff3559.js\",\"30639\",\"static/chunks/30639-d5c3bbfa26a9dbea.js\",\"89568\",\"static/chunks/89568-a87e12e126166fa5.js\",\"31312\",\"static/chunks/31312-79710f4fd8d2587b.js\",\"30372\",\"static/chunks/30372-9c8f1a282c4adc88.js\",\"52588\",\"static/chunks/52588-0b963bc397bed444.js\",\"19455\",\"static/chunks/19455-7e8c400a195d585f.js\",\"2944\",\"static/chunks/2944-ee3b4eeffb24b0f7.js\",\"91127\",\"static/chunks/91127-9021e6b442a89d25.js\",\"78857\",\"static/chunks/78857-9fedb8532db093f1.js\",\"36304\",\"static/chunks/36304-fbadf1f224500aee.js\",\"13785\",\"static/chunks/13785-1cf0d2994f921e1a.js\",\"70152\",\"static/chunks/app/(with-sidebar)/layout-e535fae6daf4ff2d.js\"],\"default\"]\n"])
+self.__next_f.push([1,"5:I[8729711517,[],\"\"]\n6:I[562558057,[],\"\"]\n"])
+self.__next_f.push([1,"7:I[3224823476,[\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"35984\",\"static/chunks/35984-58abf1591ff8a5ee.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"94114\",\"static/chunks/app/(with-sidebar)/(chat)/layout-c1f4918eeb6a2b3b.js\"],\"default\"]\n"])
+self.__next_f.push([1,"8:I[4132310793,[\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"39883\",\"static/chunks/39883-598654ca2f1536cd.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"63289\",\"static/chunks/63289-e5e8adb5b676d368.js\",\"35984\",\"static/chunks/35984-58abf1591ff8a5ee.js\",\"73510\",\"static/chunks/73510-bf86a2bd03bc83fd.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"48862\",\"static/chunks/48862-7e820ae4a7c69d9f.js\",\"88059\",\"static/chunks/88059-1f4d64b9183eb287.js\",\"56659\",\"static/chunks/app/(with-sidebar)/(chat)/chat/layout-2d5216f8ed276d86.js\"],\"default\"]\n"])
+self.__next_f.push([1,"9:I[1686070673,[\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"63289\",\"static/chunks/63289-e5e8adb5b676d368.js\",\"73510\",\"static/chunks/73510-bf86a2bd03bc83fd.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"21579\",\"static/chunks/app/(with-sidebar)/(chat)/chat/%5Buuid%5D/not-found-24833287e5a60c8f.js\"],\"default\"]\n"])
+self.__next_f.push([1,"17:I[8888051586,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"54129\",\"static/chunks/7bf36345-53d6eab5e0cf9a8a.js\",\"67598\",\"static/chunks/9af238c7-8ca88233f67b9298.js\",\"11194\",\"static/chunks/22747d63-9aa5d0bb65e8d18d.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"53724\",\"static/chunks/53724-94dc6469f933b1ee.js\",\"92999\",\"static/chunks/92999-cfe83e88599dcc9d.js\",\"98577\",\"static/chunks/98577-a7207317cdef341d.js\",\"60963\",\"static/chunks/60963-0c57b3a930dc258e.js\",\"81752\",\"static/chunks/81752-ab1f694811ac9b9a.js\",\"54130\",\"static/chunks/54130-c29009f478088df6.js\",\"65024\",\"static/chunks/65024-32ac1095d9aa8112.js\",\"42598\",\"static/chunks/42598-969e7a93967c176d.js\",\"40936\",\"static/chunks/40936-f799654067ee9591.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"93617\",\"static/chunks/93617-fc1c28d4df3cd454.js\",\"85955\",\"static/chunks/85955-6e35072f23314ff4.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"48579\",\"static/chunks/48579-2160516b29586249.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"64853\",\"static/chunks/64853-7bf38699936659d0.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"48862\",\"static/chunks/48862-7e820ae4a7c69d9f.js\",\"45318\",\"static/chunks/45318-47705892920f7dd6.js\",\"12693\",\"static/chunks/12693-b708a9db359060b1.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"66175\",\"static/chunks/66175-c026e7bff59880bc.js\",\"89128\",\"static/chunks/89128-c106b1a35852a02c.js\",\"56443\",\"static/chunks/56443-9670a624238a337f.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"1684\",\"static/chunks/1684-98ff0f21102ed2c1.js\",\"88423\",\"static/chunks/88423-64f9bb184f807663.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"91848\",\"static/chunks/91848-c4ddc934658a4dd4.js\",\"61121\",\"static/chunks/61121-674f601d6aff3559.js\",\"30639\",\"static/chunks/30639-d5c3bbfa26a9dbea.js\",\"89568\",\"static/chunks/89568-a87e12e126166fa5.js\",\"26938\",\"static/chunks/26938-a79f0a23c3e2f21b.js\",\"31312\",\"static/chunks/31312-79710f4fd8d2587b.js\",\"30372\",\"static/chunks/30372-9c8f1a282c4adc88.js\",\"52588\",\"static/chunks/52588-0b963bc397bed444.js\",\"19455\",\"static/chunks/19455-7e8c400a195d585f.js\",\"2944\",\"static/chunks/2944-ee3b4eeffb24b0f7.js\",\"43404\",\"static/chunks/43404-da5057a4d212f49a.js\",\"78857\",\"static/chunks/78857-9fedb8532db093f1.js\",\"61987\",\"static/chunks/61987-3c90ef8ff6e5684a.js\",\"77181\",\"static/chunks/77181-6a3c82183370b399.js\",\"80846\",\"static/chunks/80846-91b236fee1690612.js\",\"49916\",\"static/chunks/app/(with-sidebar)/(chat)/chat/%5Buuid%5D/page-71488708555efde2.js\"],\"CombinedChatClientPage\"]\n"])
+self.__next_f.push([1,"15:\"$e:metadata\"\n"])
+self.__next_f.push([1,"1a:I[6328918389,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ObservabilityInit\"]\n"])
+self.__next_f.push([1,"1c:I[5860527490,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"MazeScript\"]\n"])
+self.__next_f.push([1,"18:T5d3,"])
+self.__next_f.push([1,"1e:I[4984123069,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ThemeProvider\"]\n"])
+self.__next_f.push([1,"20:I[8923578861,[\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"39883\",\"static/chunks/39883-598654ca2f1536cd.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"63289\",\"static/chunks/63289-e5e8adb5b676d368.js\",\"35984\",\"static/chunks/35984-58abf1591ff8a5ee.js\",\"73510\",\"static/chunks/73510-bf86a2bd03bc83fd.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"48862\",\"static/chunks/48862-7e820ae4a7c69d9f.js\",\"88059\",\"static/chunks/88059-1f4d64b9183eb287.js\",\"19097\",\"static/chunks/app/(auth)/layout-faf6ef7e6efc01bc.js\"],\"\"]\n"])
+self.__next_f.push([1,"21:I[6164258084,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"SiftEvents\"]\n"])
+self.__next_f.push([1,"22:I[9980013490,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ClientIntlProvider\"]\n"])
+self.__next_f.push([1,"23:T4e0,"])
+self.__next_f.push([1,"24:T4ab,"])
+self.__next_f.push([1,"25:T665,"])
+self.__next_f.push([1,"26:T6b0,"])
+self.__next_f.push([1,"Create a react app based on the following spec: PyLingo is an interactive web-based Python learning platform that teaches programming fundamentals through a gamified, hands-on coding experience. The application features a structured curriculum of 15 progressive levels, covering essential Python concepts from basic Hello World programs to advanced topics like functions, loops, and data structures. Each level presents users with a clear task, educational context, and a practical coding exercise that must be completed using the integrated dark-themed code editor that mimics professional development environments.\nThe platform provides comprehensive learning support through immediate feedback validation, detailed explanations, and contextual hints. When users submit code, the system compares their input against expected outputs and provides instant correctness assessment. Incorrect submissions display the expected solution alongside educational explanations to reinforce learning, while optional hints can be toggled on demand for additional guidance. Users can also reset their progress on any level to practice until mastery is achieved.\nStrong gamification elements drive user engagement through streak tracking (consecutive correct answers), progress visualization, and completion badges. The interface includes a header progress bar, level completion indicators, and an intuitive level selector that allows flexible navigation between unlocked levels with color-coded completion status. Built with React and Tailwind CSS, the responsive design features a clean blue and white color scheme with professional layout that balances educational functionality with visual appeal across different devices."])
+self.__next_f.push([1,"27:T7bb,"])
+self.__next_f.push([1,"28:Tc04,"])
+self.__next_f.push([1,"29:T6e4,"])
+self.__next_f.push([1,"I want to create a react artifact called Email Reply Drafter. UX: Beautiful professionally designed with white background, blue buttons. It would meet the design standards of Airbnb, Facebook, etc. Have a debug panel that shows the raw response from the last API call. Functionality: Using the Claude API and the Gmail MCP, fetch the users 50 most recent conversations from their inbox when they load the page. Filter out anything that looks like it doesn’t need a reply (newsletters, spam, the user is already the last one to reply on the thread etc) and then display the set of emails that potentially need replies. The emails should be displayed in an inbox style format where you see the sender and subject line and the user can click in to view the actual contents. Make sure to save the threadId for each email, since you will need it later. When a user clicks into a email, have a text area called Brief Reply Instructions where they can write some brief notes on what the reply should be. There should be a button Draft Reply that they can click. When they click Draft Reply make a call to the Claude API to draft an email reply based on the instructions the user input. Display the draft to the user and let them make edits. The user can edit the reply and then there is a Save button for the user to save the email draft. If the users clicks Save then make a call to the Claude API and Gmail MCP to save the email as a draft. Make sure to pass threadId when you make the call to save the draft so the reply is within the original email thread. Once they have saved a draft, show a widget at the bottom that shows a count of the total number of drafts a user has saved along with a link Send Drafts that links to https://mail.google.com/mail/u/0/#drafts"])
+self.__next_f.push([1,"2b:I[917624305,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ServerUserAgentProvider\"]\n"])
+self.__next_f.push([1,"2c:I[8915630566,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"LegalDocsProvider\"]\n"])
+self.__next_f.push([1,"2d:I[2779575683,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ConfigurationProvider\"]\n"])
+self.__next_f.push([1,"2f:I[3284653999,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"QueryClientProvider\"]\n"])
+self.__next_f.push([1,"30:T8c0,"])
+self.__next_f.push([1,"Scan my calendar, email, Slack, and task managers to build my daily plan.\nThis replaces 45 minutes of context-switching with a 10-minute organized view of what matters today.\n\nSearch through:\n1. My Google Calendar - meetings today and this week\n2. My Gmail - recent emails that need responses or have action items\n3. My Slack messages - pings, threads, or requests I need to respond to\n4. Any Asana/Linear tasks assigned to me\n5. Recent activity in my key project channels\n\nThen create:\n\n**Today's Priorities (Ranked)**\n- Most urgent/important items that need attention today\n- Meetings I should prep for (with context on what they're about)\n- People waiting on responses from me\n- Deadlines approaching this week\n\n**Context I Need**\n- Key updates or decisions I might have missed in project channels\n- Threads or conversations I should catch up on before meetings\n- Any blockers or escalations relevant to my work\n\n**Suggested Time Blocks**\n- When I should focus on deep work vs. reactive tasks\n- Which meetings I could potentially skip or delegate\n- Buffer time I should protect\n\n**Quick Wins**\n- Easy tasks I can knock out to clear my plate\n- Messages I can respond to quickly\n\n**Example Output:**\n\n## Today's Priorities (Ranked)\n\n1. **URGENT: Q4 Planning Doc** - Sarah needs your section by 2pm for exec review\n2. **Prep for 3pm Product Sync** - Review the new feature proposals in #product-updates\n3. **Respond to Legal** - Contract review email from yesterday needs sign-off\n4. **Weekly Team 1:1s** - Three back-to-back starting at 10am\n\n## Context You Need\n\n- **#engineering:** Team decided to push the API refactor to next sprint\n- **Sarah's DM:** She's blocked on your feedback for the pricing model\n- **#sales:** Two enterprise deals in final stages, might need technical review\n\n## Suggested Time Blocks\n\n- 9:00-10:00am: Deep work on Q4 doc (before meetings start)\n- 10:00-12:00pm: Back-to-back 1:1s\n- 12:00-1:00pm: Lunch + quick wins (emails, Slack responses)\n- 1:00-2:00pm: Finish Q4 doc\n- 3:00-4:00pm: Product sync\n- 4:00-5:00pm: Protected focus time\n\n## Quick Wins (15 min)\n\n- Approve Mike's PR (#847)\n- Respond to recruiter about referral\n- Update Asana status on three tasks\n- Reply to customer success question in #support"])
+self.__next_f.push([1,"31:T1104,"])
+self.__next_f.push([1,"Research everything our major AI competitors announced this past week (OpenAI, Google, Microsoft, Meta, xAI, Mistral, Cohere).\nSearch their blogs, social media, tech news, and compile a comprehensive competitive intelligence brief for Monday exec review.\n\nFor each major competitor:\n\n1. Search for and analyze ALL recent announcements, blog posts, research papers, and news coverage from the past 7 days\n2. Check their official blogs, Twitter/X accounts, LinkedIn, and tech news sites\n3. Look for:\n   - New model releases or updates\n   - Product launches or feature announcements\n   - Research breakthroughs or paper publications\n   - Pricing changes or new commercial offerings\n   - Partnership announcements\n   - Hiring signals or team changes (if publicly visible)\n   - Conference talks or demos\n   - Customer wins or case studies\n   - Any regulatory or policy developments\n\n4. For each finding, note:\n   - What was announced/released\n   - Key capabilities or specifications\n   - Target use cases or customers\n   - Pricing (if mentioned)\n   - Competitive positioning/messaging they used\n   - Media and community reaction\n   - Strategic implications for Anthropic\n\n5. Create a summary section highlighting:\n   - Biggest competitive threats or moves\n   - Emerging trends across competitors\n   - Gaps in the market we could exploit\n   - Areas where we're being outpaced\n   - Recommended actions for Anthropic\n\nUse extensive web searches - check every major source, don't miss anything important.\n\n**Example Output:**\n\n# AI Competitive Intelligence Brief\n*Week of [Date]*\n\n## Executive Summary\n\n**Key Takeaways:**\n- OpenAI launched GPT-4.5 with 50% faster response times\n- Google announced enterprise pricing changes (20% reduction)\n- Meta open-sourced Llama 3 with extended context window\n- xAI raised $6B Series B, now valued at $24B\n\n**Strategic Implications:**\n- Pricing pressure intensifying in enterprise segment\n- Open source models closing capability gap faster than expected\n- Multimodal capabilities becoming table stakes\n\n---\n\n## Detailed Findings\n\n### OpenAI\n\n**GPT-4.5 Launch (announced Tuesday)**\n- 50% faster inference, 30% cost reduction\n- New vision capabilities for document understanding\n- Enterprise tier with dedicated capacity guarantees\n- Pricing: $0.03/1K tokens (down from $0.06)\n- **Reaction:** Very positive - 50K+ signups in first 48 hours\n- **Strategic Impact:** Direct pressure on our enterprise pricing\n\n**Research Paper: \"Scaling Laws Revisited\"**\n- Published Thursday in Nature\n- Claims breakthrough in sample efficiency\n- Community reaction mixed - some skepticism on reproducibility\n\n### Google DeepMind\n\n**Gemini Pro 1.5 Update**\n- Extended context to 2M tokens (vs our 200K)\n- New \"Gemini for Workspace\" integration\n- **Strategic Impact:** Context length becoming a key differentiator\n\n**Partnership Announcement**\n- Strategic partnership with Salesforce announced Monday\n- Native integration in Salesforce Einstein\n- Potential TAM impact: Access to 150K+ enterprise customers\n\n### Microsoft\n\n**Azure OpenAI Service Updates**\n- New regions: EU data residency options\n- 99.99% SLA guarantee for enterprise\n- **Strategic Impact:** Raising the bar on reliability/compliance\n\n---\n\n## Emerging Trends\n\n1. **Pricing Wars Accelerating**\n   - Average price per token down 35% QoQ across all major providers\n   - Enterprise customers gaining leverage in negotiations\n\n2. **Context Length Arms Race**\n   - Google: 2M tokens\n   - Anthropic: 200K tokens\n   - OpenAI: 128K tokens\n   - Gap widening - may need to prioritize this capability\n\n3. **Vertical-Specific Solutions**\n   - All competitors launching industry-specific models (legal, medical, finance)\n   - Potential opportunity: We haven't specialized yet\n\n---\n\n## Recommended Actions\n\n**Immediate (This Week):**\n1. Review enterprise pricing in light of OpenAI's cuts\n2. Accelerate context length expansion roadmap\n3. Prepare counter-positioning on safety/reliability vs. speed\n\n**Short-term (This Quarter):**\n1. Consider strategic partnerships to match Google-Salesforce scope\n2. Evaluate vertical specialization opportunities\n3. Enhance enterprise SLA offerings\n\n**Strategic (6-12 Months):**\n1. Differentiate on capabilities competitors can't easily copy (constitutional AI, etc.)\n2. Build moat around trust/safety positioning\n3. Consider open-source strategy to counter Meta"])
+self.__next_f.push([1,"32:T1f10,"])
+self.__next_f.push([1,"Process my sales call transcript and generate all follow-up materials: prospect email, action items, Salesforce update, and internal summary.\nI'll upload the call transcript in my next message, then you'll create everything I need to close this deal.\n\nOnce you have the transcript, please:\n\n1. Draft a follow-up email to the prospect covering the key points discussed\n2. Create a list of action items with owners and deadlines\n3. Generate a Salesforce opportunity update including:\n   - Key details (company size, current spend, timeline, pain points)\n   - Technical requirements mentioned\n   - Stakeholders and decision-makers identified\n   - Next steps and commitments made\n4. Draft an internal note to loop in relevant team members (solutions engineers, legal, etc.)\n5. Identify any resources I should send the prospect (case studies, pricing calculator, technical docs, etc.)\n6. Flag any red flags or risks to be aware of\n\nFor now just respond with 'ready to process your call transcript'.\n\n**Example Output (after transcript is provided):**\n\n---\n\n## 1. Follow-up Email to Prospect\n\n**Subject:** Great connecting today - next steps for [Company Name]\n\n**Draft:**\n\nHi Jennifer,\n\nThank you for taking the time to walk me through [Company]'s AI strategy and current challenges with your customer support automation. I appreciated your candor about the limitations you're experiencing with your current provider.\n\nBased on our conversation, here's what I understood as your key priorities:\n\n- **Response quality:** You need more accurate, contextual responses that reduce escalations to human agents (currently at 35%)\n- **Integration requirements:** Must work seamlessly with Zendesk and your internal knowledge base\n- **Compliance:** GDPR and SOC 2 are non-negotiable given your EU customer base\n- **Timeline:** Ideally pilot by Q1 2024 to support your seasonal volume spike\n\nI'm excited about how Claude could help. Our customers in similar use cases typically see 60-70% reduction in escalation rates within the first month.\n\n**Next Steps:**\n\n1. I'll send over the Acme Corp case study you requested (similar industry, similar scale)\n2. Our solutions engineer will prepare a custom demo for your team on Dec 15th\n3. I'll get you connected with our security team to review compliance documentation\n\nDoes the Dec 15th demo work for you? I'd like to include your Head of Support and CTO if possible.\n\nLooking forward to exploring this further.\n\nBest,\n[Your name]\n\n---\n\n## 2. Action Items\n\n**My Actions:**\n- [ ] Send Acme Corp case study - **Due: Today**\n- [ ] Schedule demo for Dec 15th, confirm attendees - **Due: By EOD Wednesday**\n- [ ] Loop in solutions engineering (cc: Mike) - **Due: Today**\n- [ ] Request security documentation packet from compliance team - **Due: Tomorrow**\n- [ ] Send pricing calculator link - **Due: Today**\n- [ ] Schedule follow-up call for post-demo (week of Dec 18) - **Due: By Friday**\n\n**Customer Actions:**\n- Confirm Dec 15th demo time and attendees - **Expected: This week**\n- Review case study and pricing - **Expected: Before demo**\n- Provide API documentation for Zendesk integration - **Expected: By Dec 10**\n\n**Internal Actions:**\n- **Mike (Solutions Engineer):** Prepare custom demo focusing on Zendesk integration - **Due: Dec 12**\n- **Sarah (Legal):** Review their MSA redlines if deal progresses - **FYI for now**\n\n---\n\n## 3. Salesforce Update\n\n**Opportunity Details:**\n- **Company:** Acme Technologies, Inc.\n- **Size:** 500 employees, $50M ARR SaaS company\n- **Current spend on AI:** ~$150K/year (competitor solution)\n- **Potential ACV:** $200-250K (based on volume discussed)\n- **Decision timeline:** Pilot Q1 2024, full rollout Q2 2024\n- **Budget:** Confirmed allocated, part of 2024 ops budget\n\n**Pain Points:**\n- High escalation rate (35%) with current AI support tool\n- Poor context retention across conversations\n- Compliance concerns with current vendor's data handling\n- Integration limitations with existing tech stack\n\n**Technical Requirements:**\n- Must integrate with Zendesk (primary support platform)\n- Connect to internal knowledge base (Confluence)\n- GDPR compliant (EU customers)\n- SOC 2 Type II required\n- API access for custom workflows\n\n**Stakeholders:**\n- **Jennifer Walsh** (VP Customer Success) - Champion, main contact\n- **David Chen** (CTO) - Technical buyer, final sign-off required\n- **Lisa Rodriguez** (Head of Support) - End user, needs to see demo\n- **Unknown** - Procurement/Legal (will surface during contract phase)\n\n**Next Steps \u0026 Timeline:**\n- Dec 15: Custom demo for Jennifer, David, and Lisa\n- Dec 18-22: Follow-up call to address questions\n- Jan 2024: Pilot program (1-2 support agents)\n- Feb 2024: Internal review and decision\n- Mar 2024: Rollout to full team (15 support agents)\n\n**Probability:** 60% - Strong interest, budget confirmed, clear pain, but need to win technical evaluation vs. current provider and one other competitor mentioned (Cohere)\n\n---\n\n## 4. Internal Team Note\n\n**To:** Mike (Solutions Engineering), Sarah (Legal - FYI)\n\n**Subject:** New opp needs demo support - Acme Technologies\n\nTeam,\n\nJust got off a great call with Acme Technologies (500 person SaaS company). They're frustrated with their current AI support solution and actively evaluating alternatives.\n\n**Ask for Mike:** Can you prepare a custom demo for Dec 15th? Key things to showcase:\n- Zendesk integration (this is critical)\n- How we maintain context across conversations\n- Knowledge base integration capabilities\n- Brief compliance/security overview\n\nAttendees will be:\n- Jennifer Walsh (VP CS) - our champion\n- David Chen (CTO) - technical decision maker\n- Lisa Rodriguez (Head of Support) - will be primary user\n\nDavid is technical and will ask detailed API questions. Jennifer mentioned they looked at Cohere, so we need to differentiate on quality and integration ease.\n\n**For Sarah (FYI):** They'll need SOC 2 and GDPR documentation during eval. Their legal will likely want to redline our MSA based on Jennifer's comments. Deal size is $200-250K ACV.\n\n**Red flag to watch:** Jennifer mentioned \"budget pressures\" once - confirmed budget exists but may indicate price sensitivity. She also said their current vendor contract ends in March, which creates urgency but also means we're racing the renewal cycle.\n\nLet me know if you need the full transcript or have questions.\n\n---\n\n## 5. Resources to Send\n\n**Immediate (Today):**\n1. ✅ Acme Corp case study (customer support use case, similar scale)\n2. ✅ Pricing calculator link\n3. ✅ Zendesk integration one-pager\n\n**Before Demo (by Dec 12):**\n4. SOC 2 Type II certificate\n5. GDPR compliance documentation\n6. API documentation overview\n7. Sample Claude responses for support use cases\n\n**Post-Demo (if interest confirmed):**\n8. ROI calculator with custom inputs\n9. Implementation timeline template\n10. Customer references (2-3 similar companies)\n\n---\n\n## 6. Red Flags \u0026 Risks\n\n⚠️ **Budget Pressure Mentioned:** Jennifer said \"budget pressures\" - may indicate price sensitivity or competing priorities. Need to establish ROI clearly.\n\n⚠️ **Incumbent Renewal Timeline:** Current contract ends March 2024 - tight timeline could work for or against us. If we're not ready to close by February, they might just renew.\n\n⚠️ **CTO Not on First Call:** David (CTO) wasn't on this call - Jennifer will \"loop him in.\" Risk that he's not actually engaged yet. Need him on the demo to qualify properly.\n\n⚠️ **Competitor Awareness:** They're actively talking to Cohere. Need to understand what Cohere is offering and why we're better for this use case.\n\n⚠️ **Unclear Procurement Process:** Jennifer hasn't mentioned legal/procurement yet. Need to map out full decision process and timeline.\n\n**Mitigation Plan:**\n- Nail the ROI story with specific metrics from similar customers\n- Get David engaged ASAP (demo is critical)\n- Understand Cohere's proposal if possible\n- Map out full buying committee in next conversation"])
+self.__next_f.push([1,"33:T8c0,"])
+self.__next_f.push([1,"34:T1104,"])
+self.__next_f.push([1,"35:T1f10,"])
+self.__next_f.push([1,"37:I[5601598184,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"CurrentAccountProvider\"]\n"])
+self.__next_f.push([1,"38:I[847588957,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ConsentProvider\"]\n"])
+self.__next_f.push([1,"39:I[2260942454,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"IntercomProvider\"]\n"])
+self.__next_f.push([1,"3a:I[4241086315,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"BootstrapedStatsigProvider\"]\n"])
+self.__next_f.push([1,"3b:I[5466030953,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"IsolatedMarketingPixelSegmentProvider\"]\n"])
+self.__next_f.push([1,"3c:I[1404814639,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"TierSelectorProvider\"]\n"])
+self.__next_f.push([1,"3d:I[6367756395,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"MotionConfig\"]\n"])
+self.__next_f.push([1,"3e:I[9362398074,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ReplExecutionSandboxProvider\"]\n"])
+self.__next_f.push([1,"3f:I[9267958570,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"NuxProvider\"]\n"])
+self.__next_f.push([1,"40:I[9937346283,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"PerformanceMetricsProvider\"]\n"])
+self.__next_f.push([1,"41:I[7852543175,[\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"63289\",\"static/chunks/63289-e5e8adb5b676d368.js\",\"73510\",\"static/chunks/73510-bf86a2bd03bc83fd.js\",\"24345\",\"static/chunks/app/not-found-dcf6c676b00db694.js\"],\"default\"]\n"])
+self.__next_f.push([1,"42:I[3901091810,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"OpusRateLimitModalProvider\"]\n"])
+self.__next_f.push([1,"43:I[2354404286,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"MessageLimitModalProvider\"]\n"])
+self.__next_f.push([1,"44:I[3501156252,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ConfigurableAntWarningModal\"]\n"])
+self.__next_f.push([1,"45:I[4654316522,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"NotificationListener\"]\n"])
+self.__next_f.push([1,"46:I[9767069701,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"Toasts\"]\n"])
+self.__next_f.push([1,"47:I[9524944645,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"ConsentBanner\"]\n"])
+self.__next_f.push([1,"48:I[7358482728,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"AnalyticsIdentifier\"]\n"])
+self.__next_f.push([1,"49:I[230711816,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"IntercomTracker\"]\n"])
+self.__next_f.push([1,"4a:I[9902475319,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"DesktopChecks\"]\n"])
+self.__next_f.push([1,"4b:I[664925974,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"DatadogRum\"]\n"])
+self.__next_f.push([1,"4c:I[3863335323,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"LogHiring\"]\n"])
+self.__next_f.push([1,"4d:I[9161483349,[\"73473\",\"static/chunks/891cff7f-f60c50dd8ad01172.js\",\"42100\",\"static/chunks/6527a925-d9cda19137f078bf.js\",\"59666\",\"static/chunks/59666-5b3498e03408a423.js\",\"2574\",\"static/chunks/2574-ecefe9007cc4c300.js\",\"70807\",\"static/chunks/70807-84e3e2694cb786bd.js\",\"19664\",\"static/chunks/19664-fa46500fc0dc22ed.js\",\"43402\",\"static/chunks/43402-054d0c0997c9b98c.js\",\"61295\",\"static/chunks/61295-b521bd95c7cace27.js\",\"23965\",\"static/chunks/23965-44d48ab64bf6f643.js\",\"64939\",\"static/chunks/64939-83f9f921174990c0.js\",\"78135\",\"static/chunks/78135-1de03fc25ae1f235.js\",\"41242\",\"static/chunks/41242-283b1f7a92e32610.js\",\"80559\",\"static/chunks/80559-cec9b661ced4ddc4.js\",\"51658\",\"static/chunks/51658-e0565406d3ee1fe6.js\",\"94882\",\"static/chunks/94882-beb13778964cad61.js\",\"25058\",\"static/chunks/25058-a037391d77031b3f.js\",\"10489\",\"static/chunks/10489-3f75d038e0443e76.js\",\"45312\",\"static/chunks/45312-4ca7be4c078ba17f.js\",\"86674\",\"static/chunks/86674-254e6b3165d4ceb0.js\",\"65327\",\"static/chunks/65327-3e5e8064e77924e5.js\",\"58033\",\"static/chunks/58033-5158a51918935530.js\",\"15466\",\"static/chunks/15466-00ef14d3c8045c70.js\",\"57151\",\"static/chunks/57151-f2f3c85ef9bf2118.js\",\"1445\",\"static/chunks/1445-4e2c09054dbf1db7.js\",\"62943\",\"static/chunks/62943-6e6a679b8c0882b6.js\",\"16685\",\"static/chunks/16685-8d9656c988ff34ba.js\",\"1550\",\"static/chunks/1550-18b94f9df1488575.js\",\"19211\",\"static/chunks/19211-555591c5bab93367.js\",\"61530\",\"static/chunks/61530-ad41c9d52a9ea2c1.js\",\"64328\",\"static/chunks/64328-45a3d4467cbfcc27.js\",\"74813\",\"static/chunks/74813-9013d4af86975633.js\",\"66851\",\"static/chunks/66851-bc520a81a52f1a8a.js\",\"82203\",\"static/chunks/82203-7cac90902c358717.js\",\"37131\",\"static/chunks/37131-e4f0b3c747f8d6b6.js\",\"74165\",\"static/chunks/74165-22deaac772c91d9a.js\",\"26165\",\"static/chunks/26165-8afa722f02718039.js\",\"51749\",\"static/chunks/51749-a064326710766ec1.js\",\"80649\",\"static/chunks/80649-bc6473571a666ea2.js\",\"65279\",\"static/chunks/65279-2015d1476c261346.js\",\"40252\",\"static/chunks/40252-2d47af05018f717d.js\",\"74982\",\"static/chunks/74982-41bc20aa421f1493.js\",\"23985\",\"static/chunks/23985-196f383c8a30d0a7.js\",\"90370\",\"static/chunks/90370-a0fc6fb794048193.js\",\"18928\",\"static/chunks/18928-ea95eda7bfa85231.js\",\"72725\",\"static/chunks/72725-720b69e88b1a43ac.js\",\"92245\",\"static/chunks/92245-8831de022f4927df.js\",\"63471\",\"static/chunks/63471-04e01c493809e526.js\",\"79038\",\"static/chunks/79038-a9de1052a4e7c723.js\",\"36160\",\"static/chunks/36160-63c9ba40c7da6496.js\",\"7177\",\"static/chunks/app/layout-0ae69c2e31ec1b0d.js\"],\"WorkerUpdater\"]\n"])

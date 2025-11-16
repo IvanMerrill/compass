@@ -1,0 +1,203 @@
+# Part 2/8
+# Lines 201-400 of 1599
+
+Human expertise is qualitatively different from AI pattern matching
+Human decisions often involve context/intuition that AI doesn't have
+Post-mortems need to show when humans overrode AI or chose unexpected paths
+Learning culture means we need to understand WHY humans made decisions
+Future incidents benefit from understanding human reasoning patterns
+Visual distinction in UI (colors, icons, emphasis)
+Metadata tracking (who, when, why, context)
+Authority levels (human decisions can override AI)
+Reasoning capture (why did the human choose this path?)
+Outcome tracking (was the human right? wrong? partially right?)
+Implementation challenges
+Capturing human reasoning without being intrusive
+Making it easy for humans to document their thinking
+Balancing speed (humans are busy during incidents) with documentation
+Showing respect for human expertise while also learning from mistakes
+Not creating blame culture
+Let me develop this comprehensively.
+Excellent! Let's dive deep into
+Human Decisions as First-Class Citizens
+. This is absolutely critical because COMPASS is fundamentally about
+human-AI collaboration
+, not AI replacement.
+Why Human Decisions Deserve Special Treatment
+The research on Learning Teams shows something crucial:
+how decisions are made matters as much as what decisions are made
+. When we track human reasoning, we:
+- Human intuition often picks up patterns AI misses
+- Future responders can see "why did Sarah choose that path?"
+- Humans see their decisions are valued, not just AI suggestions
+- Focus on process, not individual failure
+- Human decisions that disprove AI suggestions are training data
+Core Design Principles
+Explicit Human Authority Model
+"""Who has authority at different decision points"""
+# AI suggests, human can override
+# AI can proceed (V1: not used)
+"""Types of human decisions in the investigation"""
+"hypothesis_selection"
+# Which hypothesis to pursue
+"hypothesis_rejection"
+# Reject AI suggestion
+# Request external data
+INVESTIGATION_DIRECTION
+"investigation_direction"
+# Explicitly disagree with AI
+# Escalate to senior engineer
+A point where human judgment is required
+Captures the full context and reasoning
+# Context presented to human
+# Hypotheses, actions, etc.
+# What the investigation state was
+# "high", "medium", "low"
+# Did human agree with AI?
+if_disagreement_reason
+# Outcome tracking (filled in later)
+# How long human took
+additional_data_requested
+# Other people consulted
+A hypothesis investigation led by a human
+Different from AI investigation in key ways
+investigation_strategy
+# How human planned to test it
+# Why this needed human expertise
+# Data gathered by human
+external_data_collected
+# Things human noticed
+# kubectl, curl, manual queries, etc.
+# "proven", "disproven", "inconclusive"
+# Unique to human investigations
+tacit_knowledge_applied
+# Intuition, experience, context
+# Input from teammates
+was_hypothesis_disproven
+# What should AI learn?
+# What should future responders know?
+Rich Terminal UI with Human Decision Emphasis
+HumanDecisionInterface
+Terminal interface that makes human decisions clear and easy
+present_decision_point
+Present a decision to the human with full context
+Capture their reasoning, not just their choice
+"[bold yellow]🚨 HUMAN DECISION REQUIRED 🚨[/]"
+# Show investigation state
+_show_investigation_state
+# Show what AI recommends
+_show_ai_recommendation
+_show_options_and_get_choice
+# CRITICAL: Capture human reasoning
+_capture_human_reasoning
+# Update decision point
+_show_decision_confirmation
+"""Show current investigation state clearly"""
+"Investigation State"
+# Show recent disproven paths
+"\n[bold]Recently Ruled Out:[/]"
+"""Show AI's recommendation with reasoning"""
+f"""[bold]AI Recommends:[/]
+[bold]AI Confidence:[/]
+[bold]AI Reasoning:[/]
+"""Present options clearly, get choice"""
+_hypothesis_selection_ui
+_hypothesis_rejection_ui
+"""UI for selecting which hypothesis to investigate"""
+"Select Hypothesis to Investigate Next"
+# Add AI recommendation marker
+# Add special options
+"None of these - I have a different theory"
+"\n[bold yellow]Your choice[/]"
+# Human has their own hypothesis
+_capture_human_hypothesis
+CRITICAL: Capture WHY the human made this decision
+This is where learning happens
+"\n[bold cyan]Capture Your Reasoning[/]"
+"[dim]This helps future responders understand your thought process[/]\n"
+# Structured prompts based on decision type
+"Why did you choose this hypothesis over the others?"
+"What evidence or intuition guided your choice?"
+"What do you expect to find if this hypothesis is correct?"
+"Why do you disagree with the AI recommendation?"
+"What does your experience tell you that AI might miss?"
+"What specific evidence makes you doubt the AI's suggestion?"
+"Why did you make this choice?"
+"""Capture human's confidence level"""
+"\n[bold]How confident are you in this decision?[/]"
+"[green]High[/] - Strong evidence/experience"
+"[yellow]Medium[/] - Reasonable hypothesis, worth testing"
+"[red]Low[/] - Best guess with limited information"
+"""When human disagrees with AI, capture why"""
+"\n[bold red]You chose differently than AI recommended.[/]"
+"[dim]This is valuable learning data. Please explain:[/]\n"
+"AI missed important context"
+"My experience with similar incidents"
+"I have additional information AI doesn't have"
+"AI's reasoning doesn't match observed symptoms"
+"Intuition based on system knowledge"
+"[cyan]Additional details[/]"
+"""Show confirmation of human's decision"""
+"✅ You agreed with AI recommendation"
+"⚠️  You chose a different path than AI recommended"
+[bold]Your Decision:[/]
+[bold]Your Reasoning:[/]
+f"\n[dim]Disagreement reason:
+Human-Led Investigation Workflow
+HumanInvestigationWorkflow
+Workflow for human-led hypothesis investigations
+Captures the human process, not just results
+start_human_investigation
+Human decides to personally investigate a hypothesis
+System assists but human drives
+f"[bold green]🔍 Human-Led Investigation[/]\n"
+# Ask human for their strategy
+"\n[bold]How do you plan to test this hypothesis?[/]"
+"[dim]Describe your investigation approach:[/]"
+"\n[bold]Why does this need human expertise?[/]"
+"[dim]What can you do that AI can't?[/]"
+# Create investigation record
+active_human_investigations
+# Offer AI assistance
+"\n[bold cyan]AI Support Available:[/]"
+"• Request specific data queries"
+"• Run automated checks"
+"• Search similar past incidents"
+"• Generate related hypotheses"
+record_human_observation
+"""Record something the human noticed"""
+"\n[bold]Record an observation:[/]"
+"[cyan]What did you notice?[/]"
+# Ask if this is tacit knowledge
+"Is this based on experience/intuition rather than data?"
+"[cyan]Explain your intuition[/]"
+complete_human_investigation
+Human completes their investigation
+Capture conclusions and lessons
+"[bold]Complete Investigation[/]"
+"\n[bold]What did you conclude?[/]"
+"[green]Hypothesis PROVEN - this is the root cause[/]"
+"[red]Hypothesis DISPROVEN - ruled out[/]"
+"[yellow]INCONCLUSIVE - need more data[/]"
+# Get detailed reasoning
+"\n[bold]Explain your conclusion:[/]"
+"[dim]What evidence led you to this conclusion?[/]"
+"[cyan]Conclusion[/]"
+"[cyan]Detailed reasoning[/]"
+"\n[bold]What should the SYSTEM learn from this?[/]"
+"[dim]What patterns should AI recognize in the future?[/]"
+"[cyan]System lesson[/]"
+"\n[bold]What should future RESPONDERS learn?[/]"
+"[dim]What knowledge should other engineers have?[/]"
+"[cyan]Human lesson[/]"
+Differentiated Representation in Post-Mortem
+EnhancedPostMortemGenerator
+Generate post-mortems that clearly distinguish human vs AI contributions
+_generate_investigation_journey_section
+Generate investigation journey with clear human/AI differentiation
+"*This section documents our investigation process, including the reasoning "
+"behind key decisions. Human decisions are highlighted as they represent "
+"expertise and intuition that guided the investigation.*\n\n"
+# Timeline of key decisions
+"### Decision Timeline\n\n"
+# Render as markdown table

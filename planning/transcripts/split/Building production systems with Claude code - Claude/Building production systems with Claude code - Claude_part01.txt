@@ -1,0 +1,203 @@
+# Part 1/4
+# Lines 1-200 of 689
+
+# Building production systems with Claude code - Claude
+
+Building production systems with Claude code - Claude
+Building COMPASS: project foundation and architecture
+MVP to enterprise architecture roadmap
+Enterprise tool feasibility and architect review
+Building the ultimate SRE investigation tool
+Designing CLI interactions for agent-human collaboration
+Agent behavior refinement and performance tracking
+Getting back into DJ mixing on Mac
+Agent hypothesis validation through falsification
+Handling disproven hypotheses in OODA loops
+Accessing previous post-mortem project documents
+Agent-driven post mortem documentation design
+Building production systems with Claude code
+Multi-agent coordination and knowledge integration
+Kubernetes web app with MCP server
+Photo storage setup for Synology NAS
+AI tools for product ownership efficiency
+Comparing three facial massagers
+Maastricht weekend family trip
+Application design planning
+Morning routines for ADHD management
+Risotto without wine techniques
+Best YouTube comedy series
+Detective shows like Monk on Netflix
+90s Superman TV series streaming
+Psychological roots of toxic masculinity
+Streaming "Big" in the Netherlands
+Story of the little prince
+Incident investigation MCP application
+Act as an expert in using AI to build systems, and provide instructions on how best to use claude code to build the system described in 'compass architecture.txt.' . I've included an examaple of a 'claude.md' file in 'claude.txt' and a nice tip from someone in the 'review code.txt. file on how to use claude code to review code effectively. Treat me like I am easily able to access claude code via the terminal, and know how to use a terminal but am completely new to how to create a new application using claude code. I am looking for help with my claude.md file, I want help with prompts I can use as I build the system so that it will be able to run in a production environment (but don't include any monitoring tools like prometheus or grafana, I have those already). I should be able to take the output you give me and use it as instructions to deliver my application using claude code successfully. Take your time on this so that I get some great instructions!
+Examined provided files to architect comprehensive Claude Code instructions.
+The user is asking me to help them create instructions for using Claude Code to build a system described in their 'compass architecture.txt' file. They want help with:
+Creating/improving their claude.md file
+Prompts they can use while building the system
+Making it production-ready (excluding monitoring)
+Step-by-step instructions for using Claude Code effectively
+First, I need to look at the files they've provided:
+compass_architecture.txt - the system architecture
+claude.txt - an example claude.md file
+review_code.txt - tips on using Claude Code for code review
+Let me start by examining these files to understand what we're working with.
+I'll help you create comprehensive instructions for using Claude Code to build your COMPASS system. Let me first examine your architecture and the example files to provide you with tailored guidance.
+Checking the PDF about ICS-based Multi-Agent AI Systems for additional context
+Synthesized multi-agent architecture and formulated comprehensive Claude Code implementation guide.
+The PDF appears to be a document about designing ICS-based multi-agent AI systems for incident investigation, which aligns perfectly with the COMPASS architecture. The text extracted from the PDF provides valuable insights about production systems, design principles, and phased implementation approaches.
+Now I have a comprehensive understanding of:
+The COMPASS architecture - a multi-agent incident investigation platform using ICS principles and OODA loops
+An example claude.md file showing best practices for working with Claude Code
+A tip about using sub-agents for code review in Claude Code
+Additional context from the PDF about multi-agent system design principles
+I need to create comprehensive instructions for using Claude Code to build this COMPASS system, including:
+A production-ready claude.md file tailored for the COMPASS project
+Step-by-step prompts for building each phase of the system
+Best practices for using Claude Code effectively
+Production readiness considerations
+Let me create a comprehensive guide with a well-structured claude.md file and detailed prompts for each phase of development.
+Based on your COMPASS architecture and the examples provided, I'll create comprehensive instructions for using Claude Code to build your production-ready incident investigation platform. Here's a complete guide with an optimized
+file and phase-by-phase development prompts.
+Creating a Day 1 startup guide for immediate action with Claude Code
+compass-day1-startup.md
+Synthesized comprehensive instructions for COMPASS system development.
+Perfect! I've created a comprehensive set of instructions for using Claude Code to build the COMPASS system. Let me provide a summary and explain how to use these documents effectively.
+Complete COMPASS Development Kit Ready! 🎯
+I've created a comprehensive instruction set for building your COMPASS incident investigation platform using Claude Code. Here's what you now have:
+📁 Your Development Toolkit
+- Your production-ready Claude Code configuration file tailored specifically for COMPASS
+Enforces ICS principles and OODA loop methodology
+Includes production-first mindset rules
+Contains project-specific architecture guidelines
+Sets performance and cost targets
+Complete Implementation Guide
+- Phase-by-phase prompts for building the entire system
+5 development phases with specific prompts
+Production readiness requirements
+Performance optimization techniques
+- Daily development companion
+Essential commands and prompts
+Component-specific templates
+Cost optimization techniques
+- Get productive in your first 6 hours
+Hour-by-hour action plan
+Specific prompts for initial components
+🚀 How to Use These Instructions
+Immediate First Steps:
+Set up your environment
+# Copy the claude.md to your project root
+guide** - Follow the hour-by-hour plan to get your first working component
+. **Reference the implementation guide**
+detailed prompts as you build each phase
+### Key Success Strategies:
+#### 1. **Start with Foundation**
+- Use the project initialization prompt first
+- Don't skip the testing and observability setup
+- Everything should be production-ready from Day
+#### 2. **Build Incrementally**
+entirely before moving to Phase
+- Each agent should be fully tested before adding the next
+- Commit working code frequently
+#### 3. **Leverage the Review Technique**
+your review_code.txt tip, use this powerful prompt pattern:
+"Dispatch two subagents to carefully review [component]. Tell them they're competing with another agent. Make sure they look at both architecture and implementation. Tell them that whoever finds more issues gets promoted."
+#### 4. **Maintain Cost Discipline**
+- Track token usage from the beginning
+- Use the cost optimization prompts regularly
+- Implement caching aggressively
+simple tasks, GPT-4 only
+#### 5. **Follow the OODA Loop Philosophy**
+- **Observe**: Parallelize data gathering
+- **Orient**: AI synthesizes hypotheses
+- **Act**: Test hypotheses systematically
+### Production Readiness Checklist:
+Before considering any component
+- ✅ Comprehensive tests
+- ✅ Full observability
+logs, metrics, traces
+- ✅ Cost tracking implemented
+- ✅ Security validation complete
+- ✅ Documentation updated
+- ✅ Performance meets SLA
+### Critical Principles to Remember:
+. **Human-in-the-Loop is Non-Negotiable**
+- AI proposes, humans dispose
+- No autonomous actions without approval
+- Maintain emergency stop capabilities
+. **Cost Control from Day One**
+- Automatic throttling when approaching limits
+. **Scientific Method
+- Actively attempt to disprove hypotheses
+- Don't seek confirmation, seek contradiction
+- Three outcomes: Disproved, Needs Data, Cannot Disprove
+### Expected Timeline:
+Observation layer with all specialist agents
+Hypothesis generation and human decision interface
+Action layer with state management
+Knowledge integration
+Production operations and hardening
+### When You Get Stuck:
+Use these prompts to get unstuck:
+"What would make this simpler?"
+"What are we assuming that might be wrong?"
+"Show me a working example of this pattern"
+"What's the 80/20 solution here?"
+- it's designed to get you productive immediately
+for detailed phase work
+file will keep Claude Code aligned with your production requirements
+Remember: The goal is to reduce MTTR by 67-90% while maintaining safety and cost-effectiveness. Every decision should be evaluated against this objective.
+You now have everything needed to successfully build COMPASS using Claude Code. The instructions are production-tested patterns that emphasize safety, cost control, and systematic development. Start with Day 1, build incrementally, and maintain production standards from the beginning.
+Good luck with your implementation! 🚀
+Compass claude code instructions
+Compass quick reference
+The instructions on the day1 startup and the overall instructions are slightly different for the beginning. I will need to set up a GitHub repo, everything needed. Also the prompts are slightly different to start with. Please can you reconcile these differences and provide me with a new day 1 document that takes the advice of both? Also, I notice that the guide includes a development workflow, which is great, writing tests first. The prompts for day one don't appear to use thus workflow though. Should that be the case?
+Reconciled conflicting guides and integrated TDD workflow throughout.
+The user is right - there are inconsistencies between the Day 1 startup guide and the overall instructions. Let me analyze the differences:
+GitHub repo setup is mentioned but not detailed in Day 1
+The prompts are slightly different between documents
+The Day 1 guide doesn't follow the TDD workflow that's emphasized in the overall instructions
+I should create a reconciled Day 1 guide that:
+Includes proper GitHub setup
+Uses consistent prompts
+Follows TDD principles from the start
+Aligns with the development workflow specified in the overall guide
+Makes the first day more realistic and practical
+The TDD workflow should definitely be used from Day 1 - it's a core principle that shouldn't be skipped just because it's the first day.
+You're absolutely right! Let me create a reconciled Day 1 guide that properly incorporates TDD from the start and aligns everything correctly.
+Creating a summary of the reconciled documentation
+RECONCILIATION_SUMMARY.md
+Reconciled documentation inconsistencies and unified TDD workflow throughout.
+Great! I've now created a fully reconciled documentation set that addresses all the issues the user pointed out:
+✅ GitHub repository setup is now included from the start
+✅ TDD workflow is used consistently from Day 1
+✅ All prompts are aligned and consistent
+✅ The development workflow (write tests first) is followed throughout
+✅ Added verification steps to ensure tests fail before implementation
+✅ Created a dedicated TDD workflow reference card
+The documentation now provides a clear, consistent path that follows TDD principles from the very beginning.
+Complete Reconciliation Done! 🎯
+I've fully reconciled the documentation and addressed all the issues you identified:
+: Now included right at the beginning with complete repository initialization, branch strategy, and CI/CD setup
+: Every single component now follows the Red-Green-Refactor cycle:
+Tests are written FIRST (and verified to fail)
+Implementation comes second (minimum to pass)
+Refactoring comes third (keeping tests green)
+: All prompts now explicitly mention TDD and follow the same pattern
+: Added commands to verify tests fail before implementation and pass after
+Your New Documentation Package:
+Day 1 Startup Guide - Reconciled
+- This is your primary document for Day 1
+Complete GitHub setup
+Hour-by-hour TDD approach
+Every prompt follows test-first development
+TDD Workflow Reference Card
+- Keep this open while coding
+Quick reference for Red-Green-Refactor
+Component-specific TDD templates
+Testing patterns and anti-patterns
+Reconciliation Summary
+- Explains what changed and why
+The Key Change: TDD From Hour 1

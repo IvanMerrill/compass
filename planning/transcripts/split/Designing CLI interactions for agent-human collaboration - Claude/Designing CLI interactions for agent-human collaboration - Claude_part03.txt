@@ -1,0 +1,203 @@
+# Part 3/5
+# Lines 401-600 of 892
+
+AdaptiveResponseFormatter
+InvestigationStateManager
+HumanDecisionRecorder
+EnterpriseKnowledgeBase
+LearningCaptureSystem
+2.2 Component Interaction Flow
+[Conversation Manager]
+[Orchestrator Client]
+3. Input Processing System
+3.1 Multi-Modal Input Handler
+"""Represents any form of user input"""
+# "Help, product-service is down!"
+# "compass investigate --service product"
+# Button clicks, menu selections
+# Follow-up to previous interaction
+Processes all forms of user input
+Maintains context across interaction modes
+# Clean and normalize input
+# Extract context markers
+_extract_context_markers
+# Handle urgent markers
+_contains_urgency_markers
+INVESTIGATE_IMMEDIATE
+"""Check for panic/urgent language"""
+3.2 Intent Classification System
+"""All possible user intents"""
+"investigate_specific"
+"explanation_request"
+ML-based intent classification with fallback patterns
+Uses fine-tuned model for conversation classification
+# Try ML classification first
+# Fall back to pattern matching for ambiguous cases
+# Use context to disambiguate
+4. Conversation Management
+4.1 Adaptive Conversation Engine
+Manages natural language conversations with adaptive complexity
+Maintains context across multi-turn interactions
+clarification_manager
+# Update dialogue state
+# Determine appropriate complexity level
+# Generate response based on intent and complexity
+_handle_investigation_request
+_handle_explanation_request
+_handle_clarification
+# Default response generation
+_generate_contextual_response
+Handle investigation requests with appropriate detail level
+# Start investigation via orchestrator
+# Format response based on complexity
+f"3 hypotheses identified. Highest confidence: "
+f"Feature flag misconfiguration (78%). "
+f"Fix: Roll back flag 'new-checkout'? [yes/no/details]"
+I'll help you investigate the
+Here's what I'm doing:
+1. **Observing**: Gathering metrics, logs, and recent changes
+2. **Hypothesizing**: Forming theories about what could cause this
+3. **Testing**: Systematically validating each hypothesis
+4. **Learning**: Capturing insights for future incidents
+Initial observations:
+• Deployment detected: Feature flag 'new-checkout' at 14:30 UTC
+• Pattern matches 3 previous incidents
+Would you like me to:
+a) Explain what I'm seeing in detail
+b) Just show me the most likely cause
+c) Teach me how to investigate this myself
+"Continue investigation"
+• Started: 14:31 UTC (5 minutes ago)
+• Affected: /api/checkout, /api/payment endpoints
+1. Feature flag 'new-checkout' misconfiguration (78% confidence)
+2. Database connection exhaustion (41% confidence)
+→ Monday pattern, but pools look normal
+3. Payment service degradation (23% confidence)
+→ Checking external dependencies...
+What would you like to focus on, or should I continue investigating all paths?
+"Focus on feature flag"
+"Check all hypotheses"
+"Show me the evidence"
+"What do you recommend?"
+4.2 Complexity Adaptation System
+# Critical incident, experienced user
+# Standard investigation
+# New user or training mode
+# Power user, wants details
+Dynamically adjusts response complexity based on context
+Learns user preferences over time
+# Emergency overrides all other factors
+# New users get learning mode
+# Expert users who've shown preference for details
+average_interaction_depth
+# Adapt based on recent interactions
+# They need more explanation
+adjust_in_conversation
+"""Adjust complexity based on user cues"""
+5. Command Processing System
+5.1 Structured Command Parser
+Parses structured commands for power users
+Provides autocomplete and validation
+_build_command_registry
+"""Register all available commands"""
+# Investigation commands
+TestHypothesisCommand
+CaptureLearningCommand
+Parse structured command with validation
+Example: 'hypothesis add --description "Cache invalidation" --confidence 0.7'
+5.2 Command Execution Engine
+Executes parsed commands with full audit trail
+Integrates with orchestrator and agent system
+# Pre-execution audit
+investigation_context
+# Post-execution audit
+6. Human Decision Capture System
+6.1 Decision Point Model
+Captures complete context when human judgment is required
+Makes human decisions first-class entities for learning
+# Context presented to human
+# Investigation state
+# WHY they made this choice
+# Outcome (filled later)
+additional_data_requested
+"""Convert decision to learning for knowledge base"""
+"Which hypothesis to pursue"
+"Rejecting AI recommendation"
+"Whether to escalate"
+"Approving remediation action"
+INVESTIGATION_DIRECTION
+"Changing investigation strategy"
+"Allocating investigation resources"
+6.2 Decision Capture Interface
+DecisionCaptureInterface
+Rich interface for capturing human decisions with context
+Ensures reasoning is always captured, not just choices
+# Present context clearly
+# Show AI recommendation if available
+_format_ai_recommendation
+"No AI recommendation available"
+# CRITICAL: Capture reasoning
+# Check for agreement with AI
+# If disagreement, capture why
+_capture_disagreement_reason
+_calculate_decision_time
+Ensure we always capture WHY the human made their choice
+This is critical for learning and improvement
+# Adaptive prompts based on decision type
+instead of the AI recommendation.
+What information or experience led you to this decision?
+(This helps us learn and improve the system)
+Brief reasoning (what made this the right choice?):
+# Ensure minimum quality
+Could you elaborate a bit more? Even a sentence or two helps.
+For example: 'Based on past incidents...' or 'The pattern suggests...'
+7. Response Formatting System
+7.1 Adaptive Response Formatter
+Formats responses based on user preferences and context
+Supports multiple output formats while maintaining consistency
+ConversationalFormatter
+# Apply safety checks
+# Format based on type
+# Add interactive elements if appropriate
+_add_interactive_elements
+# Add audit trail reference
+"""Intelligently determine best format"""
+"""Natural, friendly conversation format"""
+format_investigation_status
+and have made good progress.
+Here's what I've found:
+• The issue started at
+theories about the cause
+My best guess right now is
+Should I focus on this, or would you like to explore other possibilities?
+"""Clear, organized structure for those who prefer it"""
+## Investigation Status:
+### Hypotheses (Ranked by Confidence)
+### Recommended Action
+[Approve] [Modify] [Investigate Further]
+"""Terse, action-focused for critical incidents"""
+estimated_recovery_time
+8. Audit and Transparency System
+8.1 Comprehensive Audit Logger
+Records every interaction with complete context
+Ensures full traceability for compliance and learning
+# Encrypt sensitive data
+# Store with redundancy
+# Real-time streaming for monitoring
+generate_audit_report
+"""Generate human-readable audit report"""
+8.2 Transparency Interface
+TransparencyInterface
+Makes AI reasoning and decision-making visible to users
+Builds trust through explainability
+"""Explain why AI reached this conclusion"""
+confidence_calculation
+alternative_explanations
+_explain_alternatives
+show_investigation_tree
+InvestigationVisualization
+"""Show complete investigation path including dead ends"""
+_format_hypothesis_path
+_format_abandoned_path
+_format_decision_point
+9. Safety and Culture System

@@ -1,0 +1,203 @@
+# Part 3/4
+# Lines 401-600 of 689
+
+-f docker-compose.test.yml down
+Hour 4: TDD for First Agent
+Step 12: Write Agent Tests First (20 minutes)
+TDD Prompt #6 - Agent Tests:
+Following TDD, write comprehensive FAILING tests for the base agent and ApplicationAgent.
+Create tests/unit/agents/test_base.py that tests:
+1. Abstract methods must be implemented by subclasses
+2. Timeout enforcement (30 seconds default)
+3. Token usage tracking for cost management
+4. Structured output format validation
+7. Graceful degradation on partial failures
+Create tests/unit/agents/test_application_agent.py that tests:
+2. Identifies anomaly spikes in logs
+4. Returns observations with confidence scores
+5. Handles empty results gracefully
+6. Respects token budget limits
+7. Includes source attribution
+Create tests/integration/agents/test_application_agent.py for integration tests:
+1. Full execution with real Loki instance
+2. Parallel execution with other agents
+3. Performance under 30 seconds
+4. Cost tracking accuracy
+All tests should fail initially.
+Step 13: Implement Base Agent and ApplicationAgent (30 minutes)
+TDD Prompt #7 - Agent Implementation:
+Implement agents to make all tests pass:
+1. Create compass/agents/base.py:
+- BaseAgent abstract class with observe(), analyze(), report() methods
+- Timeout handling using asyncio.wait_for
+- Token usage tracking using tiktoken
+- Cost calculation based on model pricing
+- Retry logic with backoff
+- Structured output using Pydantic models
+- OpenTelemetry instrumentation
+2. Create compass/agents/workers/application_agent.py:
+- ApplicationAgent inheriting from BaseAgent
+- Integration with LokiIntegration
+- Anomaly spike identification
+- Confidence scoring algorithm
+- Source attribution for all findings
+3. Create compass/agents/models.py:
+- Pydantic models for observations
+- Validation of agent outputs
+- Serialization helpers
+Focus on passing tests with clean, simple code. We can optimize later.
+Step 14: Test and Refactor (10 minutes)
+# Run all agent tests
+pytest tests/unit/agents/ -v
+pytest tests/integration/agents/ -v
+compass.agents tests/
+# Refactor if needed, keeping tests green
+Hour 5: TDD for Parallel Execution
+Step 15: Write Parallel Coordinator Tests (20 minutes)
+TDD Prompt #8 - Coordinator Tests:
+Write FAILING tests for the parallel execution coordinator following TDD.
+Create tests/unit/core/observe/test_coordinator.py that tests:
+1. Executes multiple agents concurrently
+2. Collects all results within timeout
+3. Handles partial failures gracefully
+4. Respects overall 2-minute timeout
+5. Tracks total token usage across agents
+6. Aggregates observations correctly
+7. Maintains execution order for reproducibility
+8. Cancels remaining agents if budget exceeded
+Create tests/integration/core/observe/test_coordinator.py:
+1. End-to-end execution with multiple real agents
+2. Performance validation (< 2 minutes)
+3. Resource cleanup after execution
+4. Graceful shutdown handling
+Write tests first, verify they fail.
+Step 16: Implement Parallel Coordinator (25 minutes)
+TDD Prompt #9 - Coordinator Implementation:
+Implement the parallel coordinator to pass all tests:
+1. Create compass/core/observe/coordinator.py:
+- ParallelCoordinator class
+- Async execution using asyncio.gather
+- Timeout management for overall execution
+- Token budget enforcement
+- Execution telemetry
+- Graceful cancellation support
+2. Create compass/core/observe/models.py:
+- ObservationResult dataclass
+- AggregatedObservations model
+- Execution metrics tracking
+Keep implementation simple and focused on passing tests.
+Step 17: Integration Test (15 minutes)
+TDD Prompt #10 - Full Integration Test:
+Create a comprehensive integration test that proves our foundation works end-to-end.
+Create tests/e2e/test_observation_phase.py:
+1. Set up test data in Loki
+2. Configure ApplicationAgent with test settings
+3. Execute through ParallelCoordinator
+4. Verify observations are collected correctly
+5. Assert execution time < 2 minutes
+6. Check token usage is tracked accurately
+7. Validate cost calculations
+8. Ensure telemetry is emitted
+This test proves Phase 1 foundation is solid.
+Hour 6: Production Readiness & Documentation
+Step 18: Add Cost Control and Monitoring (20 minutes)
+TDD Prompt #11 - Cost Control Tests:
+Write tests for comprehensive cost control, then implement:
+Create tests/unit/monitoring/test_cost_tracker.py testing:
+1. Accurate token counting for different models
+2. Cost calculation based on current pricing
+3. Budget enforcement with hard stops
+4. Cost allocation by component
+5. Persistent metrics storage
+6. Alert triggering on threshold
+Then implement compass/monitoring/cost_tracker.py to pass tests.
+Include integration with OpenTelemetry metrics.
+Step 19: Add Observability (20 minutes)
+TDD Prompt #12 - Observability Setup:
+Set up comprehensive observability:
+1. Create compass/monitoring/telemetry.py:
+- OpenTelemetry configuration
+- Structured logging setup with structlog
+- Correlation ID injection
+- Trace context propagation
+- Custom span attributes for agents
+2. Create compass/monitoring/metrics.py:
+- Prometheus metrics for agent performance
+- Cost tracking metrics
+- Investigation phase metrics
+- Custom dashboards configuration
+3. Update docker-compose.yml:
+- Add Jaeger for tracing
+- Add Prometheus for metrics
+- Configure Grafana with dashboards
+Write tests first to verify telemetry is emitted correctly.
+Step 20: Documentation and Review (20 minutes)
+Documentation Prompt:
+Update all documentation based on our Day 1 progress:
+1. Update README.md with:
+- Current implementation status
+- Setup and run instructions
+- Test execution guide
+- Architecture decisions made
+- Performance benchmarks achieved
+2. Create CONTRIBUTING.md with:
+- TDD workflow requirements
+- Code review checklist
+- Performance targets
+3. Create docs/DAY1_LEARNINGS.md with:
+- Challenges encountered
+- Performance metrics
+- Tomorrow's priorities
+Dispatch two subagents to review all code from Day 1. Tell them they're competing to find the most critical issues. Focus on:
+1. Test coverage gaps
+2. Production readiness issues
+3. Performance bottlenecks
+4. Security vulnerabilities
+5. Cost optimization opportunities
+6. Architecture decisions that won't scale
+Whoever finds more issues gets promoted. Be thorough and harsh.
+Final Commit and Push (10 minutes)
+# Run full test suite
+"[PHASE-1] Day 1: TDD foundation with working observation phase
+- MCP abstraction with full test coverage
+- Loki integration with integration tests
+- ApplicationAgent with cost tracking
+- Parallel execution coordinator
+- Cost control and monitoring
+- Comprehensive documentation
+- Observation phase: <2 minutes
+- Cost per observation:
+- All tests passing (47 total)"
+"Phase 1: Day 1 Foundation"
+"TDD implementation of observation phase foundation"
+Day 1 Success Checklist
+TDD: Wrote tests BEFORE implementation for every component
+All tests passing with >90% coverage
+Every component has unit and integration tests
+Code reviewed by Claude subagents
+Documentation updated
+Technical Achievements:
+MCP abstraction layer working
+Loki integration with real queries
+ApplicationAgent collecting observations
+Parallel execution under 2 minutes
+Cost tracking implemented
+Telemetry and monitoring active
+Docker compose environment working
+Production Readiness:
+Circuit breakers implemented
+Retry logic with backoff
+Resource cleanup verified
+Security considerations addressed
+Performance targets met
+Tomorrow's Plan (Following TDD)
+Morning: Complete Specialist Agents
+For each agent (Database, Network, Infrastructure, Tracing):
+1. Write comprehensive tests first
+2. Run tests to verify they fail
+3. Implement minimum code to pass
+4. Refactor while keeping tests green
+Afternoon: Complete Integrations
+For each integration (Mimir, Tempo, Grafana):
+1. Write integration tests first
+2. Implement against the tests

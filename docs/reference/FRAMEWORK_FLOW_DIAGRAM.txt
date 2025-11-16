@@ -1,0 +1,317 @@
+
+COMPASS SCIENTIFIC FRAMEWORK: COMPLETE FLOW DIAGRAM
+════════════════════════════════════════════════════════════════════════════════
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         INCIDENT DETECTED                                     │
+│                  PagerDuty / Monitoring / Manual                              │
+└────────────────────────────────┬─────────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      COMPASS ORCHESTRATOR                                     │
+│  • Loads incident context (symptoms, affected systems, timeline)              │
+│  • Initializes specialist agents based on symptoms                            │
+│  • Sets budgets based on severity (Sev1: $50k tokens, Sev2: $30k, etc.)     │
+│  • Starts parallel investigation (OODA Loop: OBSERVE phase)                   │
+└────────────────────────────────┬─────────────────────────────────────────────┘
+                                 │
+                 ┌───────────────┴───────────────┐
+                 │   Parallel Agent Execution    │
+                 │      (sub-2-minute target)    │
+                 └───────────────┬───────────────┘
+                                 │
+     ┌───────────────────────────┼───────────────────────────┐
+     │                           │                           │
+     ▼                           ▼                           ▼
+┌─────────┐              ┌──────────┐              ┌─────────────┐
+│Database │              │ Network  │              │Application  │
+│ Agent   │              │  Agent   │              │   Agent     │
+└────┬────┘              └─────┬────┘              └──────┬──────┘
+     │                          │                          │
+     │  Each agent follows same scientific process:        │
+     │                                                      │
+     └──────────────────────────┼──────────────────────────┘
+                                │
+                                ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│              SCIENTIFIC INVESTIGATION PROCESS (Per Agent)                     │
+│                                                                               │
+│  STEP 1: OBSERVE & GATHER DATA                                               │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │ Execute Investigation Steps (all audited):                          │     │
+│  │                                                                      │     │
+│  │ step = agent.execute_investigation_step(                            │     │
+│  │     action=InvestigativeAction.MEASURE,                             │     │
+│  │     purpose="Check connection pool utilization",                    │     │
+│  │     expected_outcome="Pool >80% if exhausted",                      │     │
+│  │     method="Query Prometheus pg_stat_database",                     │     │
+│  │     data_sources=["prometheus"],                                    │     │
+│  │     execution_func=query_prometheus                                 │     │
+│  │ )                                                                    │     │
+│  │                                                                      │     │
+│  │ Records: purpose, method, expected, actual, cost, success           │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
+│                                                                               │
+│  STEP 2: GENERATE HYPOTHESES                                                 │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │ Based on observations, generate testable hypotheses:                │     │
+│  │                                                                      │     │
+│  │ hypothesis = agent.generate_hypothesis(                             │     │
+│  │     statement="Connection pool exhaustion causing timeouts",        │     │
+│  │     initial_confidence=0.7,                                          │     │
+│  │     affected_systems=["api-service", "database"],                   │     │
+│  │     generated_from=observation.id                                   │     │
+│  │ )                                                                    │     │
+│  │                                                                      │     │
+│  │ Each hypothesis is:                                                 │     │
+│  │   ✓ Specific and testable                                           │     │
+│  │   ✓ Linked to evidence                                              │     │
+│  │   ✓ Scoped to affected systems                                      │     │
+│  │   ✓ Assigned initial confidence                                     │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
+│                                                                               │
+│  STEP 3: VALIDATE HYPOTHESIS (The Key Innovation)                            │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │ validated = agent.validate_hypothesis(hypothesis)                   │     │
+│  │                                                                      │     │
+│  │ Sub-step 3a: Generate Disproof Strategies                           │     │
+│  │ ┌──────────────────────────────────────────────────────────────┐   │     │
+│  │ │ strategies = agent.generate_disproof_strategies(hypothesis)   │   │     │
+│  │ │                                                                │   │     │
+│  │ │ Returns prioritized list:                                     │   │     │
+│  │ │ 1. temporal_contradiction (priority: 0.95)                    │   │     │
+│  │ │    "Does timing make sense?"                                  │   │     │
+│  │ │ 2. connection_metrics_contradiction (priority: 0.95)          │   │     │
+│  │ │    "Are connection metrics actually high?"                    │   │     │
+│  │ │ 3. correlation_check (priority: 0.85)                         │   │     │
+│  │ │    "Do symptoms correlate with suspected cause?"              │   │     │
+│  │ │ 4. scope_verification (priority: 0.75)                        │   │     │
+│  │ │    "Does this explain all affected systems?"                  │   │     │
+│  │ │ 5. alternative_explanation (priority: 0.65)                   │   │     │
+│  │ │    "Is there a simpler cause?"                                │   │     │
+│  │ └──────────────────────────────────────────────────────────────┘   │     │
+│  │                                                                      │     │
+│  │ Sub-step 3b: Filter to Feasible Strategies                          │     │
+│  │ ┌──────────────────────────────────────────────────────────────┐   │     │
+│  │ │ feasible = agent.filter_feasible_strategies(strategies)       │   │     │
+│  │ │                                                                │   │     │
+│  │ │ Checks: Do we have required data sources?                     │   │     │
+│  │ │ Example: "connection_metrics_contradiction" needs:            │   │     │
+│  │ │   - prometheus ✓ (available)                                 │   │     │
+│  │ │   - connection_metrics ✓ (available)                          │   │     │
+│  │ │   → Strategy is FEASIBLE                                      │   │     │
+│  │ └──────────────────────────────────────────────────────────────┘   │     │
+│  │                                                                      │     │
+│  │ Sub-step 3c: Execute Disproof Attempts                              │     │
+│  │ ┌──────────────────────────────────────────────────────────────┐   │     │
+│  │ │ for strategy in feasible_strategies:                          │   │     │
+│  │ │     if budget_exceeded(): break                               │   │     │
+│  │ │                                                                │   │     │
+│  │ │     attempt = agent.attempt_disproof(hypothesis, strategy)    │   │     │
+│  │ │                                                                │   │     │
+│  │ │     Example attempt:                                          │   │     │
+│  │ │     ┌────────────────────────────────────────────────────┐   │   │     │
+│  │ │     │ Strategy: connection_metrics_contradiction         │   │   │     │
+│  │ │     │ Expected if true: "Pool utilization >80%"          │   │   │     │
+│  │ │     │ Method: Query Prometheus pg_stat_database          │   │   │     │
+│  │ │     │                                                     │   │   │     │
+│  │ │     │ Observed: "Pool utilization: 45%"                  │   │   │     │
+│  │ │     │ Disproven: TRUE                                    │   │   │     │
+│  │ │     │ Reasoning: "Pool had significant spare capacity"   │   │   │     │
+│  │ │     │ Cost: {time_ms: 250, tokens: 120}                  │   │   │     │
+│  │ │     └────────────────────────────────────────────────────┘   │   │     │
+│  │ │                                                                │   │     │
+│  │ │     if attempt.disproven:                                      │   │     │
+│  │ │         hypothesis.status = DISPROVEN                          │   │     │
+│  │ │         break  # Don't waste time on disproven hypothesis      │   │     │
+│  │ │     else:                                                       │   │     │
+│  │ │         hypothesis.add_disproof_attempt(attempt)               │   │     │
+│  │ │         # Surviving test increases confidence                  │   │     │
+│  │ └──────────────────────────────────────────────────────────────┘   │     │
+│  │                                                                      │     │
+│  │ Sub-step 3d: Calculate Final Confidence                             │     │
+│  │ ┌──────────────────────────────────────────────────────────────┐   │     │
+│  │ │ confidence = (                                                │   │     │
+│  │ │     initial_confidence * 0.3 +                                │   │     │
+│  │ │     evidence_score * 0.7 +                                    │   │     │
+│  │ │     disproof_survival_boost                                   │   │     │
+│  │ │ )                                                              │   │     │
+│  │ │                                                                │   │     │
+│  │ │ where:                                                         │   │     │
+│  │ │   evidence_score = weighted by quality                        │   │     │
+│  │ │     Direct evidence: weight 1.0                               │   │     │
+│  │ │     Corroborated: weight 0.9                                  │   │     │
+│  │ │     Indirect: weight 0.6                                      │   │     │
+│  │ │     Circumstantial: weight 0.4                                │   │     │
+│  │ │     Weak: weight 0.2                                          │   │     │
+│  │ │                                                                │   │     │
+│  │ │   disproof_survival_boost = min(0.3, attempts * 0.05)        │   │     │
+│  │ │     Each survived test adds up to 5% confidence               │   │     │
+│  │ └──────────────────────────────────────────────────────────────┘   │     │
+│  │                                                                      │     │
+│  │ Sub-step 3e: Determine Status                                       │     │
+│  │ ┌──────────────────────────────────────────────────────────────┐   │     │
+│  │ │ if hypothesis.disproven:                                      │   │     │
+│  │ │     status = DISPROVEN                                        │   │     │
+│  │ │     # Track for learning, don't present to human             │   │     │
+│  │ │                                                                │   │     │
+│  │ │ elif confidence >= min_threshold (0.6):                      │   │     │
+│  │ │     status = VALIDATED                                        │   │     │
+│  │ │     # Present to human with full evidence trail              │   │     │
+│  │ │                                                                │   │     │
+│  │ │ else:                                                          │   │     │
+│  │ │     status = REQUIRES_HUMAN                                   │   │     │
+│  │ │     # Borderline case - let human decide                     │   │     │
+│  │ └──────────────────────────────────────────────────────────────┘   │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
+│                                                                               │
+│  STEP 4: GENERATE AUDIT TRAIL                                                │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │ Every element is recorded:                                          │     │
+│  │   • Investigation steps (purpose, method, outcome, cost)            │     │
+│  │   • Hypotheses (statement, confidence evolution, status)            │     │
+│  │   • Evidence (source, data, quality, interpretation)                │     │
+│  │   • Disproof attempts (strategy, expected, observed, reasoning)     │     │
+│  │                                                                      │     │
+│  │ audit = agent.generate_audit_trail()                                │     │
+│  │ narrative = agent.export_investigation_narrative()                  │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────────┘
+                                │
+                                │ Each agent returns:
+                                │ • Validated hypotheses
+                                │ • Disproven hypotheses
+                                │ • Complete audit trail
+                                │
+                                ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                     COORDINATOR / CONSENSUS                                   │
+│  • Collects results from all agents                                          │
+│  • Resolves conflicts between agent hypotheses                               │
+│  • Ranks hypotheses by confidence                                            │
+│  • Prepares presentation for human                                           │
+└────────────────────────────────┬─────────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                   HUMAN DECISION POINT                                        │
+│                                                                               │
+│  UI displays:                                                                 │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │ VALIDATED HYPOTHESES (Sorted by confidence)                         │     │
+│  │                                                                      │     │
+│  │ 1. Network latency spike to database (Confidence: 0.87) ⭐          │     │
+│  │    Supporting Evidence:                                             │     │
+│  │    • ✓ Prometheus: Latency +400% (Direct, confidence: 0.9)         │     │
+│  │    • ✓ Only DB affected, API normal (Corroborated, conf: 0.85)     │     │
+│  │    • ✓ Temporal: Spike 3s before timeouts (Direct, conf: 0.9)      │     │
+│  │    Disproof Attempts Survived: 4/4                                  │     │
+│  │    [View Evidence Trail] [Investigate Further] [Implement Fix]     │     │
+│  │                                                                      │     │
+│  │ 2. Database query queue buildup (Confidence: 0.65)                  │     │
+│  │    Supporting Evidence:                                             │     │
+│  │    • ✓ Queue depth +10x (Indirect, confidence: 0.7)                │     │
+│  │    • ✓ Correlates with latency (Indirect, conf: 0.65)              │     │
+│  │    Note: Likely secondary effect of #1                              │     │
+│  │    [View Evidence Trail] [Investigate Further]                      │     │
+│  │                                                                      │     │
+│  │ DISPROVEN HYPOTHESES (What we ruled out)                            │     │
+│  │                                                                      │     │
+│  │ ✗ Connection pool exhaustion                                        │     │
+│  │   Disproven by: Pool utilization 45% (expected >80%)                │     │
+│  │   [View Details]                                                     │     │
+│  │                                                                      │     │
+│  │ ✗ Slow query degradation                                            │     │
+│  │   Disproven by: Query performance unchanged (<5% variance)          │     │
+│  │   [View Details]                                                     │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
+│                                                                               │
+│  Human chooses: "Route traffic to backup database"                           │
+└────────────────────────────────┬─────────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    MITIGATION & RESOLUTION                                    │
+│  OODA continues: ORIENT → DECIDE → ACT                                       │
+│  AI assists, human directs                                                    │
+└────────────────────────────────┬─────────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    POST-MORTEM GENERATION                                     │
+│  Automatic generation from complete audit trail                              │
+│                                                                               │
+│  Generated sections:                                                          │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │ 1. Executive Summary                                                │     │
+│  │    • Impact, duration, root cause                                   │     │
+│  │    • Key metrics (MTTR, affected requests, confidence)              │     │
+│  │                                                                      │     │
+│  │ 2. Timeline (auto-generated from investigation steps)               │     │
+│  │    10:14:58 - Latency begins increasing                             │     │
+│  │    10:15:00 - First timeout detected                                │     │
+│  │    10:15:25 - Connection pool hypothesis disproven                  │     │
+│  │    10:15:40 - Network latency hypothesis validated (0.87)           │     │
+│  │    10:16:00 - Human decision: Route to backup                       │     │
+│  │                                                                      │     │
+│  │ 3. Investigation Process (with evidence)                            │     │
+│  │    • Validated hypotheses (with confidence reasoning)               │     │
+│  │    • Disproven hypotheses (what we learned)                         │     │
+│  │    • Evidence chain for root cause                                  │     │
+│  │                                                                      │     │
+│  │ 4. Root Cause Analysis (traceable to evidence)                      │     │
+│  │    • Why it happened                                                │     │
+│  │    • Why it wasn't detected earlier                                 │     │
+│  │    • Why diagnosis was rapid                                        │     │
+│  │                                                                      │     │
+│  │ 5. Action Items (auto-generated from gaps)                          │     │
+│  │    • Prevent recurrence                                             │     │
+│  │    • Improve detection                                              │     │
+│  │    • Process improvements                                           │     │
+│  │                                                                      │     │
+│  │ 6. What Went Well                                                   │     │
+│  │    • Fast diagnosis (disproved 5 hypotheses in 90s)                 │     │
+│  │    • Complete audit trail                                           │     │
+│  │    • Learning from failures                                         │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
+│                                                                               │
+│  Output formats:                                                              │
+│    • Markdown (for Confluence/GitHub)                                        │
+│    • JIRA tickets (action items)                                             │
+│    • Slack summary (stakeholder update)                                      │
+│    • JSON (for analysis/ML training)                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════════
+
+KEY PRINCIPLES ENFORCED AT EVERY STEP:
+
+✓ Every action has stated purpose
+✓ Every hypothesis is testable and falsifiable
+✓ Every conclusion is traceable to evidence
+✓ Every investigation step is auditable
+✓ Uncertainty is quantified, not hidden
+✓ Disproven hypotheses are tracked (learning!)
+✓ Humans make decisions, AI provides evidence
+
+METRICS TRACKED:
+
+• Time to validated hypothesis: <2 minutes (target)
+• Disproof efficiency: How many false leads eliminated
+• Confidence accuracy: Do high-confidence hypotheses pan out?
+• Cost per incident: Tokens and time spent
+• Human satisfaction: Did investigation help or confuse?
+
+EXTENSIBILITY:
+
+New agent in ~1 day:
+1. Copy template
+2. Define domain-specific disproof strategies
+3. Implement test functions
+4. Write tests
+5. Configure and deploy
+
+═══════════════════════════════════════════════════════════════════════════════
+
+This is COMPASS: Not just faster incident response, but SCIENTIFIC incident response.

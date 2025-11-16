@@ -1,0 +1,203 @@
+# Part 3/4
+# Lines 401-600 of 767
+
+_run_agent_with_timeout
+# Wait for all agents to complete
+# Rank hypotheses by confidence
+# Update investigation
+f"Investigation complete:
+hypotheses generated"
+"""Run agent with timeout"""
+'observation_timeout_seconds'
+"""Select which agents to use based on symptoms"""
+# For MVP, use all available agents
+"""Get time range for investigation"""
+# Last 30 minutes by default
+"""Test a specific hypothesis"""
+# Test the hypothesis
+Run these tests to confirm Week 1 is complete:
+# tests/test_week1.py
+"""Mock agent for testing"""
+test_orchestrator_parallel_execution
+"""Test orchestrator runs agents in parallel"""
+# Create orchestrator
+# Register multiple agents
+# Start investigation
+You now have the core framework. The foundation is solid. Time to build agents!
+Day 8-10: Database Agent Implementation
+A real specialist agent that can investigate database issues.
+# compass/agents/database_agent.py
+"""Database specialist agent"""
+"""Specialist for database-related issues"""
+# We'll implement this next
+"""Gather database-related observations"""
+# For now, simulate observations
+# Week 3 will add real MCP queries
+# Check connection pool
+"prometheus:pg_stats"
+"Connection pool highly utilized"
+# Check for slow queries
+"15 slow queries in time window"
+# Check lock contention
+"prometheus:pg_locks"
+"Elevated lock contention detected"
+"""Generate database-specific hypotheses"""
+# Analyze observations
+# Generate hypotheses based on observations
+"Database connection pool exhaustion causing timeouts"
+"Increase connection pool size or kill idle connections"
+"Slow queries degrading database performance"
+"Identify and optimize slow queries"
+"Database lock contention blocking transactions"
+"Identify and kill blocking transactions"
+"""Attempt to falsify database hypothesis"""
+# Test connection pool hypothesis
+_test_connection_pool
+# Test slow query hypothesis
+# Test lock contention hypothesis
+"Unable to test hypothesis specifically"
+# Add evidence and update status
+"""Test connection pool hypothesis"""
+# In real implementation, query actual metrics
+"prometheus:pg_connection_history"
+"Connection pool was at 92% capacity with 5.2s average wait"
+"""Test slow query hypothesis"""
+"Found 23 queries taking over 1s, slowest was 8.5s"
+"""Test lock contention hypothesis"""
+"47 exclusive locks with 2 processes waiting"
+Day 11-12: Application Agent
+# compass/agents/application_agent.py
+"""Application specialist agent"""
+"""Specialist for application-level issues"""
+"""Gather application observations"""
+# Response time observation
+"prometheus:latency_p99"
+"P99 latency exceeding SLA"
+"prometheus:memory_usage"
+"High memory usage, potential for OOM"
+"""Generate application-specific hypotheses"""
+# Check for memory pressure
+"Memory pressure causing garbage collection pauses"
+"Increase heap size or optimize memory usage"
+"Check downstream service health"
+"""Test application hypothesis"""
+"15 GC pauses averaging 1.2s each"
+"Generic application evidence"
+Day 13-14: Integration Testing
+# tests/test_agents.py
+"""Test specialist agents"""
+"""Test database agent investigation"""
+"""Test multiple agents working together"""
+# Should have hypotheses from both agents
+You have working agents that can generate and test hypotheses!
+Day 15-17: MCP Integration
+Real integration with observability stack.
+# compass/integrations/mcp_client.py
+"""MCP client for observability integration"""
+"""Client for querying observability stack"""
+"""Query Prometheus for metrics"""
+_parse_prometheus_response
+f"Prometheus query failed:
+"""Parse Prometheus response"""
+"""Query Loki for logs"""
+/loki/api/v1/query_range"
+"""Parse Loki response"""
+# First 10 for sample
+Day 18-19: Update Agents with Real Queries
+# compass/agents/database_agent.py (updated observe method)
+"""Gather database observations from real data"""
+# Real query for connection pool
+# Real query for slow queries
+slow queries detected"
+# Fallback to simulated data
+Day 20-21: Performance Optimization
+# compass/core/performance.py
+"""Performance monitoring and optimization"""
+"""Monitor and optimize performance"""
+"""Measure operation duration"""
+"""Get performance statistics"""
+# Update orchestrator to use performance monitoring
+"""Start investigation with performance monitoring"""
+"total_investigation"
+# ... existing code ...
+"parallel_observation"
+# Log performance stats
+Parallel execution with real data sources is working!
+Day 22-24: Falsification Framework
+# compass/core/falsification.py
+"""Hypothesis falsification framework"""
+"""A test to attempt to disprove a hypothesis"""
+required_data_sources
+"""Engine for attempting to disprove hypotheses"""
+"""Register a falsification test"""
+"""Attempt to falsify a hypothesis"""
+# Find applicable tests
+# If strongly disproven, stop
+# Database-specific falsification tests
+test_connection_pool_saturation
+"""Test if connection pool was actually saturated"""
+# Query historical connection pool metrics
+# Pool wasn't saturated - disprove hypothesis
+"prometheus:connection_pool_history"
+# Pool was saturated - support hypothesis
+Day 25-26: Confidence Scoring
+# compass/core/confidence.py
+"""Confidence scoring and adjustment"""
+"""Calculate and adjust hypothesis confidence"""
+"""Calculate overall confidence from evidence"""
+# Weight evidence by quality
+# Contradicting evidence reduces confidence more strongly
+# Calculate final confidence
+# Clamp between 0 and 1
+adjust_for_correlation
+"""Adjust confidence based on correlation between hypotheses"""
+# If multiple hypotheses point to same root cause, boost confidence
+# If hypotheses contradict each other, reduce confidence
+_calculate_similarity
+# Similar hypotheses - slight boost
+# Contradicting hypotheses - slight reduction
+"""Calculate similarity between hypotheses"""
+# Simple overlap of affected systems
+Day 27-28: Integration Testing
+# tests/test_week4.py
+"""Test hypothesis testing and falsification"""
+test_falsification_engine
+"""Test falsification engine"""
+"Test connection pool"
+# Attempt falsification
+test_confidence_calculation
+"""Test confidence calculation"""
+# Add contradicting evidence
+# Calculate confidence
+# Should be reduced due to contradicting evidence
+Scientific hypothesis testing with falsification is working!
+Day 29-31: CLI Implementation
+# compass/cli/main.py
+"""COMPASS CLI interface"""
+"""COMPASS - AI-Powered Incident Investigation"""
+f"\n[bold cyan]🔍 COMPASS Investigation System[/bold cyan]"
+f"[dim]Investigating:
+"""Run the investigation"""
+# Initialize components
+# Initialize MCP client
+# Start investigation with progress
+"Starting investigation..."
+"🔄 Observing (5 agents in parallel)..."
+"✅ Investigation complete!"
+f"\n[dim]Investigation ID:
+"[dim]Run 'compass status <id>' to check progress[/dim]\n"
+"""Display hypotheses in a table"""
+"\n📊 Generated Hypotheses"
+# Color code confidence
+"""Interactive investigation mode"""
+"\n[bold]Interactive Investigation Mode[/bold]\n"
+"[cyan]Actions:[/cyan]"
+"  1. Test hypothesis"
+"  2. Show observations"
+"  3. Execute mitigation"
+"  4. Generate post-mortem"
+"\n[yellow]Choose action[/yellow]"
+test_hypothesis_interactive
+"Exit investigation?"
+"\n[green]Investigation session ended[/green]"
+"""Test a hypothesis interactively"""

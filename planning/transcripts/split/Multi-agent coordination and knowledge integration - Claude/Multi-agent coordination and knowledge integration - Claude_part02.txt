@@ -1,0 +1,203 @@
+# Part 2/5
+# Lines 201-400 of 831
+
+"""ICS-style hierarchical coordination"""
+# Create command structure
+# Initialize investigation
+# Orchestrator creates investigation plan
+create_investigation_plan
+# Distribute tasks to managers
+# Manager coordinates workers for their task group
+_manager_coordinate_workers
+# Wait for all managers to complete
+# Orchestrator synthesizes results
+"""Blackboard pattern - shared workspace coordination"""
+# Initialize blackboard with incident data
+# Which agent is working on what
+# Agents independently observe blackboard and contribute
+_agent_blackboard_loop
+# Run until convergence or timeout
+_wait_for_convergence
+"[Coordinator] Investigation timeout, gathering results"
+# Build investigation from blackboard
+_build_investigation_from_blackboard
+"""Market-based coordination with task bidding"""
+_decompose_incident_to_tasks
+# Agents bid on tasks
+# Award task to best bidder
+# Execute awarded tasks in parallel
+# Build investigation from task results
+_build_investigation_from_tasks
+"""Manager coordinates workers for a task group"""
+# Manager decomposes task group
+# Assign subtasks to workers
+# Monitor progress with timeout per worker
+f"[Manager] Worker timeout on task"
+# Manager synthesizes worker results
+synthesize_worker_results
+# Update investigation
+4.3.2 Agent Communication Patterns
+"""Types of inter-agent messages"""
+"""Inter-agent communication message"""
+# 1-5, higher is more important
+# For request-response
+"""Asynchronous message bus for agent communication"""
+"""Publish message to bus"""
+# Route to recipient(s)
+# Handle request-response pattern
+"""Send response to a request message"""
+AgentCommunicationMixin
+"""Mixin for agents to handle communication"""
+"""Handle incoming message"""
+_handle_information_share
+_handle_status_update
+"""Request help from other agents"""
+# Wait for responses with timeout
+] No help received in time"
+"""Share finding with other agents"""
+4.4 Handling Failures and Edge Cases
+4.4.1 Failure Detection and Recovery
+"""Handles agent failures and recovery"""
+"""Handle agent failure with appropriate recovery"""
+# Check circuit breaker
+# Circuit is open, don't retry with this agent
+_find_alternative_agent
+# Determine failure type and recovery strategy
+# Retry with exponential backoff
+# Find different agent type
+# Mark agent as failed and find alternative
+"""Find alternative agent for task"""
+# Get list of available agents
+# Filter by capability
+# Select best alternative
+# No alternatives, degrade gracefully
+_create_degraded_task
+"""Circuit breaker pattern for agent failures"""
+# closed, open, half-open
+"""Check if circuit is open"""
+# Check if recovery timeout has passed
+"""Record a failure"""
+f"[CircuitBreaker] Opened after
+"""Record a success"""
+f"[CircuitBreaker] Closed after successful recovery"
+4.4.2 Consensus and Conflict Resolution
+"""Resolves conflicts between agent findings"""
+resolve_hypothesis_conflicts
+"""Resolve conflicts between competing hypotheses"""
+# Group hypotheses by root cause category
+# Multiple hypotheses in same category - need resolution
+_resolve_group_conflict
+"""Resolve conflict within a hypothesis group"""
+# Strategy 1: Weighted voting based on agent expertise
+_can_use_expertise_voting
+_expertise_weighted_vote
+# Strategy 2: Evidence-based resolution
+_have_sufficient_evidence
+_evidence_based_resolution
+# Strategy 3: Statistical consensus
+_statistical_consensus
+# Fallback: Highest confidence
+"""Vote weighted by agent expertise"""
+# Get agent expertise weight for this category
+_get_expertise_weight
+# Select highest voted root cause
+# Return hypothesis with winning root cause
+This completes the knowledge integration, learning system, and multi-agent coordination covering:
+External knowledge source integration (GitHub, Confluence, Slack)
+Knowledge caching and semantic search
+Pattern recognition and learning from incidents
+Human feedback integration
+Multi-agent coordination protocols (hierarchical, blackboard, market-based)
+Inter-agent communication patterns
+Failure handling and recovery strategies
+Consensus building and conflict resolution
+To continue, please prompt me with:
+"Continue with Part 5: Production Deployment, Monitoring, and Optimization"
+This final part will cover:
+Production deployment strategies
+Performance monitoring and observability
+Cost optimization techniques
+Security considerations
+Testing and validation frameworks
+Would you like me to proceed with Part 5 now?
+Continue with Part 5: Production Deployment, Monitoring, and Optimization
+Architected comprehensive deployment guide spanning monitoring, scaling, and operational excellence.
+The user wants me to continue with Part 5 of the COMPASS implementation guide. This is the final part that should cover production deployment, monitoring, and optimization. Based on the established pattern, I need to provide detailed, practical implementation code and guidance for:
+I should maintain the same detailed, code-heavy approach with practical examples that has been used throughout the previous parts.
+Architecture & Implementation Guide - Part 5 of 5
+Continuing from Part 4...
+Part 5: Production Deployment, Monitoring, and Optimization
+5.1 Production Deployment Architecture
+A phased rollout strategy with comprehensive monitoring ensures safe deployment to production.
+5.1.1 Deployment Pipeline
+DeploymentEnvironment
+"""Deployment environments with increasing scope"""
+# Pre-production validation
+# Limited production (5% traffic)
+# Parallel non-impacting run
+"""Production deployment configuration"""
+max_agents_per_incident
+max_cost_per_incident
+max_investigation_time
+require_human_approval
+auto_remediation_enabled
+# Rollout configuration
+incident_type_whitelist
+# low, medium, high, critical
+"""Manages production deployment of COMPASS"""
+"""Load deployment configuration from YAML"""
+"""Deploy to specified environment with safety checks"""
+f"[Deploy] Starting deployment to
+# Pre-deployment checks
+_pre_deployment_checks
+"Pre-deployment checks failed"
+# Update configuration for environment
+_apply_environment_limits
+# Initialize components
+_initialize_components
+# Start with shadow mode if production
+_shadow_mode_validation
+# Progressive rollout
+# Post-deployment validation
+_post_deployment_validation
+"Post-deployment validation failed"
+f"[Deploy] Successfully deployed to
+"""Run pre-deployment safety checks"""
+# Check system health
+# Check resource availability
+# Check previous deployment success rate
+_check_deployment_history
+# Validate configuration
+_validate_configuration
+_run_deployment_tests
+# Check for ongoing incidents
+_check_ongoing_incidents
+"""Progressive rollout with monitoring"""
+# Start with 1% traffic
+# Full rollout for non-production
+f"[Deploy] Rolling out to
+_update_load_balancer
+f"[Deploy] Issues detected at
+% rollout successful"
+"""Run in shadow mode to validate without impact"""
+f"[Deploy] Starting shadow mode validation (
+"investigations_shadowed"
+"performance_metrics"
+# Get next production incident
+# Run shadow investigation
+_run_shadow_investigation
+# Compare with production result
+differs_from_production
+_update_shadow_metrics
+# Validate shadow results
+f"Shadow mode validation failed: too many differences"
+f"[Deploy] Shadow mode validation passed:
+5.1.2 Infrastructure as Code
+InfrastructureProvisioner
+"""Provisions infrastructure for COMPASS deployment"""
+_generate_k8s_manifests
+"""Generate Terraform configuration"""
+# COMPASS Infrastructure - Production
+source  = "hashicorp/aws"
+source  = "hashicorp/kubernetes"
+# EKS Cluster for COMPASS

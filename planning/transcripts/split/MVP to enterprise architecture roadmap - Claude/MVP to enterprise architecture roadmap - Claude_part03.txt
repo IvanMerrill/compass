@@ -1,0 +1,203 @@
+# Part 3/6
+# Lines 401-600 of 1003
+
+Professional services as major revenue stream
+"If it's only ever OSS, that's ok" philosophy reflected
+Added as MVP feature (Section 4.7)
+Clear behaviors for each failure mode
+Learning from failures built in
+Technical Decisions Finalized
+pgvector for vectors (no vendor lock-in)
+Python only (readability over cleverness)
+Kubernetes required with Tilt for DX
+LGTM stack first, expand later
+APM tools as data sources, not competition
+"We make their tools more valuable"
+Clear integration strategy
+Document Strength Assessment:
+What makes this document powerful:
+Unique differentiation is clear
+- Parallel OODA loops are genuinely novel
+Pragmatic business model
+- Open source with clear monetization path
+- CLI, bring-your-own-LLM, Kubernetes native
+- MVP is achievable in 3 months
+- Not just faster investigation, but organizational improvement
+This document now serves as:
+A clear implementation guide for you and Claude Code
+A vision document for potential contributors
+A reference for architectural decisions
+A roadmap that guards against scope creep
+View your updated COMPASS Product Reference Document v1.1
+The document is ready. It captures your vision while keeping you grounded, defines clear boundaries while allowing flexibility where needed, and most importantly - it's implementable. This is your blueprint for changing how the industry approaches incident investigation.
+Compass product reference document v1.1
+Claude can make mistakes.
+Please double-check responses.
+COMPASS Product Reference Document
+Comprehensive Observability Multi-Agent Platform for Adaptive System Solutions
+Product Definition - Ready for Implementation
+Engineering Teams, Architects, Product Owners
+COMPASS is an AI-powered incident investigation platform that transforms how engineers diagnose and learn from production incidents. By orchestrating specialized AI agents following proven Incident Command System (ICS) principles and scientific methodology, COMPASS reduces Mean Time to Resolution (MTTR) by 67-90% while building a culture of continuous learning.
+Unlike traditional observability tools that overwhelm engineers with raw data, COMPASS acts as an intelligent investigation assistant that systematically generates and tests hypotheses, gathering evidence from across the entire observability stack. Every investigation follows scientific rigor with complete audit trails, making the system suitable for SOC2, ISO27001, and other regulatory compliance requirements.
+COMPASS democratizes incident investigation expertise through parallel OODA loop execution. Multiple agents simultaneously test different hypotheses, compressing investigation time while maintaining scientific rigor. A junior engineer can conduct investigations with the thoroughness of a senior SRE, while experienced engineers save hours on routine investigations.
+1.1 The Current Reality
+just gathering initial data across multiple tools
+Domain-specific query languages
+(PromQL, LogQL, TraceQL) create barriers
+between Grafana, Loki, Tempo, Mimir exhausts cognitive capacity
+locked in senior engineers' heads
+Post-mortems take 30-60 minutes
+of documentation work after resolution
+require multiple engineers to resolve
+from extended MTTR (for 100-engineer organizations)
+from root cause analysis focus
+from lack of systematic learning
+1.2 Why Existing Solutions Fall Short
+Present data but don't analyze or hypothesize
+Only works for known patterns
+Still requires expertise to ask right questions
+Creates blame culture, misses systemic issues
+High false positives, no investigation capability
+By combining proven emergency management frameworks (ICS) with modern AI capabilities and scientific methodology, we can create a system that:
+Compresses investigation time
+through parallel hypothesis testing
+Captures and applies organizational knowledge
+Enables learning culture
+through blameless retrospectives
+Democratizes expertise
+across all skill levels
+2. Core Design Principles
+2.1 Human-in-the-Loop (Level 1 Autonomy)
+AI accelerates data gathering and hypothesis generation; humans make all critical decisions.
+Agents can query any observability tool
+Agents generate and rank hypotheses
+Humans select which hypothesis to pursue
+Humans approve all remediation actions
+Emergency stop always available
+Maintains safety, accountability, and regulatory compliance while maximizing speed.
+2.2 Scientific Methodology with Parallel OODA Loops
+Multiple agents execute OODA loops (Observe-Orient-Decide-Act) in parallel, each testing different hypotheses simultaneously.
+5+ specialist agents work in parallel
+Each agent completes full OODA cycles
+Hypotheses tested through falsification
+Evidence tracked for and against each theory
+Results synthesized by orchestrator
+While traditional investigation tests one hypothesis at a time, COMPASS tests 5+ simultaneously - like having a team of senior engineers investigating in parallel.
+2.3 Contributing Causes Over Root Cause
+Incidents have multiple contributing factors across system levels, not single root causes.
+Analyze six system levels (regulatory, organizational, technical management, work environment, human-system interface, equipment/technology)
+Generate Contributing Causes Map
+Focus on system improvements, not individual blame
+Follow Learning Teams methodology (114% more improvement actions than RCA)
+Research shows this approach generates 57% more system-focused improvements.
+2.4 LLM Provider Agnostic
+Bring your own LLM - work with whatever AI provider the enterprise already uses.
+Auto-detect available providers (OpenAI, Azure OpenAI, Anthropic, AWS Bedrock, Copilot)
+Support for any OpenAI-compatible endpoint
+Model routing based on query complexity
+Local models via Ollama for air-gapped environments
+Enterprises have existing AI contracts and compliance requirements. Flexibility removes adoption barriers.
+2.5 Progressive Complexity
+Simple to start, powerful when needed.
+Command-line interface for developer workflow
+Natural language for beginners
+Advanced commands for power users
+Progressive disclosure of information
+Context-aware assistance
+Accessibility drives adoption; power features retain expert users.
+3. Product Architecture Overview
+3.1 Three-Question Framework
+Every investigation systematically answers:
+┌─────────────────────────────────────────┐
+│  1. WHAT is happening?                  │
+│     → Observe symptoms across systems   │
+│     → Identify anomalies                │
+│     → Establish timeline                │
+└──────────────────┬──────────────────────┘
+│  2. WHERE is it happening?              │
+│     → Isolate affected components       │
+│     → Map dependencies                  │
+│     → Determine blast radius            │
+│  3. WHY is it happening?                │
+│     → Generate causal hypotheses        │
+│     → Test through falsification        │
+│     → Identify contributing causes      │
+└─────────────────────────────────────────┘
+3.2 Parallel Agent Execution
+Orchestrator (Incident Commander)
+├── [Parallel OODA Loop Execution]
+│   ├── Database Agent → Hypothesis A
+│   ├── Network Agent → Hypothesis B
+│   ├── Application Agent → Hypothesis C
+│   ├── Infrastructure Agent → Hypothesis D
+│   └── Tracing Agent → Hypothesis E
+└── Synthesis → Ranked hypotheses for human decision
+3.3 Investigation Flow
+Alert or manual start via CLI/Slack
+Parallel Observation:
+All agents gather data simultaneously (<2 minutes)
+Hypothesis Generation:
+Each agent proposes theories
+Select most promising hypothesis
+Attempt to disprove selected hypothesis
+Continue until resolution
+Generate Post-Mortem:
+Automatic documentation
+4. MVP Features (Months 1-3)
+4.1 Core Investigation Engine
+Multi-agent parallel investigation system
+Spawn 5 specialist agents (Database, Network, Application, Infrastructure, Tracing)
+Query LGTM stack via MCP (Loki, Grafana, Tempo, Mimir)
+Execute investigations in <2 minutes for observation phase
+Generate 3-5 ranked hypotheses with confidence scores
+Parallel OODA loop execution across all agents
+Can complete full investigation cycle for P1 incident
+All agents execute OODA loops in parallel
+Hypothesis confidence scores correlate with correctness >70%
+Complete audit log of investigation steps
+Clear differentiation of parallel vs sequential findings
+4.2 Scientific Hypothesis Framework
+Rigorous hypothesis generation and testing
+Generate testable, falsifiable hypotheses
+Track evidence for/against each hypothesis
+Calculate confidence based on survived tests
+Document all paths including disproven ones
+Every hypothesis has clear test criteria
+System actively queries for contradicting evidence
+Confidence scores update based on evidence
+Investigation chronicle shows complete journey
+4.3 Command-Line Interface (Primary)
+Developer-first CLI for investigation control
+Full investigation workflow via CLI
+Tab completion for commands
+Clear output formatting
+Scriptable for automation
+Works in any terminal
+4.4 LLM Provider Flexibility
+Bring-your-own-LLM architecture
+Auto-detect available providers during setup
+Support OpenAI, Azure OpenAI, Anthropic, AWS Bedrock, Copilot
+Configure any OpenAI-compatible endpoint
+Local models via Ollama
+Model routing (simple queries → smaller model, complex → larger)
+Clear cost transparency: Users provide and pay for their own API keys
+Setup wizard detects available LLMs
+Can switch providers without code changes
+Cost estimates shown before investigation
+Works with at least 3 major providers
+Clear documentation on API key configuration
+4.5 Cost Management System
+Transparent tracking and control of AI costs
+Real-time token usage tracking
+Per-investigation budget limits ($5 default)
+Cost attribution by hypothesis/agent
+Automatic optimization for expensive operations
+Users pay for their own LLM tokens via their API keys
+Never exceeds budget without permission
+Cost displayed for every investigation
+Can predict investigation cost before starting
+Optimization reduces costs by >30% over naive approach
+Clear messaging that token costs are user's responsibility
+4.6 Post-Mortem Generation
+Automated post-mortem document creation
+Generate comprehensive post-mortem in <10 minutes

@@ -1,0 +1,203 @@
+# Part 7/8
+# Lines 1201-1400 of 1599
+
+# Disproven by Human - EMPHASIZED
+# Show decision details if available
+"[bold]Investigation Timeline[/]"
+render_human_decisions_summary
+Show summary of human decisions made during investigation
+"[bold]Human Decisions Summary[/]"
+# Create summary table
+# Truncate decision description
+# Show agreement statistics
+[bold]Collaboration Stats:[/]
+- Human-AI agreement:
+"""Find the decision point that selected this hypothesis"""
+6.3 Real-time Updates
+LiveInvestigationView
+Live-updating view of investigation progress
+Uses rich.live for real-time updates
+"""Run live-updating view in terminal"""
+# Split into sections
+# Split body into left and right
+_render_recent_events
+"""Render header with incident info"""
+"""Render current investigation state"""
+[bold]Active Hypotheses:[/]
+"""Render recent timeline events"""
+"""Render footer with controls"""
+"[dim]Press Ctrl+C to exit | Investigation continues in background[/]"
+6.4 Integration Contract
+IInvestigationVisualization
+"""Interface for investigation visualization components"""
+"""Render investigation map showing all paths"""
+"""Render investigation timeline"""
+"""Render summary of human decisions"""
+- Updates chronicle, triggers UI refresh
+Human Decision Points
+- UI pauses for human input, resumes after
+- UI shows final summary with all paths explored
+7. Blameless Retrospective System
+When a human's decision leads to an unexpected outcome (hypothesis disproven, required pivot), we conduct a
+blameless retrospective
+Validates the human's reasoning
+- Shows why it was reasonable given context
+Identifies system factors
+- What information was missing/misleading?
+- What should the system improve?
+- Focus on "what can we learn" not "who was wrong"
+There are no "wrong" decisions, only unexpected outcomes that teach us about system complexity.
+Stored for future pattern recognition
+# How to differentiate
+7.3 Retrospective Analyzer
+CRITICAL: Explain WHY the human's hypothesis was reasonable
+This validates their thinking and focuses on context
+f"AI also recommended this hypothesis with "
+confidence based on: "
+f"Observed symptoms included: "
+# Context at time of decision
+f"had already been ruled out"
+"Given the available information, this hypothesis was reasonable because:\n"
+Identify SYSTEM factors that contributed to unexpected outcome
+f"Pattern recognition: Add '
+f"as confusable with '
+f"distinguish by checking: "
+"Improve explanation: AI was correct but human chose differently. "
+"Better explain AI reasoning to build trust."
+f"Surface critical data: Ensure these are visible: "
+"Create fast disambiguation check for this scenario"
+f"Definitively ruled out '
+f"with symptoms similar to '
+# Helper methods (simplified signatures)
+# Implementation using LLM
+# Calculate time from decision to next decision or resolution
+# Calculate cost of investigating this path
+# Query past incidents database
+# Check if critical data was missing
+# Check if metrics were misleading
+# Check if symptoms could indicate multiple causes
+# Check if relevant docs were missing
+# Get data available at specific time
+# Get data that revealed root cause
+# Use LLM to identify what would have changed decision
+# Generate observability recommendations
+# Generate documentation recommendations
+# Generate process recommendations
+7.4 Optional Human Reflection Interface
+# Guide through reflection
+"""Show the system-focused retrospective, framed positively"""
+# Why it was reasonable (VALIDATE)
+# Value of learning (POSITIVE FRAME)
+"""Guide human through reflection with supportive questions"""
+"\n[bold cyan]Looking back, what information would you want earlier?[/]"
+"[dim]Not 'what did you do wrong' but 'what would have helped?'[/]"
+"[dim]E.g., 'symptoms X and Y together usually mean Z'[/]"
+7.5 Integration Contract
+IRetrospectiveAnalyzer
+"""Interface for retrospective analysis"""
+"""Analyze decision with unexpected outcome"""
+offer_human_reflection
+"""Offer optional human reflection"""
+Post-Investigation Process
+After incident resolved, trigger retrospective analysis
+Analyze all human decisions with unexpected outcomes
+Generate system improvement recommendations
+Store retrospectives in learning database
+Use for pattern recognition
+Feed into AI training data
+Post-Mortem Generator
+Include retrospective insights in post-mortem
+Show learning value of all investigation paths
+8. Learning & Pattern Recognition
+learns from every investigation
+, building a knowledge base of:
+Confusable symptom patterns
+Observability gaps discovered
+Human vs AI decision patterns
+Effective investigation strategies
+8.2 Learning Database
+InvestigationLearning
+Learning extracted from a completed investigation
+# What symptoms appeared
+# What could be confused
+# Investigation effectiveness
+# % of AI hypotheses that were correct
+human_ai_agreement_rate
+# System gaps discovered
+# Effective strategies
+# For future reference
+recommended_first_checks
+Manages learning from investigations
+Provides pattern matching for future incidents
+Extract learning from completed investigation
+_extract_symptom_patterns
+_extract_confusable_scenarios
+_calculate_ai_accuracy
+_collect_observability_gaps
+_collect_documentation_gaps
+_identify_effective_strategies
+_identify_ineffective_strategies
+_generate_first_checks
+_extract_warning_signs
+find_similar_incidents
+Find past incidents with similar symptoms
+Used to inform current investigation
+# Query learning database
+query_learning_by_symptoms
+Extract scenarios where symptoms were confusable
+"confused_hypothesis"
+_find_shared_symptoms
+"distinguishing_factors"
+"""Collect all observability gaps from retrospectives"""
+# Additional helper methods...
+8.3 Integration Contract
+Learning System Integration Points:
+Post-Investigation Hook
+complete_investigation
+"""Called when investigation completes"""
+# Update pattern database
+Pre-Investigation Hook
+"""Called when investigation starts"""
+# Find similar past incidents
+9. Post-Mortem Generation
+9.1 Enhanced Post-Mortem Structure
+The post-mortem now includes:
+Investigation Journey
+- All paths explored, including dead ends
+Human Decisions Analysis
+- Differentiated from AI actions
+- System improvements identified
+Blameless Retrospectives
+- Insights from unexpected outcomes
+Generate learning-focused post-mortems
+Emphasizes investigation process and system improvements
+# 1. Executive Summary
+# 2. Investigation Journey (NEW!)
+# 5. Learning & System Improvements (NEW!)
+_generate_action_items
+Generate investigation journey section
+Shows all paths explored with clear human/AI differentiation
+# Hypotheses Investigated - Grouped by investigator
+# Find related decision
+"**Expertise Applied:**\n"
+# Collaboration Analysis
+Generate learning-focused section
+# Why it seemed reasonable (validate)
+"**System Factors:**\n"
+# Value (positive frame)
+# Human reflection if provided
+"**Engineer's Perspective:**\n"
+# System improvements
+"""Extract reusable patterns"""
+"*No confusable patterns identified.*\n"
+10. Contracts & Integration Points
+10.1 Summary of All Integration Points
+This section consolidates all integration contracts for easy reference.
+10.1.1 Core Interfaces
+# Chronicle Management
+# Hypothesis Generation (Enhanced)
+# NEW: Required parameter
+# Hypothesis Testing (Enhanced)
+# Retrospective Analysis
+10.1.2 Modified Existing Components
+OODALoopController (Modified Constructor):

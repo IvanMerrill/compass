@@ -1,0 +1,203 @@
+# Part 4/6
+# Lines 601-800 of 1003
+
+Include investigation timeline
+Document all hypotheses (including disproven)
+Contributing causes map (not root cause)
+System improvement recommendations
+Markdown/Confluence format export
+Post-mortem includes all required sections
+Human review time <5 minutes
+Follows Learning Teams methodology
+Exportable to Confluence/GitHub
+Shows complete investigation journey
+4.7 Failure Handling & Learning
+Graceful failure with learning capture
+Clear communication when COMPASS can't form hypotheses
+Fallback to data presentation when AI unavailable
+Capture corrections when COMPASS is wrong
+Log unsolved patterns for analysis
+Identify observability gaps
+Every failure mode has defined behavior
+Users can correct wrong conclusions
+Failed investigations still provide value
+Learning system captures failure patterns
+No silent failures or unclear states
+4.8 Deployment Options
+Flexible deployment from laptop to cluster
+Kubernetes deployment with Helm charts
+Local development with Tilt (
+Docker container packaging
+30-minute setup to first investigation
+Works with customer's existing LLM contracts
+starts local environment
+Helm install works on any K8s cluster
+Clear documentation for both modes
+No external dependencies except LLM and observability stack
+Setup wizard guides configuration
+5. Future Features (Post-MVP)
+5.1 Phase 2: Team Collaboration (Months 4-6)
+Shared Knowledge Base
+Team-specific pattern library
+Collaborative post-mortem editing
+Shared investigation views
+Team runbook encoding
+Slack Integration Enhancement
+Start investigations from Slack
+Real-time investigation updates
+Thread-based hypothesis discussion
+Team notification on resolution
+Confluence documentation search
+Kubernetes configuration inspection
+CI/CD pipeline analysis
+5.2 Phase 3: Enterprise Features (Months 7-12)
+Organizational Learning
+Cross-team pattern recognition
+Tribal knowledge aggregation
+Dependency impact analysis
+Organizational metrics dashboard
+Enterprise Requirements
+RBAC with SSO/SAML (paid feature)
+Advanced audit logging (paid feature)
+SLA support contracts (paid feature)
+Multi-tenant isolation
+Extensibility Framework
+Plugin architecture for new agents
+Custom MCP server SDK
+REST API for third-party tools
+5.3 Phase 4: Resilience Engineering (Year 2)
+Build Adaptive Capacity (Not Prediction)
+Chaos engineering integration
+Normal work analysis (work-as-done)
+Resilience metrics tracking
+Capacity and boundary identification
+Recovery pattern library
+Cross-incident pattern clustering
+Automated observability gap detection
+Team capability assessment
+Cultural change metrics
+Junior Engineer (0-2 years)
+Needs: Guidance through investigation process
+Interface: Natural language via CLI
+Value: Conducts senior-level investigations
+Senior Engineer (5+ years)
+Needs: Speed and efficiency
+Interface: CLI with advanced commands
+Value: 70% time savings on routine investigations
+Needs: Fast resolution at 3 AM
+Interface: CLI + Slack integration
+Value: Reduce stress, faster resolution
+Needs: Team learning and metrics
+Interface: Post-mortem reports + dashboards
+Value: Improved team capability, reduced MTTR
+6.2 Primary User Journey (CLI-First)
+# Alert fires, engineer responds
+$ compass investigate payment-service --urgent
+COMPASS: Initiating parallel investigation across
+Live output as agents work
+Database Agent: Checking connection pools
+Network Agent: Analyzing latency patterns
+Infrastructure Agent: Checking resource usage
+. memory pressure detected
+Tracing Agent: Analyzing
+parallel analysis complete
+Database connection pool exhaustion
+Memory pressure causing GC pauses
+Cascading failure from upstream
+COMPASS: Testing hypothesis: Database connection pool exhaustion
+- Checking connection pool metrics
+contradicting evidence
+- Analyzing timing correlation
+. ✓ matches symptom onset
+Hypothesis CONFIRMED with
+Recommended action: Increase pool size or revert
+$ compass generate post-mortem
+COMPASS: Generating comprehensive post-mortem
+Post-mortem ready: incident-2025-11-16-payment-service.md
+6.3 Interface Principles
+Natural developer workflow
+No Training Required:
+Intuitive commands with help
+Progressive Disclosure:
+Show simple first, details on demand
+"What happened" not "who did it"
+Visual Investigation Map:
+See all paths explored (even dead ends)
+Complete Transparency:
+Every decision explained
+7. Technical Implementation
+Python 3.11+ (readable, maintainable, extensive libraries)
+FastAPI for REST endpoints
+Redis for investigation state
+PostgreSQL with pgvector for knowledge/embeddings
+Docker/Kubernetes deployment
+LangChain for agent orchestration
+Provider-agnostic LLM interface
+Sentence-transformers for similarity
+pgvector for vector storage (no vendor lock-in)
+MCP for tool connections (LGTM stack initially)
+Prometheus client for metrics
+Slack SDK for chat interface
+Confluence API for documentation
+Tilt for local Kubernetes development
+Helm for production deployment
+pytest for comprehensive testing
+Black/ruff for code formatting
+7.2 Key Technical Decisions
+Need fine control over scientific method
+Enterprises have existing AI contracts
+Event streaming (Redis)
+Enable real-time updates and audit
+PostgreSQL + pgvector
+Single database, no vendor lock-in
+Already using Postgres, trusted by enterprises
+Readable, maintainable, wide support
+Enterprise standard + great DX
+LGTM (Loki, Grafana, Tempo, Mimir)
+Author's environment, then expand
+7.3 Performance Requirements
+<5 seconds from trigger
+<2 minutes for parallel scan
+Post-Mortem Generation:
+Concurrent Investigations:
+Customer-configurable (investigations ephemeral, learnings persistent)
+8. Implementation Roadmap
+8.1 Month 1: Foundation
+Week 1-2: Core Architecture
+ScientificAgent base class
+Parallel OODA loop controller
+Investigation state machine
+LLM provider abstraction layer
+Week 3-4: Agent Implementation
+Database Agent with Mimir integration
+Application Agent with Loki integration
+Network Agent with Mimir integration
+Basic Orchestrator with parallel execution
+8.2 Month 2: Intelligence Layer
+Week 5-6: Hypothesis System
+Hypothesis generation from parallel agents
+Confidence scoring algorithm
+Falsification framework
+Synthesis of parallel findings
+Week 7-8: Learning System
+Knowledge persistence in pgvector
+Similar incident matching
+Feedback loop for corrections
+Failure pattern capture
+8.3 Month 3: User Experience
+Interactive investigation mode
+Slack integration (basic)
+Post-mortem generator
+Setup wizard for LLM configuration
+Week 11-12: Production Readiness
+Kubernetes manifests + Helm charts
+Tilt configuration for local dev
+Comprehensive documentation
+9.1 Quantitative Metrics
+Time from alert to resolution
+Start to first hypothesis
+vs sequential investigation
+Confirmed/selected ratio
+Cost per Investigation
+Incidents using COMPASS
+9.2 Qualitative Metrics

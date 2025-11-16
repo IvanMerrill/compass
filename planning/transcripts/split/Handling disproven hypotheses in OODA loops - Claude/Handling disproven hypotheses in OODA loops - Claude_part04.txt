@@ -1,0 +1,203 @@
+# Part 4/8
+# Lines 601-800 of 1599
+
+_show_retrospective_analysis
+# Offer to add perspective
+"\n[bold cyan]Would you like to add your perspective?[/]\n"
+"[dim]This helps future responders understand your thought process. "
+"No pressure - only if you find it valuable.[/]\n"
+"Add your reflection?"
+# Structured reflection questions
+Show the system-focused retrospective
+Frame everything positively
+# Why it was reasonable
+f"[bold green]Why Your Hypothesis Was Reasonable[/]\n\n"
+f"\n[bold]What Happened:[/]\n
+# System factors (NOT your fault)
+"[bold]System Factors That Contributed:[/]"
+# Missing information
+"\n[bold]Information That Would Have Helped:[/]"
+f"[bold cyan]Value of This Exploration[/]\n\n"
+# Improvements we'll make
+"\n[bold green]System Improvements We'll Make:[/]"
+"\n[italic]Observability:[/]"
+"\n[italic]AI Improvements:[/]"
+"\n[italic]Process:[/]"
+Guide human through reflection with supportive questions
+# What would you do differently?
+"\n[bold cyan]Looking back, what would you want to know earlier?[/]"
+"[dim]Not 'what did you do wrong' but 'what information would have helped?'[/]"
+"[cyan]Information needed[/]"
+f"Information that would have helped:
+# What patterns did you learn?
+"\n[bold cyan]What patterns did you learn from this?[/]"
+"[dim]E.g., 'symptoms X and Y together usually mean Z, not what I thought'[/]"
+"[cyan]Patterns learned[/]"
+# What would you tell future responders?
+"\n[bold cyan]What would you tell someone facing similar symptoms?[/]"
+"[dim]Your experience is valuable for future incidents[/]"
+"[cyan]Advice for future[/]"
+f"Advice for future responders:
+# Any intuitions confirmed or challenged?
+"\n[bold cyan]Did this challenge or confirm any of your intuitions?[/]"
+"[cyan]Intuitions[/]"
+Post-Mortem Representation (Learning-Focused)
+LearningFocusedPostMortem
+Generate post-mortems that frame unexpected outcomes as learning
+_generate_learning_section
+Generate a learning-focused section for the post-mortem
+NO BLAME, only system improvements
+"## Learning and System Improvements\n\n"
+"*This section focuses on what the SYSTEM learned and how we'll improve. "
+"Incident investigations naturally involve exploring hypotheses that don't "
+# Unexpected outcomes as learning opportunities
+"### Exploration Outcomes\n\n"
+f"During this investigation, we explored
+"that led to unexpected outcomes. Each taught us something valuable:\n\n"
+# Why it seemed reasonable (validate the thinking)
+f"**Why This Seemed Reasonable:**\n
+f"**What We Discovered:**\n
+f"**System Factors:**\n"
+# Value (reframe as positive)
+f"**Learning Value:**\n
+# Show human reflection if provided
+f"**Engineer's Perspective:**\n"
+# System improvements we'll make
+"### System Improvements\n\n"
+"Based on what we learned, we're making these improvements:\n\n"
+# Collect all improvements
+"#### Observability Improvements\n\n"
+"#### AI System Improvements\n\n"
+"#### Documentation Improvements\n\n"
+"#### Process Improvements\n\n"
+"### Patterns Learned for Future Incidents\n\n"
+Extract reusable patterns from the investigation
+f"**Confusable Case:** Symptoms of "
+' can actually be caused by "
+f"Distinguish by checking:
+Team Review (Optional Team Learning)
+Facilitate team learning sessions focused on system improvements
+NOT individual performance review
+generate_team_learning_agenda
+Generate agenda for team learning session
+Focus: What can we all learn?
+"""# Team Learning Session: [Incident Name]
+Review the investigation process to identify system improvements and share knowledge.
+This is NOT a performance review - we're looking at how the system can better support incident response.
+1. Focus on system factors, not individual decisions
+2. Ask "what information was missing?" not "who was wrong?"
+3. Every hypothesis exploration teaches us something
+4. Psychological safety is paramount
+### 1. Investigation Timeline (10 min)
+Walk through the investigation journey, including paths explored
+### 2. System Factors Analysis (15 min)
+Discuss system factors that influenced decisions:
+# Add system factors found
+### 3. Confusable Cases (10 min)
+Identify scenarios where symptoms are misleading:
+### 4. System Improvements (15 min)
+Review and prioritize proposed improvements:
+- Observability gaps to fill
+- Documentation to create/update
+- Process changes to consider
+- AI improvements to implement
+### 5. Pattern Recognition (10 min)
+What patterns should we all remember for future incidents?
+### 6. Action Items (5 min)
+Assign owners for system improvements
+The goal is collective learning and system improvement, not blame assignment.
+Key Principles Summary
+"Unexpected outcome" not "wrong decision"
+"Learning value" not "wasted effort"
+Always explain WHY the decision was reasonable given the context
+Show what information they had
+Acknowledge time pressure, ambiguity, etc.
+What information was missing?
+What metrics were misleading?
+What documentation gaps existed?
+Every disproven hypothesis narrows the solution space
+Discovering confusable cases is valuable
+Identifying observability gaps prevents future incidents
+Framed as learning opportunity
+Human controls their narrative
+Share knowledge, not blame
+Build collective expertise
+How to handle repeated "unexpected outcomes" by the same person (coaching without blame)?
+Metrics for measuring learning culture vs. blame culture?
+Integration with existing incident review processes (Confluence templates, Jira tickets, etc.)?
+Let's summarise this chat in an architectural document that can be used to contribute to the overall design of system. This document will be read by Claude and my hope is that in reading this document, Claude will have everything it needs to include everything we've discussed in its final architecture document. If you're unsure on anything then please check with me.
+Architected comprehensive system document synthesizing OODA loops and investigation frameworks.
+The user wants me to create a comprehensive architectural document that summarizes everything we discussed in this chat about:
+OODA loops and the "loops" part - handling disproven hypotheses
+Feeding disproven evidence back into the system
+Differentiating human vs AI investigations
+Terminal interface representation
+Human decisions as first-class citizens
+Handling cases where humans were "wrong" (without blame)
+This document should be:
+Comprehensive enough that Claude (in the future) can use it to implement these features
+Well-structured and clear
+Connected to the existing COMPASS architecture
+Focused on the key innovations we discussed
+Let me structure this logically:
+Core Problem & Solution
+Architecture Components
+Learning & Feedback Systems
+Implementation Guidelines
+I should check if there's anything I'm unsure about before writing.
+I'll create a comprehensive architectural document capturing everything we discussed. Let me make sure I understand the scope correctly:
+This document should cover:
+✅ OODA loop feedback mechanisms (disproven hypotheses feeding back into investigation)
+✅ Disproven evidence preservation and reuse by active agents
+✅ Human vs AI investigation differentiation (in data model, UI, and post-mortem)
+✅ Terminal interface design for investigation visualization
+✅ Human decision tracking as first-class entities
+✅ Blameless retrospective system for unexpected outcomes
+Questions before I write:
+Should this document be standalone, or should it reference the existing architecture documents (compass_architecture.txt) and assume those as foundation?
+Full code examples (like we discussed), OR
+Architectural patterns with key code snippets, OR
+High-level design that Claude Code can implement details of?
+Should I explicitly call out:
+Where this plugs into existing OODA loop (from compass_architecture.txt)?
+Integration with existing Investigation State Machine?
+Integration with MCP Gateway and agents?
+Should I create this as:
+A new Part 6 that extends the existing 5-part architecture guide, OR
+A standalone "Investigation Learning & Human Collaboration Module" document, OR
+An addendum/enhancement document?
+Let me know your preferences and I'll create exactly what you need!
+Definitely reference the existing architecture. But also suggest changes if needed. It's a foundation you can build on.
+Let's go with the middle option, architectural patterns. This will be referenced in the main architecture document. Ultimately, it's a guide for Claude to build the right thing. Go into as much detail as you need to make that happen.
+Explicitly call out all integration points. Having each component's contracts clearly defined is an important aspect of an extensible architecture.
+This document will become a reference document in the main architecture document. Consider it the main architecture artefact got this aspect of the system.
+I hope that answers your questions. Please ask me if you have any more uncertainty
+Architected comprehensive specification integrating patterns, contracts, and implementation guidance.
+Perfect! The user wants:
+Reference existing architecture, suggest changes where needed
+Architectural patterns with enough detail for Claude Code to implement
+Explicit integration points and contracts
+This becomes THE reference document for the investigation learning & human collaboration aspects
+So I need to create a comprehensive architectural document that:
+References compass_architecture.txt
+Defines clear contracts/interfaces
+Shows architectural patterns with key code snippets
+Calls out integration points explicitly
+Can be used by Claude Code to implement the system
+Covers all our discussion: OODA feedback, disproven hypotheses, human decisions as first-class, terminal UI, blameless retrospectives
+Let me structure this as a comprehensive architectural specification document.
+Perfect! I have everything I need. Let me create a comprehensive architectural document.
+Creating comprehensive architectural document for Investigation Learning and Human Collaboration subsystem, covering OODA loop feedback, disproven hypothesis management, human decision tracking, terminal UI, and blameless retrospectives
+investigation_learning_human_collaboration_architecture.md
+Synthesized comprehensive architectural blueprint with integration contracts and implementation guidance.
+Perfect! I've created a comprehensive architectural document that covers everything we discussed. Let me create a summary for the user so they know what's in the document and can verify it meets their needs.
+The document includes:
+Core concepts and terminology
+Integration with existing architecture (explicit changes to existing components)
+Investigation Chronicle data model
+Disproven hypothesis management
+Human decisions as first-class entities
+Terminal UI for investigation visualization
+Blameless retrospective system
+Learning and pattern recognition
+Enhanced post-mortem generation

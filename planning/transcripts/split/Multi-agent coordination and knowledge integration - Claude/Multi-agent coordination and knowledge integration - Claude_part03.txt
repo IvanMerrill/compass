@@ -1,0 +1,203 @@
+# Part 3/5
+# Lines 401-600 of 831
+
+name     = "compass-production"
+role_arn = aws_iam_role.compass_cluster.arn
+subnet_ids = var.private_subnet_ids
+endpoint_private_access = true
+endpoint_public_access  = false
+security_group_ids = [aws_security_group.compass_cluster.id]
+key_arn = aws_kms_key.compass.arn
+resources = ["secrets"]
+enabled_cluster_log_types = [
+"api", "audit", "authenticator", "controllerManager", "scheduler"
+# Node groups for different agent types
+cluster_name    = aws_eks_cluster.compass.name
+node_group_name = "compass-orchestrator"
+node_role_arn   = aws_iam_role.compass_node.arn
+subnet_ids      = var.private_subnet_ids
+instance_types = ["m6i.xlarge"]  # 4 vCPU, 16 GB RAM
+"compass/tier" = "orchestrator"
+"compass/role" = "control"
+key    = "compass/orchestrator"
+effect = "NO_SCHEDULE"
+node_group_name = "compass-worker"
+instance_types = ["m6i.large"]  # 2 vCPU, 8 GB RAM
+"compass/tier" = "worker"
+"compass/role" = "compute"
+# Redis for state management
+replication_group_id       = "compass-redis"
+description               = "Redis for COMPASS state and caching"
+node_type                = "cache.r6g.large"
+number_cache_clusters    = 2
+automatic_failover_enabled = true
+multi_az_enabled          = true
+subnet_group_name = aws_elasticache_subnet_group.compass.name
+security_group_ids = [aws_security_group.compass_redis.id]
+at_rest_encryption_enabled = true
+transit_encryption_enabled = true
+auth_token                = random_password.redis_auth.result
+snapshot_retention_limit = 7
+snapshot_window          = "03:00-05:00"
+# S3 for artifact storage
+Environment = var.environment
+Purpose     = "Investigation artifacts and logs"
+bucket = aws_s3_bucket.compass_artifacts.id
+kms_master_key_id = aws_kms_key.compass.arn
+sse_algorithm     = "aws:kms"
+# DynamoDB for pattern storage
+name           = "compass-incident-patterns"
+billing_mode   = "PAY_PER_REQUEST"
+hash_key       = "pattern_id"
+range_key      = "version"
+name = "incident_type"
+name            = "IncidentTypeIndex"
+hash_key        = "incident_type"
+projection_type = "ALL"
+kms_key_arn = aws_kms_key.compass.arn
+"""Generate Kubernetes manifests"""
+environment: production
+name: compass-orchestrator
+apiVersion: rbac.authorization.k8s.io/v1
+resources: ["pods", "services", "configmaps", "secrets"]
+verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["batch"]
+verbs: ["get", "list", "watch", "create", "delete"]
+# Orchestrator Deployment
+"10-orchestrator.yaml"
+app: compass-orchestrator
+serviceAccountName: compass-orchestrator
+compass/tier: orchestrator
+- key: compass/orchestrator
+image: compass/orchestrator:latest
+- containerPort: 8080
+- containerPort: 9090
+- name: MAX_COST_PER_INCIDENT
+initialDelaySeconds: 30
+initialDelaySeconds: 10
+"20-worker-pool.yaml"
+name: compass-worker-pool
+image: compass/worker:latest
+# Specialized workers for different agent types
+name: compass-database-workers
+app: compass-worker-database
+- name: SPECIALIZATION
+value: "postgresql,mysql,mongodb"
+name: compass-metrics
+prometheus.io/scrape: "true"
+prometheus.io/port: "9090"
+apiVersion: monitoring.coreos.com/v1
+5.2 Performance Monitoring and Observability
+Comprehensive monitoring ensures system health and enables optimization.
+5.2.1 Metrics Collection
+"""Collects and exposes metrics for monitoring"""
+# Investigation metrics
+'compass_investigations_total'
+'Total number of investigations'
+investigation_duration
+'compass_investigation_duration_seconds'
+'Investigation duration in seconds'
+'compass_hypothesis_accuracy'
+'Hypothesis accuracy rate'
+'compass_agents_active'
+'Number of active agents'
+'compass_agent_task_duration_seconds'
+'Agent task execution duration'
+'compass_agent_failures_total'
+'Total agent failures'
+'compass_llm_tokens_total'
+'Total LLM tokens used'
+'compass_investigation_cost_usd'
+'Investigation cost in USD'
+'compass_redis_operations_total'
+'compass_external_api_calls_total'
+'compass_human_feedback_score'
+'Human feedback scores'
+'compass_mttr_reduction_percentage'
+'MTTR reduction compared to baseline'
+"""Record investigation metrics"""
+"""Record agent task execution"""
+"""Record LLM token usage"""
+"""Manages distributed tracing for investigations"""
+# Configure Jaeger exporter
+start_investigation_trace
+"""Start trace for new investigation"""
+start_as_current_span
+"""Trace individual agent task"""
+5.2.2 Dashboards and Alerts
+"""Generates monitoring dashboards"""
+generate_grafana_dashboard
+"""Generate Grafana dashboard JSON"""
+"COMPASS Operations Dashboard"
+"rate(compass_investigations_total[5m])"
+"Investigation Duration (p95)"
+"histogram_quantile(0.95, compass_investigation_duration_seconds)"
+"Cost per Investigation"
+"compass_investigation_cost_usd"
+"compass_agents_active"
+"LLM Token Usage Rate"
+"rate(compass_llm_tokens_total[5m])"
+"rate(compass_agent_failures_total[5m])"
+"""Generate Prometheus alert rules"""
+"HighInvestigationFailureRate"
+"High investigation failure rate"
+"InvestigationCostExceeded"
+"compass_investigation_cost_usd > 10"
+"Investigation cost exceeded threshold"
+"compass_agents_active / compass_agents_total > 0.9"
+"Agent pool nearly exhausted"
+"rate(compass_llm_tokens_total[1h]) > 1000000"
+"High LLM token usage detected"
+5.3 Cost Optimization
+Implementing strategies to minimize operational costs while maintaining performance.
+5.3.1 Intelligent Caching
+"""Optimizes costs across the system"""
+IntelligentCacheManager
+"""Optimize LLM request for cost"""
+f"[Optimizer] Cache hit, saved $
+# Select cheapest capable model
+# Make request with optimized settings
+_get_optimized_settings
+"""Get optimized settings for model"""
+# Deterministic for caching
+# Limit output length
+"""Routes requests to appropriate models based on requirements"""
+"""Select cheapest model that meets requirements"""
+# Check context window
+# Assume 500 token output
+f"No model available within budget $
+# Return cheapest eligible model
+"""Optimizes prompts to reduce token usage"""
+"""Optimize prompt for token efficiency"""
+# Remove redundant whitespace
+# Use abbreviations for common terms
+"mean time to resolution"
+# Remove unnecessary examples if present
+# Keep only first example
+# Compress JSON if present
+5.4 Security Implementation
+Security measures to protect the system and prevent abuse.
+5.4.1 Security Controls
+"""Manages security controls for COMPASS"""
+AuthenticationManager
+"""Validate investigation request for security"""
+# Authentication and authorization
+"Authentication failed"
+"Rate limit exceeded"
+"100 requests per hour"
+"Malformed request data"
+# Prompt injection detection
+"prompt_injection_attempt"
+"Security violation detected"
+# Resource access validation
+_validate_resource_access
+"Insufficient permissions"
+"read access to specified resources"
+"""Validate user has access to requested resources"""
+# Check service access
+# Check data access levels
+include_sensitive_data
+"sensitive_data_access"
+"""Validates prompts for injection attacks"""
+r"ignore previous instructions"
+r"disregard all prior"

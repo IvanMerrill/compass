@@ -1,0 +1,203 @@
+# Part 5/8
+# Lines 801-1000 of 1599
+
+Complete contracts and integration points
+Implementation checklist
+All integration points are clearly defined with before/after code examples, and breaking changes are explicitly noted. The document is structured to be used by Claude Code to implement the system.
+Perfect! I've created a comprehensive architectural specification document for the Investigation Learning & Human Collaboration subsystem. Here's what's included:
+View your architecture document
+Core Concepts & Terminology
+- Establishes the learning culture principles and key entities
+Integration with Existing Architecture
+Which existing components need modification
+Before/after code comparisons
+Breaking vs. non-breaking changes
+Required new dependencies
+Investigation Chronicle
+- The complete story data model with:
+Integration contracts
+Disproven Hypothesis Management
+- How we preserve and reuse learning:
+Agent Knowledge Context builder
+Lessons learned extraction
+Constraint propagation to agents
+Human Decisions as First-Class Entities
+- Rich decision capture:
+Complete data model with reasoning
+Terminal UI for decision points
+Agreement/disagreement tracking
+Terminal UI Visualization
+- Investigation journey rendering:
+Investigation map view
+Human decisions summary
+Blameless Retrospective System
+- Learning from unexpected outcomes:
+System factor identification
+Improvement recommendations
+Optional human reflection
+Learning & Pattern Recognition
+- Continuous improvement:
+Similar incident detection
+Enhanced Post-Mortem Generation
+- Complete investigation story:
+Journey section with human/AI differentiation
+Learning section with system improvements
+Contracts & Integration Points
+- Complete reference:
+All interface definitions
+Component dependencies diagram
+Implementation checklist (8-week plan)
+Explicit Integration Points
+- Every component's contracts clearly defined
+✅
+Breaking Changes Documented
+- Shows exactly what needs updating in existing code
+✅
+Implementation Checklist
+- Phase-by-phase guide for building this
+✅
+- Three concrete examples showing how it works
+✅
+- Version 2.0 considerations
+The document is designed to be
+the authoritative reference
+for this subsystem that Claude Code can use to implement the complete solution. It references the existing
+compass_architecture.txt
+as foundation and shows exactly how to extend it.
+Is there anything you'd like me to clarify, expand, or modify in the document?
+Investigation learning human collaboration architecture
+Claude can make mistakes.
+Please double-check responses.
+COMPASS: Investigation Learning & Human Collaboration Architecture
+Architectural Specification
+Define how COMPASS learns from investigations, preserves disproven hypotheses, treats human decisions as first-class entities, and implements blameless retrospectives
+This document specifies the
+Investigation Learning & Human Collaboration
+subsystem of COMPASS. While the core OODA loop architecture (defined in
+) handles the mechanical flow of Observe → Orient → Decide → Act, this subsystem addresses the critical
+that makes COMPASS improve over time.
+Traditional incident investigation systems treat disproven hypotheses as failures and discard them. Human decisions are not differentiated from AI suggestions. When humans make unexpected choices, there's no structured way to learn from them without blame.
+Disproven hypotheses become learning artifacts
+that constrain future investigations
+Human decisions are first-class entities
+with rich context, reasoning capture, and retrospective analysis
+Terminal interface visualizes investigation journey
+including dead ends and pivot points
+Blameless retrospectives focus on system factors
+, not individual performance
+Learning culture metrics
+replace blame culture metrics
+This subsystem integrates with the existing OODA loop, Investigation State Machine, and Agent Orchestrator to create a
+continuously learning incident response system
+Investigation Chronicle: The Complete Story
+Terminal UI: Investigation Visualization
+Post-Mortem Generation
+1. Core Concepts & Terminology
+From Learning Teams Research:
+Learning Teams approach generates 57% more system-focused improvements than traditional Root Cause Analysis
+(how we investigated) not just
+Document investigation journey including dead ends
+Avoid blame by focusing on system factors
+COMPASS Implementation:
+: A disproven hypothesis is valuable data that narrows the solution space
+: Humans make all critical decisions; AI accelerates data gathering
+: Every investigation improves future investigations
+: No blame for unexpected outcomes; focus on system improvements
+: Investigation journey is transparent and traceable
+# Core investigation outcome types
+"""Neutral language for outcomes - no 'wrong' or 'failed'"""
+# System factors that influence decisions (not human factors)
+"""System-level factors that influenced investigation decisions"""
+# Decision authority model
+# Future: AI suggests, human can override
+# Future: AI can proceed
+2. Integration with Existing Architecture
+2.1 Reference to Existing Components
+This subsystem integrates with components defined in
+After "ACT" phase, before loop restart
+Learning Feedback Loop captures disproven hypotheses
+OODA Controller now maintains Investigation Chronicle
+Part 3: Investigation State Machine
+All state transitions trigger Chronicle updates
+Human Decision Points are new state types
+State Machine now tracks human vs AI actions separately
+Part 4: Agent Orchestrator
+Orchestrator receives constraint context from disproven hypotheses
+Agents see what's been ruled out before generating hypotheses
+Part 5: Post-Mortem Generation
+Replaces simple post-mortem with learning-focused version
+Blameless Retrospective Generator
+Post-mortems include investigation journey section
+2.2 Architectural Changes to Existing Components
+Change 1: OODALoopController Enhancement
+(from compass_architecture.txt Part 1):
+investigate_hypothesis
+# ... existing implementation
+# NEW: Investigation chronicle
+# NEW: Access to complete investigation history
+Investigate hypothesis through iterative OODA loops
+NEW: Now records all attempts in chronicle and provides
+constraints from disproven hypotheses to agents
+# ACT: Generate disproof queries (existing)
+generate_disproof_queries
+# Execute attempts (existing)
+execute_disproof_attempts
+# NEW: Record attempts in chronicle
+record_disproof_attempts
+# Evaluate outcome (existing)
+evaluate_falsification_outcome
+# NEW: Record disproven hypothesis in chronicle
+_extract_disproof_evidence
+# ... rest of existing logic
+Record all disproof attempts and outcomes
+None (backward compatible with optional parameter)
+Change 2: OrchestratorAgent Enhancement
+(from compass_architecture.txt Part 2):
+# NEW: Context builder
+# NEW: Access to what's been ruled out
+Generate hypotheses informed by what's already been disproven
+NEW: Agents receive constraints from disproven hypotheses
+to avoid repeating failed paths
+# NEW: Build context including disproven hypotheses
+CURRENT OBSERVATIONS:
+Generate 3-5 NEW hypotheses that:
+1. Explain the current observations
+2. DON'T repeat any of the disproven paths listed above
+3. Respect all active constraints
+4. Consider what we've learned from failed investigations
+Return as JSON array of hypotheses with reasoning.
+# Rest of existing implementation
+Modified Method Signature:
+Hypotheses are constrained by disproven paths
+Yes - all callers must provide chronicle
+Change 3: Investigation State Machine Enhancement
+(from compass_architecture.txt Part 3):
+InvestigationStateMachine
+"""Move from Orient to Decide (human selection)"""
+# NEW: Chronicle reference
+Move from Orient to Decide (human selection)
+NEW: Creates HumanDecisionPoint to capture decision context
+InvalidStateTransition
+f"Can only decide from orienting, currently
+"Cannot decide without hypotheses"
+# NEW: Create decision point with full context
+_get_ai_recommendation
+_capture_context_snapshot
+# Calculated after decision
+# Filled in by UI if needed
+# Filled in during retrospective
+# Calculated when decision made
+# NEW: Store decision point in chronicle
+f"Awaiting human decision for
+record_human_decision
+Record a human decision with full context
+NEW: Calculates agreement with AI and stores in chronicle
+# NEW: Determine if human agreed with AI
+# NEW: Add to chronicle
+# NEW: Record as timeline event
+f"Selected hypothesis:
+record_human_decision()
+with rich context capture
+All decisions tracked in chronicle with agreement analysis
+Constructor signature changed (requires chronicle)
+3. Investigation Chronicle: The Complete Story

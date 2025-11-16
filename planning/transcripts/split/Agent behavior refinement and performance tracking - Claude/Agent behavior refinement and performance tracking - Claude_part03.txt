@@ -1,0 +1,203 @@
+# Part 3/5
+# Lines 401-600 of 815
+
+2. Modified BaseAgent Architecture
+Modified BaseAgent that supports runtime configuration injection
+Initialize agent with knowledge configuration
+# Load configuration from Knowledge Service
+# Build pattern matchers from config
+_build_pattern_matchers
+# Initialize behavior modifiers
+_initialize_behavior_modifiers
+Convert configuration patterns into efficient matchers
+# Build normal behavior patterns
+Determine if observation warrants investigation using config
+# Check against ignore patterns first
+_log_ignored_observation
+_escalate_immediately
+# Check maintenance windows
+_is_maintenance_window
+_log_maintenance_suppression
+# Apply normal investigation logic
+Generate hypotheses using both ML and configured patterns
+# 1. Get ML-generated hypotheses
+# 2. Apply configured investigation strategies
+"investigation_strategies"
+_apply_investigation_strategies
+# 3. Check against known issues
+known_issue_hypotheses
+# 4. Deduplicate and rank
+_deduplicate_hypotheses
+Apply configured investigation strategies to generate hypotheses
+# Check if strategy trigger condition is met
+# Generate hypothesis from strategy
+_extract_strategy_evidence
+"investigation_sequence"
+_hot_reload_configuration
+Hot reload configuration without restarting agent
+# Validate new configuration
+f"Invalid configuration:
+# Apply new configuration
+# Rebuild pattern matchers
+# Reinitialize behavior modifiers
+f"Successfully hot-reloaded configuration v
+f"Failed to apply configuration:
+3. Configuration Schema and Validation
+"""Schema for behavior patterns"""
+"""Validate pattern syntax"""
+# Attempt to compile as regex
+f"Invalid regex pattern:
+# Implementation here
+"""Main service configuration schema"""
+investigation_strategies
+monitoring_integration
+# Reject unknown fields
+ConfigurationValidator
+"""Validates configurations at multiple levels"""
+Validate configuration against appropriate schema
+# Additional business logic validation
+_validate_business_rules
+Validate business-specific rules
+# Example: Ensure critical services have runbooks
+"Critical services must have investigation strategies"
+# Example: Validate timeout hierarchies
+"timeout_configurations"
+"HTTP timeout should be >= database timeout"
+4. Pattern Matching Engine
+"""Represents a pattern match result"""
+# "ignore", "investigate", "escalate"
+High-performance pattern matching engine
+Pre-compile regex patterns for performance
+# Simple string pattern
+# Not a regex, treat as literal string
+# Compile sub-patterns if any
+Check if observation matches this pattern
+_matches_main_pattern
+# Check ignore conditions
+_matches_ignore_conditions
+"Matches ignore pattern"
+# Determine action based on pattern type
+_calculate_confidence
+_extract_matched_data
+Check if observation matches the main pattern
+# Literal string matching
+Evaluate complex conditions
+Evaluates complex conditions from configuration
+Evaluate a condition against an observation
+# Handle different condition types
+_evaluate_rate_condition
+_evaluate_threshold_condition
+_evaluate_time_condition
+Evaluate rate-based conditions (e.g., "< 0.1%")
+r"([<>]=?)\s*([\d.]+)(%)?"
+5. Runtime Configuration Management
+Manages runtime configuration lifecycle
+Start configuration runtime
+# Load initial configurations
+_load_initial_configs
+# Start configuration watcher
+_watch_configurations
+# Start performance monitoring
+Watch for configuration changes
+# Check for updates every 30 seconds
+Apply configuration update to running agents
+f"Invalid configuration update:
+_notify_update_failure
+# Apply update strategy
+on_configuration_update
+# Track success/failure
+_record_update_metrics
+Monitor configuration performance impact
+# Check if configuration is degrading performance
+# Consider automatic rollback
+_rollback_configuration
+Configuration Data Model
+-- PostgreSQL schema for configuration storage
+-- Configuration versions table
+created_at TIMESTAMPTZ
+parent_config_id UUID
+-- Configuration deployment history
+started_at TIMESTAMPTZ
+completed_at TIMESTAMPTZ
+-- Pattern effectiveness tracking
+pattern_effectiveness
+-- Effectiveness metrics
+-- Performance metrics
+avg_time_saved_seconds
+avg_investigation_time_seconds
+last_triggered TIMESTAMPTZ
+last_validated TIMESTAMPTZ
+idx_pattern_effectiveness
+-- Configuration feedback
+helped_identify_issue
+caused_false_positive
+Redis Cache Structure
+# Redis key patterns for configuration cache
+Redis key patterns for configuration caching
+# Active configuration for a service
+# Value: JSON configuration
+# TTL: 5 minutes (refreshed on access)
+# Merged configuration (after hierarchy resolution)
+# Value: JSON merged configuration
+# Pattern match cache
+# Value: match result
+# Configuration version tracking
+# Value: version string
+# TTL: None (persistent)
+# Hot reload notifications
+# Message: configuration update notification
+[Engineer writes YAML]
+2. Validation Pipeline
+# .github/workflows/knowledge-validation.yml
+Knowledge Configuration Validation
+'knowledge/**/*.yaml'
+pip install compass-cli
+pip install -r requirements.txt
+compass validate schemas \
+--config-dir knowledge/ \
+--schema-dir schemas/
+compass validate conflicts \
+--report-file conflict-report.json
+compass test regression \
+--test-data tests/historical_incidents.json \
+--baseline-metrics tests/baseline_metrics.json
+Performance Impact Assessment
+compass test performance \
+--max-latency-increase 50ms \
+--max-pattern-count 1000
+compass security scan \
+--check-credentials \
+--check-sensitive-data
+compass report generate \
+--validation-results . \
+--output-format markdown \
+--output-file validation-report.md
+issue_number: context.issue.number,
+owner: context.repo.owner,
+repo: context.repo.repo,
+3. Deployment Pipeline
+ConfigurationDeploymentPipeline
+Handles configuration deployment lifecycle
+deployment_strategies
+Deploy configuration through the pipeline
+# 1. Load configuration
+_load_config_from_git
+# 2. Pre-deployment validation
+_pre_deployment_validation
+# 3. Create deployment plan
+_create_deployment_plan
+# 4. Execute deployment
+# 5. Post-deployment validation
+_post_deployment_validation
+f"Post-deployment validation failed:
+# 6. Record deployment
+How Configurations Modify Agent Behavior
+BehaviorModificationEngine
+Engine for runtime behavior modification based on configurations
+Apply configuration to modify behavior
+# Clear existing modifiers
+# Build modifiers from config
+"maintenance_windows"
+MaintenanceWindowFilter
+StrategyBasedEnhancer
+TimeoutBehaviorModifier
