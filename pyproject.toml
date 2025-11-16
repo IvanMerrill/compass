@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "compass", from = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 pydantic = "^2.5.0"
 pydantic-settings = "^2.1.0"
 structlog = "^23.2.0"
@@ -38,7 +38,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 100
-target-version = ["py39", "py310", "py311"]
+target-version = ["py311"]
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -52,7 +52,7 @@ exclude = '''
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py311"
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -67,7 +67,7 @@ ignore = [
 ]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -100,3 +100,4 @@ omit = ["*/tests/*", "*/__pycache__/*", "*/venv/*"]
 precision = 2
 show_missing = true
 skip_covered = false
+fail_under = 90
