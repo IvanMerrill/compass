@@ -15,9 +15,7 @@ from structlog.types import Processor
 from compass.config import Environment, Settings
 
 # Context variable for correlation ID (thread-safe)
-_correlation_id_var: ContextVar[Optional[str]] = ContextVar(
-    "correlation_id", default=None
-)
+_correlation_id_var: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
 
 
 def get_correlation_id() -> Optional[str]:
@@ -90,10 +88,12 @@ def setup_logging(settings: Settings) -> None:
         processors.append(structlog.processors.JSONRenderer())
     else:
         # Console for development (human-readable)
-        processors.extend([
-            structlog.processors.ExceptionPrettyPrinter(),
-            structlog.dev.ConsoleRenderer(colors=True),
-        ])
+        processors.extend(
+            [
+                structlog.processors.ExceptionPrettyPrinter(),
+                structlog.dev.ConsoleRenderer(colors=True),
+            ]
+        )
 
     # Configure structlog
     structlog.configure(

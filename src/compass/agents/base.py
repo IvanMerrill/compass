@@ -173,9 +173,7 @@ class ScientificAgent(BaseAgent):
         return hypothesis
 
     @abstractmethod
-    def generate_disproof_strategies(
-        self, hypothesis: Hypothesis
-    ) -> List[Dict[str, Any]]:
+    def generate_disproof_strategies(self, hypothesis: Hypothesis) -> List[Dict[str, Any]]:
         """
         Generate domain-specific strategies to attempt to disprove the hypothesis.
 
