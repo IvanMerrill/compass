@@ -145,15 +145,34 @@ Related Documentation
 - ADR 001: Evidence Quality Naming
 - Agent Integration: docs/architecture/AGENTS.md
 """
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List
-import uuid
 
 from compass.observability import get_tracer
 
 tracer = get_tracer(__name__)
+
+# Confidence calculation constants
+INITIAL_CONFIDENCE_WEIGHT = 0.3  # 30% weight for initial confidence
+EVIDENCE_WEIGHT = 0.7  # 70% weight for evidence score
+DISPROOF_SURVIVAL_BOOST_PER_ATTEMPT = 0.05  # Bonus per survived disproof
+MAX_DISPROOF_SURVIVAL_BOOST = 0.3  # Maximum total disproof bonus
+
+# Confidence bounds
+MIN_CONFIDENCE = 0.0
+MAX_CONFIDENCE = 1.0
+
+# Evidence quality weights
+EVIDENCE_QUALITY_WEIGHTS = {
+    "direct": 1.0,
+    "corroborated": 0.9,
+    "indirect": 0.6,
+    "circumstantial": 0.3,
+    "weak": 0.1,
+}
 
 
 class InvestigativeAction(Enum):
@@ -229,6 +248,17 @@ class Evidence:
     confidence: float = 0.5  # 0.0 to 1.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Validate evidence fields after initialization."""
+        if not self.source or not self.source.strip():
+            raise ValueError("Evidence source cannot be empty")
+
+        if not (MIN_CONFIDENCE <= self.confidence <= MAX_CONFIDENCE):
+            raise ValueError(
+                f"Evidence confidence must be between {MIN_CONFIDENCE} and "
+                f"{MAX_CONFIDENCE}, got {self.confidence}"
+            )
+
     def to_audit_log(self) -> Dict[str, Any]:
         """
         Convert evidence to audit log format.
@@ -269,6 +299,14 @@ class DisproofAttempt:
     evidence: List[Evidence] = field(default_factory=list)
     reasoning: str = ""
     cost: Dict[str, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Validate disproof attempt fields after initialization."""
+        if not self.strategy or not self.strategy.strip():
+            raise ValueError("DisproofAttempt strategy cannot be empty")
+
+        if not self.method or not self.method.strip():
+            raise ValueError("DisproofAttempt method cannot be empty")
 
     def to_audit_log(self) -> Dict[str, Any]:
         """
@@ -325,6 +363,26 @@ class Hypothesis:
 
     # Metadata
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Validate hypothesis fields after initialization."""
+        if not self.statement or not self.statement.strip():
+            raise ValueError("Hypothesis statement cannot be empty")
+
+        if not (MIN_CONFIDENCE <= self.initial_confidence <= MAX_CONFIDENCE):
+            raise ValueError(
+                f"Hypothesis initial_confidence must be between {MIN_CONFIDENCE} and "
+                f"{MAX_CONFIDENCE}, got {self.initial_confidence}"
+            )
+
+        # Ensure current_confidence matches initial_confidence if not explicitly set
+        if self.current_confidence != self.initial_confidence:
+            # Allow explicit setting, but validate range
+            if not (MIN_CONFIDENCE <= self.current_confidence <= MAX_CONFIDENCE):
+                raise ValueError(
+                    f"Hypothesis current_confidence must be between {MIN_CONFIDENCE} and "
+                    f"{MAX_CONFIDENCE}, got {self.current_confidence}"
+                )
 
     def add_evidence(self, evidence: Evidence) -> None:
         """
@@ -394,12 +452,8 @@ class Hypothesis:
         """
         with tracer.start_as_current_span("hypothesis.calculate_confidence") as span:
             span.set_attribute("confidence.before", self.current_confidence)
-            span.set_attribute(
-                "evidence.supporting_count", len(self.supporting_evidence)
-            )
-            span.set_attribute(
-                "evidence.contradicting_count", len(self.contradicting_evidence)
-            )
+            span.set_attribute("evidence.supporting_count", len(self.supporting_evidence))
+            span.set_attribute("evidence.contradicting_count", len(self.contradicting_evidence))
             span.set_attribute("disproof.count", len(self.disproof_attempts))
 
             # Calculate evidence contribution (70% of final score)
@@ -415,29 +469,30 @@ class Hypothesis:
 
             # Normalize evidence score to 0-1 range
             # Using simple average if we have evidence
-            total_evidence_count = len(self.supporting_evidence) + len(
-                self.contradicting_evidence
-            )
+            total_evidence_count = len(self.supporting_evidence) + len(self.contradicting_evidence)
             if total_evidence_count > 0:
                 evidence_score = evidence_score / total_evidence_count
             else:
                 evidence_score = 0.0
 
-            # Calculate disproof survival bonus (up to +0.3)
+            # Calculate disproof survival bonus (up to MAX_DISPROOF_SURVIVAL_BOOST)
             survived_disproofs = len(
                 [attempt for attempt in self.disproof_attempts if not attempt.disproven]
             )
-            disproof_bonus = min(0.3, survived_disproofs * 0.05)
+            disproof_bonus = min(
+                MAX_DISPROOF_SURVIVAL_BOOST,
+                survived_disproofs * DISPROOF_SURVIVAL_BOOST_PER_ATTEMPT,
+            )
 
             # Combine scores
             final_confidence = (
-                self.initial_confidence * 0.3  # Initial confidence (30%)
-                + evidence_score * 0.7  # Evidence score (70%)
+                self.initial_confidence * INITIAL_CONFIDENCE_WEIGHT
+                + evidence_score * EVIDENCE_WEIGHT
                 + disproof_bonus  # Disproof survival bonus
             )
 
-            # Clamp to valid range [0.0, 1.0]
-            self.current_confidence = max(0.0, min(1.0, final_confidence))
+            # Clamp to valid range
+            self.current_confidence = max(MIN_CONFIDENCE, min(MAX_CONFIDENCE, final_confidence))
 
             # Update confidence reasoning
             self._update_confidence_reasoning()
@@ -454,14 +509,7 @@ class Hypothesis:
         Returns:
             Weight multiplier (0.1 to 1.0)
         """
-        weights = {
-            EvidenceQuality.DIRECT: 1.0,
-            EvidenceQuality.CORROBORATED: 0.9,
-            EvidenceQuality.INDIRECT: 0.6,
-            EvidenceQuality.CIRCUMSTANTIAL: 0.3,
-            EvidenceQuality.WEAK: 0.1,
-        }
-        return weights[quality]
+        return EVIDENCE_QUALITY_WEIGHTS[quality.value]
 
     def _update_confidence_reasoning(self) -> None:
         """Update human-readable confidence reasoning."""
@@ -469,23 +517,19 @@ class Hypothesis:
 
         # Evidence summary
         if self.supporting_evidence:
-            quality_dist = {}
+            quality_dist: Dict[str, int] = {}
             for evidence in self.supporting_evidence:
                 quality_name = evidence.quality.value
                 quality_dist[quality_name] = quality_dist.get(quality_name, 0) + 1
 
-            quality_str = ", ".join(
-                f"{count} {quality}" for quality, count in quality_dist.items()
-            )
+            quality_str = ", ".join(f"{count} {quality}" for quality, count in quality_dist.items())
             parts.append(f"{len(self.supporting_evidence)} supporting evidence ({quality_str})")
 
         if self.contradicting_evidence:
             parts.append(f"{len(self.contradicting_evidence)} contradicting evidence")
 
         # Disproof attempts
-        survived = len(
-            [attempt for attempt in self.disproof_attempts if not attempt.disproven]
-        )
+        survived = len([attempt for attempt in self.disproof_attempts if not attempt.disproven])
         if survived > 0:
             parts.append(f"survived {survived} disproof attempt(s)")
 
@@ -517,9 +561,7 @@ class Hypothesis:
                 "supporting": [e.to_audit_log() for e in self.supporting_evidence],
                 "contradicting": [e.to_audit_log() for e in self.contradicting_evidence],
             },
-            "disproof_attempts": [
-                attempt.to_audit_log() for attempt in self.disproof_attempts
-            ],
+            "disproof_attempts": [attempt.to_audit_log() for attempt in self.disproof_attempts],
             "affected_systems": self.affected_systems,
             "metadata": self.metadata,
         }
