@@ -2,7 +2,6 @@
 from pathlib import Path
 
 import pytest
-
 from compass.config import Environment, LogLevel, Settings
 
 
@@ -27,9 +26,7 @@ def test_redis_url_without_password():
 
 def test_redis_url_with_password():
     """Test Redis URL generation with password."""
-    settings = Settings(
-        redis_host="testhost", redis_port=6380, redis_db=1, redis_password="secret"
-    )
+    settings = Settings(redis_host="testhost", redis_port=6380, redis_db=1, redis_password="secret")
 
     assert settings.redis_url == "redis://:secret@testhost:6380/1"
 

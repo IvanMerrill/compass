@@ -21,7 +21,9 @@ def test_project_structure_exists():
 
     # Integration directories
     assert (src_compass / "integrations" / "mcp").is_dir(), "mcp directory missing"
-    assert (src_compass / "integrations" / "observability").is_dir(), "observability directory missing"
+    assert (
+        src_compass / "integrations" / "observability"
+    ).is_dir(), "observability directory missing"
 
     # Other core directories
     assert (src_compass / "cli").is_dir(), "cli directory missing"
@@ -42,6 +44,7 @@ def test_imports_work():
 
     # Import should work without errors
     import compass
+
     assert compass is not None
 
 
