@@ -174,6 +174,9 @@ EVIDENCE_QUALITY_WEIGHTS = {
     "weak": 0.1,
 }
 
+# Audit log settings
+MAX_AUDIT_DATA_LENGTH = 200  # Maximum characters for evidence data in audit logs
+
 
 class InvestigativeAction(Enum):
     """Types of investigative actions that can be taken."""
@@ -259,6 +262,14 @@ class Evidence:
                 f"{MAX_CONFIDENCE}, got {self.confidence}"
             )
 
+        # Validate timestamp is timezone-aware and in UTC
+        if self.timestamp.tzinfo is None or self.timestamp.tzinfo.utcoffset(self.timestamp) is None:
+            raise ValueError(
+                "Evidence timestamp must be timezone-aware. "
+                f"Use datetime.now(timezone.utc) instead of datetime.now(). "
+                f"Got timestamp: {self.timestamp}"
+            )
+
     def to_audit_log(self) -> Dict[str, Any]:
         """
         Convert evidence to audit log format.
@@ -266,11 +277,18 @@ class Evidence:
         Returns:
             Dictionary containing all evidence fields in serializable format
         """
+        # Format data with truncation indicator if needed
+        data_str = None
+        if self.data is not None:
+            data_str = str(self.data)
+            if len(data_str) > MAX_AUDIT_DATA_LENGTH:
+                data_str = data_str[:MAX_AUDIT_DATA_LENGTH] + "... [truncated]"
+
         return {
             "id": self.id,
             "timestamp": self.timestamp.isoformat(),
             "source": self.source,
-            "data": str(self.data)[:200] if self.data is not None else None,
+            "data": data_str,
             "interpretation": self.interpretation,
             "quality": self.quality.value,
             "supports": self.supports_hypothesis,
@@ -366,6 +384,9 @@ class Hypothesis:
 
     def __post_init__(self) -> None:
         """Validate hypothesis fields after initialization."""
+        if not self.agent_id or not self.agent_id.strip():
+            raise ValueError("Hypothesis agent_id cannot be empty - required for audit trail")
+
         if not self.statement or not self.statement.strip():
             raise ValueError("Hypothesis statement cannot be empty")
 
@@ -390,7 +411,17 @@ class Hypothesis:
 
         Args:
             evidence: Evidence object to add
+
+        Raises:
+            ValueError: If hypothesis is in terminal state (DISPROVEN or REJECTED)
         """
+        # Prevent modification of hypotheses in terminal states
+        if self.status in (HypothesisStatus.DISPROVEN, HypothesisStatus.REJECTED):
+            raise ValueError(
+                f"Cannot add evidence to hypothesis in {self.status.value} state. "
+                f"Hypothesis ID: {self.id}"
+            )
+
         with tracer.start_as_current_span("hypothesis.add_evidence") as span:
             span.set_attribute("evidence.quality", evidence.quality.value)
             span.set_attribute("evidence.confidence", evidence.confidence)
@@ -467,11 +498,13 @@ class Hypothesis:
                 weight = self._evidence_quality_weight(evidence.quality)
                 evidence_score -= evidence.confidence * weight
 
-            # Normalize evidence score to 0-1 range
-            # Using simple average if we have evidence
+            # Normalize evidence score by averaging, then clamp to [-1.0, 1.0] range
+            # This ensures evidence contributes at most ±0.7 to final confidence
             total_evidence_count = len(self.supporting_evidence) + len(self.contradicting_evidence)
             if total_evidence_count > 0:
                 evidence_score = evidence_score / total_evidence_count
+                # Clamp to prevent extreme values from breaking the algorithm
+                evidence_score = max(-1.0, min(1.0, evidence_score))
             else:
                 evidence_score = 0.0
 
