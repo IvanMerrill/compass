@@ -4,7 +4,8 @@ OpenTelemetry observability setup for COMPASS.
 Provides distributed tracing infrastructure for tracking investigations,
 agent interactions, and system performance.
 """
-from typing import Optional
+from contextlib import contextmanager
+from typing import Any, Dict, Iterator, Optional
 
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -73,3 +74,46 @@ def is_observability_enabled() -> bool:
         True if observability is configured and active
     """
     return _tracer_provider is not None
+
+
+@contextmanager
+def emit_span(
+    name: str,
+    attributes: Optional[Dict[str, Any]] = None,
+) -> Iterator[trace.Span]:
+    """
+    Create an OpenTelemetry span for instrumenting code.
+
+    This is a convenience context manager that wraps OpenTelemetry's
+    start_as_current_span to make instrumentation easier.
+
+    Args:
+        name: Name of the span (e.g., "llm.generate", "agent.investigate")
+        attributes: Optional dictionary of span attributes for metadata
+
+    Yields:
+        The created span object
+
+    Example:
+        >>> with emit_span("database.query", {"query": "SELECT * FROM users"}):
+        ...     result = execute_query()
+        ...     # Span automatically ends when context exits
+    """
+    tracer = get_tracer("compass")
+
+    with tracer.start_as_current_span(name) as span:
+        # Add attributes if provided
+        if attributes:
+            for key, value in attributes.items():
+                span.set_attribute(key, value)
+
+        try:
+            yield span
+        except Exception as e:
+            # Record exception on span for observability
+            span.record_exception(e)
+            span.set_status(trace.Status(trace.StatusCode.ERROR))
+            raise
+        else:
+            # Mark span as successful
+            span.set_status(trace.Status(trace.StatusCode.OK))

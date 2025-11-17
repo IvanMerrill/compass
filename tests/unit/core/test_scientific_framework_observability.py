@@ -1,12 +1,11 @@
 """Tests for OpenTelemetry observability in scientific framework."""
-import pytest
 from unittest.mock import Mock, patch
 
 from compass.core.scientific_framework import (
-    Hypothesis,
+    DisproofAttempt,
     Evidence,
     EvidenceQuality,
-    DisproofAttempt,
+    Hypothesis,
 )
 
 
@@ -16,9 +15,7 @@ def test_add_evidence_creates_span() -> None:
 
     with patch("compass.core.scientific_framework.tracer") as mock_tracer:
         mock_span = Mock()
-        mock_tracer.start_as_current_span.return_value.__enter__.return_value = (
-            mock_span
-        )
+        mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         evidence = Evidence(
             source="test:source",
@@ -30,9 +27,7 @@ def test_add_evidence_creates_span() -> None:
         hypothesis.add_evidence(evidence)
 
         # Verify span was created (may be called multiple times due to nested spans)
-        span_calls = [
-            call[0][0] for call in mock_tracer.start_as_current_span.call_args_list
-        ]
+        span_calls = [call[0][0] for call in mock_tracer.start_as_current_span.call_args_list]
         assert "hypothesis.add_evidence" in span_calls
 
         # Verify span attributes were set
@@ -50,9 +45,7 @@ def test_add_disproof_creates_span() -> None:
 
     with patch("compass.core.scientific_framework.tracer") as mock_tracer:
         mock_span = Mock()
-        mock_tracer.start_as_current_span.return_value.__enter__.return_value = (
-            mock_span
-        )
+        mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         disproof = DisproofAttempt(
             strategy="test_strategy",
@@ -65,9 +58,7 @@ def test_add_disproof_creates_span() -> None:
         hypothesis.add_disproof_attempt(disproof)
 
         # Verify span was created (may be called multiple times due to nested spans)
-        span_calls = [
-            call[0][0] for call in mock_tracer.start_as_current_span.call_args_list
-        ]
+        span_calls = [call[0][0] for call in mock_tracer.start_as_current_span.call_args_list]
         assert "hypothesis.add_disproof" in span_calls
 
         # Verify attributes
@@ -83,9 +74,7 @@ def test_calculate_confidence_creates_span() -> None:
 
     with patch("compass.core.scientific_framework.tracer") as mock_tracer:
         mock_span = Mock()
-        mock_tracer.start_as_current_span.return_value.__enter__.return_value = (
-            mock_span
-        )
+        mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         evidence = Evidence(
             source="test",
@@ -97,9 +86,7 @@ def test_calculate_confidence_creates_span() -> None:
         hypothesis.add_evidence(evidence)
 
         # Verify calculate confidence span was created
-        span_calls = [
-            call[0][0] for call in mock_tracer.start_as_current_span.call_args_list
-        ]
+        span_calls = [call[0][0] for call in mock_tracer.start_as_current_span.call_args_list]
         assert "hypothesis.calculate_confidence" in span_calls
 
 
@@ -109,9 +96,7 @@ def test_span_attributes_include_confidence_changes() -> None:
 
     with patch("compass.core.scientific_framework.tracer") as mock_tracer:
         mock_span = Mock()
-        mock_tracer.start_as_current_span.return_value.__enter__.return_value = (
-            mock_span
-        )
+        mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         evidence = Evidence(
             source="test",

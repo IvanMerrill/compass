@@ -8,7 +8,9 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 from compass.core.scientific_framework import Hypothesis
+from compass.integrations.llm.base import BudgetExceededError
 from compass.logging import get_logger
+from compass.observability import emit_span
 
 logger = get_logger(__name__)
 
@@ -75,20 +77,31 @@ class ScientificAgent(BaseAgent):
                 return [...]
     """
 
-    def __init__(self, agent_id: str, config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        agent_id: str,
+        config: Optional[Dict[str, Any]] = None,
+        budget_limit: Optional[float] = None,
+    ):
         """
         Initialize scientific agent.
 
         Args:
             agent_id: Unique identifier for this agent
             config: Optional configuration dictionary
+            budget_limit: Optional budget limit in USD (default: no limit)
         """
+        # Validate budget_limit
+        if budget_limit is not None and budget_limit < 0:
+            raise ValueError(f"budget_limit must be >= 0, got {budget_limit}")
+
         self.agent_id = agent_id
         self.config = config or {}
         self.hypotheses: List[Hypothesis] = []
         self._total_cost = 0.0
+        self.budget_limit = budget_limit
 
-        logger.info("scientific_agent.initialized", agent_id=agent_id)
+        logger.info("scientific_agent.initialized", agent_id=agent_id, budget_limit=budget_limit)
 
     def generate_hypothesis(
         self,
@@ -212,6 +225,95 @@ class ScientificAgent(BaseAgent):
             Dictionary of observations
         """
         return {}
+
+    def _record_llm_cost(
+        self,
+        tokens_input: int,
+        tokens_output: int,
+        cost: float,
+        model: str,
+        operation: str = "llm_call",
+    ) -> None:
+        """
+        Record cost from an LLM API call and enforce budget limits.
+
+        This method:
+        1. Checks budget limits BEFORE incrementing cost
+        2. Increments the total cost for this agent
+        3. Emits observability metrics for cost tracking
+
+        Args:
+            tokens_input: Number of input tokens used
+            tokens_output: Number of output tokens generated
+            cost: Cost in USD for this API call
+            model: Model name (e.g., "gpt-4o-mini")
+            operation: Operation type for tracking (default: "llm_call")
+
+        Raises:
+            BudgetExceededError: If total cost would exceed budget_limit
+
+        Example:
+            ```python
+            # After making an LLM call
+            response = await llm_provider.generate(...)
+            self._record_llm_cost(
+                tokens_input=response.tokens_input,
+                tokens_output=response.tokens_output,
+                cost=response.cost,
+                model=response.model,
+                operation="hypothesis_generation"
+            )
+            ```
+        """
+        # Calculate new total cost
+        new_total = self._total_cost + cost
+
+        # Check budget limit BEFORE incrementing (prevent overruns)
+        if self.budget_limit is not None and new_total > self.budget_limit:
+            logger.error(
+                "agent.budget_exceeded",
+                agent_id=self.agent_id,
+                operation=operation,
+                current_cost=self._total_cost,
+                attempted_cost=cost,
+                would_be_total=new_total,
+                budget_limit=self.budget_limit,
+                overage=new_total - self.budget_limit,
+            )
+            raise BudgetExceededError(
+                f"Agent '{self.agent_id}' would exceed budget limit of ${self.budget_limit:.2f}. "
+                f"Current cost: ${self._total_cost:.2f}, attempted operation: ${cost:.4f}"
+            )
+
+        # Only increment after budget check passes
+        self._total_cost = new_total
+
+        # Log the cost
+        logger.info(
+            "agent.llm_cost_recorded",
+            agent_id=self.agent_id,
+            operation=operation,
+            model=model,
+            tokens_input=tokens_input,
+            tokens_output=tokens_output,
+            cost=cost,
+            total_cost=self._total_cost,
+        )
+
+        # Emit observability metrics
+        with emit_span(
+            "agent.record_cost",
+            attributes={
+                "agent.id": self.agent_id,
+                "agent.operation": operation,
+                "llm.model": model,
+                "llm.tokens.input": tokens_input,
+                "llm.tokens.output": tokens_output,
+                "llm.cost": cost,
+                "agent.total_cost": self._total_cost,
+            },
+        ):
+            pass  # Span automatically records the attributes
 
     def get_cost(self) -> float:
         """

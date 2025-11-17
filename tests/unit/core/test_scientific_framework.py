@@ -7,19 +7,16 @@ Following TDD Red-Green-Blue cycle:
 
 These tests define the complete behavior of the scientific framework.
 """
-import pytest
-from datetime import datetime, timezone
+from datetime import timezone
 
 from compass.core.scientific_framework import (
+    DisproofAttempt,
+    DisproofOutcome,
     Evidence,
     EvidenceQuality,
     Hypothesis,
     HypothesisStatus,
-    DisproofAttempt,
-    DisproofOutcome,
-    InvestigativeAction,
 )
-
 
 # ============================================================================
 # Evidence Tests (6 tests)
@@ -555,5 +552,7 @@ def test_confidence_reasoning_updated_on_recalculation() -> None:
 
     # Reasoning should be updated
     assert hypothesis.confidence_reasoning != initial_reasoning
-    assert "evidence" in hypothesis.confidence_reasoning.lower() or \
-           "supporting" in hypothesis.confidence_reasoning.lower()
+    assert (
+        "evidence" in hypothesis.confidence_reasoning.lower()
+        or "supporting" in hypothesis.confidence_reasoning.lower()
+    )

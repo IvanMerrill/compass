@@ -4,13 +4,12 @@ These tests were added to verify critical fixes to the confidence
 calculation algorithm identified in Day 2 code review.
 """
 import pytest
-
 from compass.core.scientific_framework import (
+    DisproofAttempt,
     Evidence,
     EvidenceQuality,
     Hypothesis,
     HypothesisStatus,
-    DisproofAttempt,
 )
 
 

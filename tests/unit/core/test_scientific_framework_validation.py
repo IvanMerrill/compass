@@ -1,11 +1,10 @@
 """Tests for input validation in scientific framework."""
 import pytest
-
 from compass.core.scientific_framework import (
-    Hypothesis,
+    DisproofAttempt,
     Evidence,
     EvidenceQuality,
-    DisproofAttempt,
+    Hypothesis,
 )
 
 

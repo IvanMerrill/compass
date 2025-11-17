@@ -1,12 +1,10 @@
 """Tests for ScientificAgent integration with scientific framework."""
-import pytest
 
 from compass.agents.base import ScientificAgent
 from compass.core.scientific_framework import (
-    Hypothesis,
     Evidence,
     EvidenceQuality,
-    HypothesisStatus,
+    Hypothesis,
 )
 
 

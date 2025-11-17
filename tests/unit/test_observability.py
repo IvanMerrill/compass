@@ -1,5 +1,4 @@
 """Tests for OpenTelemetry observability setup."""
-import pytest
 
 from compass.config import Settings
 from compass.observability import get_tracer, is_observability_enabled, setup_observability
@@ -17,6 +16,7 @@ def test_setup_observability_when_disabled() -> None:
     """Test observability setup when disabled in settings."""
     # Re-import to reset state
     import compass.observability as obs_module
+
     obs_module._tracer_provider = None
 
     settings = Settings(enable_observability=False)

@@ -1,10 +1,7 @@
 """Tests for structured logging system."""
-import logging
-from typing import Any, Dict
 
 import pytest
 import structlog
-
 from compass.logging import (
     get_correlation_id,
     get_logger,
@@ -55,6 +52,7 @@ def test_correlation_id_defaults_to_none() -> None:
     """Test correlation ID is None by default."""
     # Clear any existing correlation ID
     import compass.logging as logging_module
+
     logging_module._correlation_id_var.set(None)
 
     result = get_correlation_id()
