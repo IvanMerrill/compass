@@ -12,6 +12,8 @@ from compass.integrations.mcp.base import (
     MCPServer,
     MCPValidationError,
 )
+from compass.integrations.mcp.grafana_client import GrafanaMCPClient
+from compass.integrations.mcp.tempo_client import TempoMCPClient
 
 __all__ = [
     "MCPServer",
@@ -20,4 +22,6 @@ __all__ = [
     "MCPConnectionError",
     "MCPQueryError",
     "MCPValidationError",
+    "GrafanaMCPClient",
+    "TempoMCPClient",
 ]

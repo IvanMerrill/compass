@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Grafana MCP Server
+  # Provides MCP interface to Grafana/Prometheus/Mimir/Loki
+  grafana-mcp:
+    image: grafana/mcp-grafana:latest
+    container_name: compass-grafana-mcp
+    ports:
+      - "8000:8000"
+    environment:
+      # Grafana connection
+      - GRAFANA_URL=${GRAFANA_URL:-http://grafana:3000}
+      - GRAFANA_SERVICE_ACCOUNT_TOKEN=${GRAFANA_SERVICE_ACCOUNT_TOKEN}
+
+      # MCP server config
+      - MCP_TRANSPORT=http
+      - MCP_PORT=8000
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    networks:
+      - compass-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Grafana (if not already running)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: compass-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    networks:
+      - compass-network
+    restart: unless-stopped
+
+  # Prometheus (if not already running)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: compass-prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - compass-network
+    restart: unless-stopped
+
+networks:
+  compass-network:
+    name: compass-network
+    driver: bridge
+
+volumes:
+  grafana-data:
+    name: compass-grafana-data
+  prometheus-data:
+    name: compass-prometheus-data
