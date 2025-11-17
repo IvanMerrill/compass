@@ -1,0 +1,118 @@
+version: '3.8'
+
+# Optional observability stack for local COMPASS development
+# This is NOT required for COMPASS to run - it's for local testing
+#
+# Usage:
+#   docker-compose -f docker-compose.observability.yml up -d
+#
+# Access:
+#   Grafana:    http://localhost:3000 (admin/admin)
+#   Prometheus: http://localhost:9090
+#   Jaeger:     http://localhost:16686
+#
+# COMPASS will send metrics/traces to the OTel collector on localhost:4317
+
+services:
+  # OpenTelemetry Collector - receives metrics/traces from COMPASS
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: compass-otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./observability/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8888:8888"   # Prometheus metrics (collector's own metrics)
+      - "8889:8889"   # Prometheus exporter
+    networks:
+      - compass-observability
+    restart: unless-stopped
+
+  # Prometheus - stores metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: compass-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - compass-observability
+    restart: unless-stopped
+    depends_on:
+      - otel-collector
+
+  # Grafana - visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: compass-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - ./observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./observability/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./observability/dashboards:/var/lib/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - compass-observability
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - tempo
+
+  # Tempo - distributed tracing backend
+  tempo:
+    image: grafana/tempo:latest
+    container_name: compass-tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP
+      - "4319:4317"   # OTLP gRPC (different port to avoid conflict)
+    networks:
+      - compass-observability
+    restart: unless-stopped
+
+  # Jaeger UI - query traces from Tempo
+  jaeger-query:
+    image: jaegertracing/jaeger-query:latest
+    container_name: compass-jaeger-query
+    environment:
+      - SPAN_STORAGE_TYPE=grpc-plugin
+      - GRPC_STORAGE_SERVER=tempo:9095
+    ports:
+      - "16686:16686"  # Jaeger UI
+    networks:
+      - compass-observability
+    restart: unless-stopped
+    depends_on:
+      - tempo
+
+networks:
+  compass-observability:
+    name: compass-observability
+    driver: bridge
+
+volumes:
+  prometheus-data:
+    name: compass-prometheus-data
+  grafana-data:
+    name: compass-grafana-data
+  tempo-data:
+    name: compass-tempo-data
