@@ -55,6 +55,24 @@ grep -i "human decision\|collaboration\|blameless" docs/reference/COMPASS_CONVER
 
 **Why this matters**: Planning conversations contain the rationale, trade-offs, and context for every architectural decision. Reference these when implementing.
 
+### Step 1.5: Review Architecture Decision Records (ADRs)
+
+**Check for documented architectural decisions** related to your task:
+
+```bash
+# View all ADRs
+ls docs/architecture/adr/
+
+# Search ADRs for your topic
+grep -i "your_topic" docs/architecture/adr/*.md
+```
+
+**Current ADRs**:
+- [ADR 001: Evidence Quality Naming](docs/architecture/adr/001-evidence-quality-naming.md) - Semantic evidence types (DIRECT, CORROBORATED, etc.)
+- [ADR 002: Foundation First Approach](docs/architecture/adr/002-foundation-first-approach.md) - Quality over velocity, fix bugs immediately
+
+**Why this matters**: ADRs document decisions already made with full rationale. Reading them prevents re-litigating decided questions and ensures alignment with project direction.
+
 ### Step 2: Consult Relevant Documentation
 
 Match your task to the right documentation:
@@ -127,14 +145,17 @@ Which approach aligns better with your vision for COMPASS?
 ```
 compass/
 ├── docs/
-│   ├── architecture/          # 8 technical architecture specs
+│   ├── architecture/          # 8 technical architecture specs + ADRs
 │   │   ├── COMPASS_MVP_Architecture_Reference.md (START HERE)
 │   │   ├── COMPASS_MVP_Technical_Design.md
 │   │   ├── COMPASS_Scientific_Framework_DOCS.md
 │   │   ├── COMPASS_Enterprise_Knowledge_Architecture.md
 │   │   ├── COMPASS_Interface_Architecture.md
 │   │   ├── COMPASS_Future_Proofing_Architecture.md
-│   │   └── investigation_learning_human_collaboration_architecture.md
+│   │   ├── investigation_learning_human_collaboration_architecture.md
+│   │   └── adr/               # Architecture Decision Records
+│   │       ├── 001-evidence-quality-naming.md
+│   │       └── 002-foundation-first-approach.md
 │   │
 │   ├── product/               # 3 product strategy docs
 │   │   ├── COMPASS_Product_Reference_Document_v1_1.md (PRIMARY SPEC)
@@ -206,6 +227,110 @@ $ grep -i "disproof" docs/reference/COMPASS_CONVERSATIONS_INDEX.md
 - Cost Management
 - MCP Integration
 - Product Strategy
+
+---
+
+## 📋 Architecture Decision Records (ADRs)
+
+### What Are ADRs?
+
+Architecture Decision Records document significant architectural decisions with:
+- **Context**: What problem are we solving?
+- **Decision**: What did we choose?
+- **Rationale**: Why did we choose this?
+- **Alternatives Considered**: What else did we evaluate?
+- **Consequences**: What are the trade-offs?
+
+### Current ADRs
+
+#### ADR 001: Evidence Quality Naming Convention
+**Decision**: Use semantic evidence types (DIRECT, CORROBORATED, INDIRECT, CIRCUMSTANTIAL, WEAK) instead of simple quality levels (HIGH, MEDIUM, LOW)
+
+**Key Points**:
+- Aligns with professional incident investigation (NTSB, aviation safety)
+- Forces agents to consider evidence gathering methodology
+- Better audit trails ("DIRECT observation" vs "HIGH quality")
+- Maps to quality weights for confidence calculation
+
+**When to consult**: Implementing evidence gathering, confidence scoring, audit trails
+
+**Location**: `docs/architecture/adr/001-evidence-quality-naming.md`
+
+#### ADR 002: Foundation First Approach
+**Decision**: Fix all P0 bugs immediately before continuing with new features, even if it delays feature delivery
+
+**Key Points**:
+- Quality over velocity - sustainable pace requires solid foundation
+- Fix bugs immediately while context is fresh (10x cheaper than later)
+- Prevents technical debt accumulation
+- Establishes quality-first culture
+
+**When to consult**: Planning sprints, prioritizing bug fixes vs features, code review processes
+
+**Location**: `docs/architecture/adr/002-foundation-first-approach.md`
+
+### When to Create an ADR
+
+Create an ADR when:
+- Making a decision with long-term architectural impact
+- Choosing between multiple valid approaches with different trade-offs
+- Establishing a precedent for future development
+- Making a decision that's likely to be questioned later
+- Changing a significant abstraction or interface
+
+### ADR Template
+
+```markdown
+# ADR [number]: [Title]
+
+**Status**: [Proposed | Accepted | Deprecated | Superseded]
+**Date**: YYYY-MM-DD
+**Deciders**: [List of people involved]
+
+## Context and Problem Statement
+[Describe the problem and why we need to make a decision]
+
+## Decision Drivers
+[Key factors influencing the decision]
+
+## Considered Options
+### Option A: [Name]
+**Pros**: ...
+**Cons**: ...
+
+### Option B: [Name]
+**Pros**: ...
+**Cons**: ...
+
+## Decision Outcome
+**Chosen Option**: [Which option and why]
+
+**Consequences**:
+- Positive: ...
+- Negative: ...
+- Neutral: ...
+
+## Validation Metrics
+[How will we know if this decision was right?]
+
+## References
+[Related documents, conversations, external sources]
+```
+
+### How to Use ADRs
+
+**Before implementing**:
+1. Search existing ADRs for related decisions
+2. Check if your approach contradicts any ADR
+3. If it does, either follow the ADR or propose updating it
+
+**During implementation**:
+1. Reference ADR in code comments for non-obvious patterns
+2. Update ADR if you discover new information
+
+**After implementation**:
+1. Create ADR if you made a significant decision
+2. Link to ADR from completion reports
 
 ---
 
@@ -972,6 +1097,7 @@ grep -i "MCP\|integration\|LGTM" docs/reference/COMPASS_CONVERSATIONS_INDEX.md
 | **Cost Management** | Search index: "cost" | `docs/product/COMPASS_Product_Strategy.md` |
 | **TDD Workflow** | `docs/guides/compass-tdd-workflow.md` | `src/tests/test_scientific_framework.py` |
 | **Learning Teams** | `docs/research/Evaluation_of_Learning_Teams...pdf` | Search index: "Learning Teams" |
+| **Architecture Decisions** | `docs/architecture/adr/` (all ADRs) | ADR 001 (Evidence Quality), ADR 002 (Foundation First) |
 
 ### Prototype Code Locations
 
