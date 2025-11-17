@@ -26,7 +26,7 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.sdk.resources import Resource, SERVICE_NAME, SERVICE_VERSION
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+# from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor  # TODO: Add when httpx is used
 from opentelemetry.trace import Status, StatusCode
 
 logger = structlog.get_logger()
@@ -126,11 +126,12 @@ def _instrument_libraries() -> None:
         logger.warning("instrumentation_failed", library="redis", error=str(e))
 
     # httpx - for external API calls (LLM providers, etc.)
-    try:
-        HTTPXClientInstrumentor().instrument()
-        logger.debug("instrumented", library="httpx")
-    except Exception as e:
-        logger.warning("instrumentation_failed", library="httpx", error=str(e))
+    # TODO: Enable when httpx instrumentation dependency is resolved
+    # try:
+    #     HTTPXClientInstrumentor().instrument()
+    #     logger.debug("instrumented", library="httpx")
+    # except Exception as e:
+    #     logger.warning("instrumentation_failed", library="httpx", error=str(e))
 
 
 # Span attribute constants (semantic conventions)
