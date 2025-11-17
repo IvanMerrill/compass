@@ -22,16 +22,28 @@ anthropic = "^0.40.0"
 tiktoken = "^0.5.0"
 asyncpg = "^0.29.0"
 sqlalchemy = "^2.0.0"
+prometheus-client = "^0.19.0"
+opentelemetry-instrumentation-sqlalchemy = "^0.42b0"
+opentelemetry-instrumentation-redis = "^0.42b0"
+opentelemetry-exporter-prometheus = "^0.42b0"
+sentry-sdk = "^1.39.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 pytest-asyncio = "^0.21.0"
 pytest-cov = "^4.1.0"
 pytest-mock = "^3.12.0"
+pytest-watch = "^4.2.0"
 black = "^23.12.0"
 ruff = "^0.1.9"
 mypy = "^1.8.0"
 pre-commit = "^3.6.0"
+bandit = {extras = ["toml"], version = "^1.7.5"}
+safety = "^3.0.0"
+detect-secrets = "^1.4.0"
+locust = "^2.17.0"
+types-redis = "^4.6.0"
+types-setuptools = "^69.0.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -102,3 +114,7 @@ precision = 2
 show_missing = true
 skip_covered = false
 fail_under = 90
+
+[tool.bandit]
+exclude_dirs = ["/tests", "/.venv", "/venv"]
+skips = ["B101"]  # assert_used - acceptable in tests

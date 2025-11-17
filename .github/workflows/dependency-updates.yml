@@ -1,0 +1,75 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9 AM UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.7.0'
+
+      - name: Update dependencies
+        run: |
+          poetry update
+          poetry lock
+
+      - name: Install updated dependencies
+        run: poetry install --no-interaction
+
+      - name: Run tests
+        run: poetry run pytest tests/unit/ -v
+        continue-on-error: true
+        id: tests
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): weekly dependency updates'
+          title: 'chore(deps): Weekly dependency updates'
+          body: |
+            ## Automated Dependency Updates
+
+            This PR contains weekly dependency updates generated automatically.
+
+            ### Changes
+            - Updated all dependencies to their latest compatible versions
+            - Updated poetry.lock file
+
+            ### Test Results
+            Tests status: ${{ steps.tests.outcome }}
+
+            ### Review Checklist
+            - [ ] Review changed dependencies for breaking changes
+            - [ ] Verify all tests pass
+            - [ ] Check for security advisories
+            - [ ] Validate CI pipeline passes
+
+            ---
+            🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+            Co-Authored-By: Claude <noreply@anthropic.com>
+          branch: deps/automated-weekly-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            python
+            automated
+          draft: false
