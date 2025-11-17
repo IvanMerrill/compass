@@ -1,7 +1,6 @@
 """Tests for MCP base abstractions."""
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 
 import pytest
 from compass.integrations.mcp.base import (
@@ -9,7 +8,6 @@ from compass.integrations.mcp.base import (
     MCPError,
     MCPQueryError,
     MCPResponse,
-    MCPServer,
     MCPValidationError,
 )
 
@@ -25,30 +23,6 @@ def valid_mcp_response() -> MCPResponse:
         metadata={"execution_time_ms": 42},
         server_type="prometheus",
     )
-
-
-# Mock implementation for testing abstract class
-class MockMCPServer(MCPServer):
-    """Mock MCP server for testing the abstract base class."""
-
-    async def query(
-        self,
-        query: str,
-        context: Optional[Dict[str, Any]] = None,
-        timeout: float = 30.0,
-    ) -> MCPResponse:
-        """Mock query method."""
-        return MCPResponse(
-            data=[{"timestamp": 1234567890, "value": 42.0}],
-            query=query,
-            timestamp=datetime.now(timezone.utc),
-            metadata={"mock": True, "timeout": timeout},
-            server_type="mock",
-        )
-
-    def get_capabilities(self) -> List[str]:
-        """Mock capabilities method."""
-        return ["metrics", "instant_query", "range_query"]
 
 
 # MCPResponse tests
@@ -142,60 +116,6 @@ class TestMCPResponse:
             server_type="test",
         )
         assert response_str.data == "raw_response"
-
-
-# MCPServer tests
-class TestMCPServer:
-    """Tests for MCPServer abstract base class."""
-
-    def test_cannot_instantiate_abstract_class(self) -> None:
-        """Test that MCPServer cannot be instantiated directly."""
-        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
-            MCPServer()  # type: ignore
-
-    @pytest.mark.asyncio
-    async def test_mock_server_implements_interface(self) -> None:
-        """Test that a concrete implementation works correctly."""
-        server = MockMCPServer()
-
-        response = await server.query(
-            query="test_query",
-            context={"service": "payments"},
-        )
-
-        assert isinstance(response, MCPResponse)
-        assert response.query == "test_query"
-        assert response.server_type == "mock"
-        assert response.metadata["mock"] is True
-
-    @pytest.mark.asyncio
-    async def test_query_with_timeout(self) -> None:
-        """Test that timeout parameter is passed through."""
-        server = MockMCPServer()
-
-        response = await server.query(
-            query="test_query",
-            timeout=15.0,
-        )
-
-        assert response.metadata["timeout"] == 15.0
-
-    def test_get_capabilities(self) -> None:
-        """Test that get_capabilities returns list of strings."""
-        server = MockMCPServer()
-
-        caps = server.get_capabilities()
-
-        assert isinstance(caps, list)
-        assert "metrics" in caps
-        assert "instant_query" in caps
-        assert "range_query" in caps
-
-    def test_get_server_type(self) -> None:
-        """Test that get_server_type returns correct type."""
-        server = MockMCPServer()
-
-        assert server.get_server_type() == "mockmcp"
 
 
 # Exception hierarchy tests

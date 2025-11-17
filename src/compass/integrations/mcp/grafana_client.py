@@ -178,18 +178,21 @@ class GrafanaMCPClient:
             >>> for series in response.data["result"]:
             ...     print(series["metric"], series["value"])
         """
+        # Validate inputs
+        if not query or not query.strip():
+            raise ValueError("query cannot be empty")
+        if not datasource_uid or not datasource_uid.strip():
+            raise ValueError("datasource_uid cannot be empty")
+
         tool_params: Dict[str, Any] = {
             "query": query,
             "datasource_uid": datasource_uid,
         }
 
-        if context:
-            tool_params["context"] = context
-
         result = await self._call_mcp_tool(
             tool_name="execute_promql_query",
             params=tool_params,
-            context=context,
+            context=context,  # Optional params passed as kwargs
         )
 
         return MCPResponse(
@@ -229,6 +232,12 @@ class GrafanaMCPClient:
             >>> for stream in response.data["result"]:
             ...     print(stream["stream"], len(stream["values"]))
         """
+        # Validate inputs
+        if not query or not query.strip():
+            raise ValueError("query cannot be empty")
+        if not datasource_uid or not datasource_uid.strip():
+            raise ValueError("datasource_uid cannot be empty")
+
         result = await self._call_mcp_tool(
             tool_name="execute_logql_query",
             params={
@@ -321,8 +330,10 @@ class GrafanaMCPClient:
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                # MCP endpoint at /mcp (convention from Grafana MCP server)
-                mcp_url = "http://localhost:8000/mcp"  # MCP server endpoint
+                # MCP endpoint at /mcp (Grafana MCP server standard)
+                # Note: Grafana MCP uses /mcp, while Tempo MCP uses /api/mcp
+                # This is per official server implementations.
+                mcp_url = f"{self.url}/mcp"
 
                 response = await self._session.post(
                     mcp_url,
@@ -336,7 +347,11 @@ class GrafanaMCPClient:
                     raise MCPQueryError(f"Datasource not found or tool '{tool_name}' not available")
                 elif 400 <= response.status_code < 500:
                     # Client error (bad query, invalid params)
-                    error_detail = response.json().get("error", "Unknown error")
+                    try:
+                        error_detail = response.json().get("error", "Unknown error")
+                    except json.JSONDecodeError:
+                        # Response isn't JSON, use the text body
+                        error_detail = response.text or f"HTTP {response.status_code}"
                     raise MCPQueryError(f"Query failed: {error_detail}")
                 elif response.status_code >= 500:
                     # Server error - may be transient, worth retrying

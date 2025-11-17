@@ -4,7 +4,7 @@ services:
   # Grafana MCP Server
   # Provides MCP interface to Grafana/Prometheus/Mimir/Loki
   grafana-mcp:
-    image: grafana/mcp-grafana:latest
+    image: mcp/grafana:latest
     container_name: compass-grafana-mcp
     ports:
       - "8000:8000"

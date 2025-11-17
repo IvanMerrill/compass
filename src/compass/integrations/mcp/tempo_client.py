@@ -178,6 +178,10 @@ class TempoMCPClient:
             >>> for trace in response.data["traces"]:
             ...     print(trace["traceID"], trace["durationMs"])
         """
+        # Validate inputs
+        if not query or not query.strip():
+            raise ValueError("query cannot be empty")
+
         tool_params: Dict[str, Any] = {
             "query": query,
             "limit": limit,
@@ -244,7 +248,9 @@ class TempoMCPClient:
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                # MCP endpoint at /api/mcp (Tempo convention)
+                # MCP endpoint at /api/mcp (Tempo MCP server standard)
+                # Note: Tempo MCP uses /api/mcp, while Grafana MCP uses /mcp
+                # This is per official Grafana Tempo 2.9+ MCP implementation.
                 mcp_url = f"{self.url}/api/mcp"
 
                 response = await self._session.post(
@@ -261,7 +267,11 @@ class TempoMCPClient:
                     )
                 elif 400 <= response.status_code < 500:
                     # Client error (bad query, invalid params)
-                    error_detail = response.json().get("error", "Unknown error")
+                    try:
+                        error_detail = response.json().get("error", "Unknown error")
+                    except json.JSONDecodeError:
+                        # Response isn't JSON, use the text body
+                        error_detail = response.text or f"HTTP {response.status_code}"
                     raise MCPQueryError(f"Query failed: {error_detail}")
                 elif response.status_code >= 500:
                     # Server error - may be transient, worth retrying

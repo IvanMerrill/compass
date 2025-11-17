@@ -9,14 +9,12 @@ from compass.integrations.mcp.base import (
     MCPError,
     MCPQueryError,
     MCPResponse,
-    MCPServer,
     MCPValidationError,
 )
 from compass.integrations.mcp.grafana_client import GrafanaMCPClient
 from compass.integrations.mcp.tempo_client import TempoMCPClient
 
 __all__ = [
-    "MCPServer",
     "MCPResponse",
     "MCPError",
     "MCPConnectionError",

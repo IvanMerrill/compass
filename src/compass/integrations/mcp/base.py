@@ -1,32 +1,31 @@
 """Base abstractions for MCP (Model Context Protocol) integration.
 
-This module defines the core interfaces and data structures for integrating
+This module defines the core data structures and exceptions for integrating
 with observability systems via MCP. MCP provides a standardized way to query
-metrics, logs, and traces from various backends (Prometheus, Grafana Mimir, etc.).
+metrics, logs, and traces from various backends (Grafana, Tempo, etc.).
 
 Design Principles:
-1. Server abstraction: Easy to add new MCP servers without changing agent code
-2. Query flexibility: Support both raw queries and templated queries
-3. Error handling: Standardized exceptions for connection failures, timeouts, etc.
-4. Observability: All MCP calls are instrumented with OpenTelemetry spans
+1. Type-safe responses: MCPResponse dataclass for structured results
+2. Clear exceptions: Specific error types for different failure modes
+3. Immutable responses: Frozen dataclass prevents accidental modification
+4. Observability: All MCP calls should be instrumented with OpenTelemetry
 
 Example usage:
     ```python
-    from compass.integrations.mcp.prometheus import PrometheusServer
+    from compass.integrations.mcp import GrafanaMCPClient
 
-    server = PrometheusServer(endpoint="http://localhost:9090")
-    response = await server.query(
-        query="rate(http_requests_total[5m])",
-        context={"service": "payments"}
-    )
-    print(f"Found {len(response.data)} metrics")
+    async with GrafanaMCPClient(url=mcp_url, token=token) as client:
+        response = await client.query_promql(
+            query="rate(http_requests_total[5m])",
+            datasource_uid="prometheus"
+        )
+        print(f"Found {len(response.data)} metrics")
     ```
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 
 # Exception hierarchy for MCP errors
@@ -91,86 +90,3 @@ class MCPResponse:
         # Validate server_type is not empty
         if not self.server_type or not self.server_type.strip():
             raise MCPValidationError("MCPResponse server_type cannot be empty")
-
-
-class MCPServer(ABC):
-    """Abstract base class for MCP server integrations.
-
-    All MCP servers (Prometheus, Grafana Mimir, etc.) must implement this interface.
-    This ensures consistent behavior across different observability backends and makes
-    it easy to swap servers without changing agent code.
-
-    The server is responsible for:
-    1. Maintaining connection to the observability backend
-    2. Executing queries and returning structured results
-    3. Error handling (connection failures, query errors, timeouts)
-    4. OpenTelemetry instrumentation for observability
-
-    Subclasses must implement:
-    - query(): Execute a query and return structured response
-    - get_capabilities(): Describe what this server can do
-    """
-
-    @abstractmethod
-    async def query(
-        self,
-        query: str,
-        context: Optional[Dict[str, Any]] = None,
-        timeout: float = 30.0,
-    ) -> MCPResponse:
-        """Execute a query against the MCP server.
-
-        Args:
-            query: The query to execute (format depends on server type)
-            context: Optional context for query templating (e.g., service name, time range)
-            timeout: Query timeout in seconds (default: 30.0)
-
-        Returns:
-            MCPResponse with data, metadata, and timestamp
-
-        Raises:
-            MCPValidationError: If query is empty or invalid
-            MCPConnectionError: If unable to connect to server
-            MCPQueryError: If query execution fails
-
-        Example:
-            ```python
-            response = await server.query(
-                query="rate(http_requests_total{service='payments'}[5m])",
-                context={"service": "payments"},
-                timeout=10.0
-            )
-            print(f"Query returned {len(response.data)} data points")
-            ```
-        """
-        pass
-
-    @abstractmethod
-    def get_capabilities(self) -> List[str]:
-        """Get the capabilities of this MCP server.
-
-        Returns:
-            List of capability strings (e.g., ["metrics", "instant_query", "range_query"])
-
-        Example:
-            ```python
-            caps = server.get_capabilities()
-            if "range_query" in caps:
-                # Server supports time range queries
-                pass
-            ```
-        """
-        pass
-
-    def get_server_type(self) -> str:
-        """Get the type of this MCP server (e.g., "prometheus", "mimir").
-
-        Returns:
-            Server type as lowercase string
-
-        Note:
-            Default implementation returns the class name lowercased without
-            "Server" suffix. Subclasses can override if needed.
-        """
-        class_name = self.__class__.__name__
-        return class_name.replace("Server", "").lower()
