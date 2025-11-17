@@ -380,6 +380,62 @@ class TestDatabaseAgentObserve:
         assert result["traces"] == {}
         assert result["confidence"] == 0.0  # No data sources = no confidence
 
+    @pytest.mark.asyncio
+    async def test_observe_concurrent_cache_access(self):
+        """Verify observe() handles concurrent calls correctly without cache corruption."""
+        import asyncio
+
+        # Setup mock MCP clients
+        mock_grafana = AsyncMock()
+        mock_grafana.query_promql = AsyncMock(
+            return_value=MCPResponse(
+                data={"result": []},
+                query="test",
+                timestamp=datetime.now(timezone.utc),
+                metadata={},
+                server_type="grafana",
+            )
+        )
+        mock_grafana.query_logql = AsyncMock(
+            return_value=MCPResponse(
+                data={"result": []},
+                query="test",
+                timestamp=datetime.now(timezone.utc),
+                metadata={},
+                server_type="grafana",
+            )
+        )
+        mock_tempo = AsyncMock()
+        mock_tempo.query_traceql = AsyncMock(
+            return_value=MCPResponse(
+                data={"traces": []},
+                query="test",
+                timestamp=datetime.now(timezone.utc),
+                metadata={},
+                server_type="tempo",
+            )
+        )
+
+        agent = DatabaseAgent(
+            agent_id="test_database_agent",
+            grafana_client=mock_grafana,
+            tempo_client=mock_tempo,
+        )
+
+        # Execute 10 concurrent observe() calls
+        tasks = [agent.observe() for _ in range(10)]
+        results = await asyncio.gather(*tasks)
+
+        # All results should be identical (from cache)
+        for result in results[1:]:
+            assert result == results[0]
+
+        # MCP clients should only be called once (all other calls hit cache)
+        # Without proper locking, this test may fail intermittently
+        assert mock_grafana.query_promql.call_count == 1
+        assert mock_grafana.query_logql.call_count == 1
+        assert mock_tempo.query_traceql.call_count == 1
+
 
 class TestDatabaseAgentDisproofStrategies:
     """Tests for generate_disproof_strategies() method."""
@@ -889,4 +945,51 @@ class TestDatabaseAgentLLMHypothesis:
 
         # Execute - should raise ValueError
         with pytest.raises(ValueError, match="LLM provider"):
+            await agent.generate_hypothesis_with_llm(observations)
+
+    @pytest.mark.asyncio
+    async def test_incremental_budget_exhaustion(self):
+        """Verify budget enforcement works across multiple incremental LLM calls."""
+        from compass.integrations.llm.base import LLMResponse
+        from compass.agents.base import BudgetExceededError
+
+        mock_openai = AsyncMock()
+        # Each call costs $0.04
+        mock_openai.generate = AsyncMock(
+            return_value=LLMResponse(
+                content='{"statement": "Test", "initial_confidence": 0.5, "affected_systems": [], "reasoning": "Test"}',
+                model="gpt-4o-mini",
+                tokens_input=1000,
+                tokens_output=500,
+                cost=0.04,  # $0.04 per call
+                timestamp=datetime.now(timezone.utc),
+                metadata={},
+            )
+        )
+
+        # Set budget to $0.10 (should allow 2 calls, reject 3rd)
+        agent = DatabaseAgent(agent_id="test_database_agent", budget_limit=0.10)
+        agent.llm_provider = mock_openai
+
+        observations = {
+            "metrics": {},
+            "logs": {},
+            "traces": {},
+            "timestamp": "2024-01-01T00:00:00Z",
+            "confidence": 0.5,
+        }
+
+        # First call: $0.04 spent, $0.06 remaining - should succeed
+        hypothesis1 = await agent.generate_hypothesis_with_llm(observations)
+        assert hypothesis1 is not None
+        assert agent.get_cost() == 0.04
+
+        # Second call: $0.08 spent, $0.02 remaining - should succeed
+        hypothesis2 = await agent.generate_hypothesis_with_llm(observations)
+        assert hypothesis2 is not None
+        assert agent.get_cost() == 0.08
+
+        # Third call: would be $0.12 spent, exceeds $0.10 budget - should fail
+        # Without proper locking, race condition could allow this to succeed
+        with pytest.raises(BudgetExceededError):
             await agent.generate_hypothesis_with_llm(observations)

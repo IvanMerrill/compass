@@ -4,6 +4,7 @@ Base agent classes for COMPASS.
 Provides abstract base classes for the multi-agent system following
 the ICS (Incident Command System) hierarchy.
 """
+import threading
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -110,6 +111,7 @@ class ScientificAgent(BaseAgent):
         self.budget_limit = budget_limit
         self.llm_provider = llm_provider
         self.mcp_server = mcp_server
+        self._cost_lock = threading.Lock()  # Prevent race conditions in budget checks
 
         logger.info(
             "scientific_agent.initialized",
@@ -281,28 +283,30 @@ class ScientificAgent(BaseAgent):
             )
             ```
         """
-        # Calculate new total cost
-        new_total = self._total_cost + cost
+        # Use lock to prevent race conditions in concurrent budget checks
+        with self._cost_lock:
+            # Calculate new total cost
+            new_total = self._total_cost + cost
 
-        # Check budget limit BEFORE incrementing (prevent overruns)
-        if self.budget_limit is not None and new_total > self.budget_limit:
-            logger.error(
-                "agent.budget_exceeded",
-                agent_id=self.agent_id,
-                operation=operation,
-                current_cost=self._total_cost,
-                attempted_cost=cost,
-                would_be_total=new_total,
-                budget_limit=self.budget_limit,
-                overage=new_total - self.budget_limit,
-            )
-            raise BudgetExceededError(
-                f"Agent '{self.agent_id}' would exceed budget limit of ${self.budget_limit:.2f}. "
-                f"Current cost: ${self._total_cost:.2f}, attempted operation: ${cost:.4f}"
-            )
+            # Check budget limit BEFORE incrementing (prevent overruns)
+            if self.budget_limit is not None and new_total > self.budget_limit:
+                logger.error(
+                    "agent.budget_exceeded",
+                    agent_id=self.agent_id,
+                    operation=operation,
+                    current_cost=self._total_cost,
+                    attempted_cost=cost,
+                    would_be_total=new_total,
+                    budget_limit=self.budget_limit,
+                    overage=new_total - self.budget_limit,
+                )
+                raise BudgetExceededError(
+                    f"Agent '{self.agent_id}' would exceed budget limit of ${self.budget_limit:.2f}. "
+                    f"Current cost: ${self._total_cost:.2f}, attempted operation: ${cost:.4f}"
+                )
 
-        # Only increment after budget check passes
-        self._total_cost = new_total
+            # Only increment after budget check passes
+            self._total_cost = new_total
 
         # Log the cost
         logger.info(

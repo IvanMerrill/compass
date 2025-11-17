@@ -82,6 +82,7 @@ class DatabaseAgent(ScientificAgent):
         # Cache for observe() results
         self._observe_cache: Optional[Dict[str, Any]] = None
         self._observe_cache_time: Optional[float] = None
+        self._cache_lock = asyncio.Lock()  # Prevent race conditions in cache access
 
         logger.info(
             "database_agent.initialized",
@@ -122,127 +123,142 @@ class DatabaseAgent(ScientificAgent):
                 "agent.has_tempo": self.tempo_client is not None,
             },
         ) as span:
-            # Check cache first
-            current_time = time.time()
-            if (
-                self._observe_cache is not None
-                and self._observe_cache_time is not None
-                and (current_time - self._observe_cache_time) < OBSERVE_CACHE_TTL_SECONDS
-            ):
-                span.set_attribute("cache.hit", True)
-                span.set_attribute("cache.age_seconds", current_time - self._observe_cache_time)
-                logger.debug(
-                    "database_agent.observe_cache_hit",
+            # Use lock to prevent race conditions in concurrent cache access
+            async with self._cache_lock:
+                # Check cache first
+                current_time = time.time()
+                if (
+                    self._observe_cache is not None
+                    and self._observe_cache_time is not None
+                    and (current_time - self._observe_cache_time) < OBSERVE_CACHE_TTL_SECONDS
+                ):
+                    span.set_attribute("cache.hit", True)
+                    span.set_attribute("cache.age_seconds", current_time - self._observe_cache_time)
+                    logger.debug(
+                        "database_agent.observe_cache_hit",
+                        agent_id=self.agent_id,
+                        cache_age_seconds=current_time - self._observe_cache_time,
+                    )
+                    return self._observe_cache
+
+                span.set_attribute("cache.hit", False)
+                logger.info("database_agent.observe_started", agent_id=self.agent_id)
+
+                # Initialize result structure
+                result: Dict[str, Any] = {
+                    "metrics": {},
+                    "logs": {},
+                    "traces": {},
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "confidence": 0.0,
+                }
+
+                # If no MCP clients configured, return empty result
+                if self.grafana_client is None and self.tempo_client is None:
+                    logger.warning("database_agent.no_mcp_clients", agent_id=self.agent_id)
+                    span.set_attribute("mcp.sources_configured", 0)
+                    self._observe_cache = result
+                    self._observe_cache_time = current_time
+                    return result
+
+                # Query all MCP sources in parallel
+                tasks = []
+                if self.grafana_client is not None:
+                    tasks.append(self._query_metrics())
+                    tasks.append(self._query_logs())
+                if self.tempo_client is not None:
+                    tasks.append(self._query_traces())
+
+                # Execute queries in parallel and collect results
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                # Process results and calculate confidence
+                successful_sources = 0
+                total_sources = 0
+
+                # Metrics
+                if self.grafana_client is not None:
+                    total_sources += 1
+                    metrics_result = results[0] if len(results) > 0 else None
+                    if isinstance(metrics_result, Exception):
+                        logger.warning(
+                            "database_agent.metrics_query_failed",
+                            agent_id=self.agent_id,
+                            error_type=type(metrics_result).__name__,
+                            error=str(metrics_result),
+                            query="db_connections",
+                            datasource_uid="prometheus",
+                            exc_info=True,
+                        )
+                        result["metrics"] = {}
+                    elif metrics_result is not None:
+                        result["metrics"] = metrics_result
+                        successful_sources += 1
+
+                    # Logs
+                    total_sources += 1
+                    logs_result = results[1] if len(results) > 1 else None
+                    if isinstance(logs_result, Exception):
+                        logger.warning(
+                            "database_agent.logs_query_failed",
+                            agent_id=self.agent_id,
+                            error_type=type(logs_result).__name__,
+                            error=str(logs_result),
+                            query='{app="postgres"}',
+                            datasource_uid="loki",
+                            duration="5m",
+                            exc_info=True,
+                        )
+                        result["logs"] = {}
+                    elif logs_result is not None:
+                        result["logs"] = logs_result
+                        successful_sources += 1
+
+                # Traces
+                if self.tempo_client is not None:
+                    total_sources += 1
+                    # Traces is last in results
+                    traces_index = 2 if self.grafana_client is not None else 0
+                    traces_result = results[traces_index] if len(results) > traces_index else None
+                    if isinstance(traces_result, Exception):
+                        logger.warning(
+                            "database_agent.traces_query_failed",
+                            agent_id=self.agent_id,
+                            error_type=type(traces_result).__name__,
+                            error=str(traces_result),
+                            query='{service.name="database"}',
+                            limit=20,
+                            exc_info=True,
+                        )
+                        result["traces"] = {}
+                    elif traces_result is not None:
+                        result["traces"] = traces_result
+                        successful_sources += 1
+
+                # Calculate confidence based on successful sources
+                if total_sources > 0:
+                    result["confidence"] = successful_sources / total_sources
+                else:
+                    result["confidence"] = 0.0
+
+                # Set span attributes for observability
+                span.set_attribute("mcp.sources_total", total_sources)
+                span.set_attribute("mcp.sources_successful", successful_sources)
+                span.set_attribute("observe.confidence", result["confidence"])
+
+                logger.info(
+                    "database_agent.observe_completed",
                     agent_id=self.agent_id,
-                    cache_age_seconds=current_time - self._observe_cache_time,
+                    successful_sources=successful_sources,
+                    total_sources=total_sources,
+                    confidence=result["confidence"],
                 )
-                return self._observe_cache
 
-            span.set_attribute("cache.hit", False)
-            logger.info("database_agent.observe_started", agent_id=self.agent_id)
-
-            # Initialize result structure
-            result: Dict[str, Any] = {
-                "metrics": {},
-                "logs": {},
-                "traces": {},
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "confidence": 0.0,
-            }
-
-            # If no MCP clients configured, return empty result
-            if self.grafana_client is None and self.tempo_client is None:
-                logger.warning("database_agent.no_mcp_clients", agent_id=self.agent_id)
-                span.set_attribute("mcp.sources_configured", 0)
+                # Cache the result
                 self._observe_cache = result
                 self._observe_cache_time = current_time
+
                 return result
-
-            # Query all MCP sources in parallel
-            tasks = []
-            if self.grafana_client is not None:
-                tasks.append(self._query_metrics())
-                tasks.append(self._query_logs())
-            if self.tempo_client is not None:
-                tasks.append(self._query_traces())
-
-            # Execute queries in parallel and collect results
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-
-            # Process results and calculate confidence
-            successful_sources = 0
-            total_sources = 0
-
-            # Metrics
-            if self.grafana_client is not None:
-                total_sources += 1
-                metrics_result = results[0] if len(results) > 0 else None
-                if isinstance(metrics_result, Exception):
-                    logger.warning(
-                        "database_agent.metrics_query_failed",
-                        agent_id=self.agent_id,
-                        error=str(metrics_result),
-                    )
-                    result["metrics"] = {}
-                elif metrics_result is not None:
-                    result["metrics"] = metrics_result
-                    successful_sources += 1
-
-                # Logs
-                total_sources += 1
-                logs_result = results[1] if len(results) > 1 else None
-                if isinstance(logs_result, Exception):
-                    logger.warning(
-                        "database_agent.logs_query_failed",
-                        agent_id=self.agent_id,
-                        error=str(logs_result),
-                    )
-                    result["logs"] = {}
-                elif logs_result is not None:
-                    result["logs"] = logs_result
-                    successful_sources += 1
-
-            # Traces
-            if self.tempo_client is not None:
-                total_sources += 1
-                # Traces is last in results
-                traces_index = 2 if self.grafana_client is not None else 0
-                traces_result = results[traces_index] if len(results) > traces_index else None
-                if isinstance(traces_result, Exception):
-                    logger.warning(
-                        "database_agent.traces_query_failed",
-                        agent_id=self.agent_id,
-                        error=str(traces_result),
-                    )
-                    result["traces"] = {}
-                elif traces_result is not None:
-                    result["traces"] = traces_result
-                    successful_sources += 1
-
-            # Calculate confidence based on successful sources
-            if total_sources > 0:
-                result["confidence"] = successful_sources / total_sources
-            else:
-                result["confidence"] = 0.0
-
-            # Set span attributes for observability
-            span.set_attribute("mcp.sources_total", total_sources)
-            span.set_attribute("mcp.sources_successful", successful_sources)
-            span.set_attribute("observe.confidence", result["confidence"])
-
-            logger.info(
-                "database_agent.observe_completed",
-                agent_id=self.agent_id,
-                successful_sources=successful_sources,
-                total_sources=total_sources,
-                confidence=result["confidence"],
-            )
-
-            # Cache the result
-            self._observe_cache = result
-            self._observe_cache_time = current_time
-
-            return result
 
     async def _query_metrics(self) -> Dict[str, Any]:
         """Query Prometheus/Mimir metrics via Grafana MCP.
@@ -474,9 +490,23 @@ class DatabaseAgent(ScientificAgent):
             operation="hypothesis_generation",
         )
 
-        # Parse JSON response
+        # Parse JSON response (strip markdown wrappers if present)
         try:
-            hypothesis_data = json_module.loads(response.content.strip())
+            # LLMs often wrap JSON in markdown code blocks despite instructions
+            content = response.content.strip()
+
+            # Remove markdown code fences (```json...``` or ```...```)
+            if content.startswith("```"):
+                # Remove opening fence (```json or ```)
+                lines = content.split("\n")
+                if lines[0].startswith("```"):
+                    lines = lines[1:]  # Remove first line
+                # Remove closing fence
+                if lines and lines[-1].strip() == "```":
+                    lines = lines[:-1]  # Remove last line
+                content = "\n".join(lines).strip()
+
+            hypothesis_data = json_module.loads(content)
         except json_module.JSONDecodeError as e:
             raise ValueError(
                 f"LLM returned invalid JSON. Response: {response.content[:200]}"
@@ -489,6 +519,19 @@ class DatabaseAgent(ScientificAgent):
             raise ValueError(
                 f"LLM response missing required fields: {missing_fields}. "
                 f"Response: {hypothesis_data}"
+            )
+
+        # Validate confidence bounds
+        confidence = hypothesis_data["initial_confidence"]
+        if not isinstance(confidence, (int, float)):
+            raise ValueError(
+                f"LLM returned invalid confidence type: {type(confidence).__name__} "
+                f"(expected float). Value: {confidence}"
+            )
+        if not (0.0 <= confidence <= 1.0):
+            raise ValueError(
+                f"LLM returned confidence out of bounds: {confidence} "
+                f"(expected 0.0-1.0)"
             )
 
         # Create Hypothesis object
