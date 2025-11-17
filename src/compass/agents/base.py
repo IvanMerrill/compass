@@ -5,12 +5,16 @@ Provides abstract base classes for the multi-agent system following
 the ICS (Incident Command System) hierarchy.
 """
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from compass.core.scientific_framework import Hypothesis
 from compass.integrations.llm.base import BudgetExceededError
 from compass.logging import get_logger
 from compass.observability import emit_span
+
+if TYPE_CHECKING:
+    from compass.integrations.llm.base import LLMProvider
+    from compass.integrations.mcp.base import MCPServer
 
 logger = get_logger(__name__)
 
@@ -82,6 +86,8 @@ class ScientificAgent(BaseAgent):
         agent_id: str,
         config: Optional[Dict[str, Any]] = None,
         budget_limit: Optional[float] = None,
+        llm_provider: Optional["LLMProvider"] = None,
+        mcp_server: Optional["MCPServer"] = None,
     ):
         """
         Initialize scientific agent.
@@ -90,6 +96,8 @@ class ScientificAgent(BaseAgent):
             agent_id: Unique identifier for this agent
             config: Optional configuration dictionary
             budget_limit: Optional budget limit in USD (default: no limit)
+            llm_provider: Optional LLM provider for hypothesis generation
+            mcp_server: Optional MCP server for metric/log/trace queries
         """
         # Validate budget_limit
         if budget_limit is not None and budget_limit < 0:
@@ -100,8 +108,16 @@ class ScientificAgent(BaseAgent):
         self.hypotheses: List[Hypothesis] = []
         self._total_cost = 0.0
         self.budget_limit = budget_limit
+        self.llm_provider = llm_provider
+        self.mcp_server = mcp_server
 
-        logger.info("scientific_agent.initialized", agent_id=agent_id, budget_limit=budget_limit)
+        logger.info(
+            "scientific_agent.initialized",
+            agent_id=agent_id,
+            budget_limit=budget_limit,
+            has_llm_provider=llm_provider is not None,
+            has_mcp_server=mcp_server is not None,
+        )
 
     def generate_hypothesis(
         self,

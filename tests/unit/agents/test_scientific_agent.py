@@ -166,3 +166,48 @@ async def test_observe_method_exists() -> None:
 
     # Default implementation returns empty dict
     assert isinstance(result, dict)
+
+
+def test_scientific_agent_with_llm_provider() -> None:
+    """Test ScientificAgent can be initialized with LLM provider."""
+    from unittest.mock import Mock
+
+    from compass.integrations.llm.base import LLMProvider
+
+    mock_llm = Mock(spec=LLMProvider)
+    agent = TestScientificAgent(agent_id="test_agent", llm_provider=mock_llm)
+
+    assert agent.agent_id == "test_agent"
+    assert agent.llm_provider == mock_llm
+    assert agent.mcp_server is None
+
+
+def test_scientific_agent_with_mcp_server() -> None:
+    """Test ScientificAgent can be initialized with MCP server."""
+    from unittest.mock import Mock
+
+    from compass.integrations.mcp.base import MCPServer
+
+    mock_mcp = Mock(spec=MCPServer)
+    agent = TestScientificAgent(agent_id="test_agent", mcp_server=mock_mcp)
+
+    assert agent.agent_id == "test_agent"
+    assert agent.llm_provider is None
+    assert agent.mcp_server == mock_mcp
+
+
+def test_scientific_agent_with_llm_and_mcp() -> None:
+    """Test ScientificAgent can be initialized with both LLM and MCP."""
+    from unittest.mock import Mock
+
+    from compass.integrations.llm.base import LLMProvider
+    from compass.integrations.mcp.base import MCPServer
+
+    mock_llm = Mock(spec=LLMProvider)
+    mock_mcp = Mock(spec=MCPServer)
+    agent = TestScientificAgent(
+        agent_id="test_agent", llm_provider=mock_llm, mcp_server=mock_mcp
+    )
+
+    assert agent.llm_provider == mock_llm
+    assert agent.mcp_server == mock_mcp
