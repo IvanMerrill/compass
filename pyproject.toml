@@ -26,7 +26,6 @@ prometheus-client = "^0.19.0"
 opentelemetry-instrumentation-sqlalchemy = "^0.42b0"
 opentelemetry-instrumentation-redis = "^0.42b0"
 opentelemetry-exporter-prometheus = "^0.42b0"
-sentry-sdk = "^1.39.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
