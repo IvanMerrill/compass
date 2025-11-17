@@ -17,7 +17,7 @@ from openai import RateLimitError as OpenAIRateLimitError
 @pytest.fixture
 def api_key() -> str:
     """Valid OpenAI API key for testing."""
-    return "sk-test-key-12345"
+    return "sk-test-key-1234567890123456789012345678901234567890"
 
 
 @pytest.fixture
@@ -73,7 +73,7 @@ class TestOpenAIProviderInit:
 
     def test_invalid_api_key_format_raises_error(self) -> None:
         """Test that invalid API key format raises ValidationError."""
-        with pytest.raises(ValidationError, match="expected key to start with 'sk-'"):
+        with pytest.raises(ValidationError, match="expected key to start with 'sk-' and be at least 40 characters"):
             OpenAIProvider(api_key="invalid-key")
 
     def test_with_organization(self, api_key: str) -> None:

@@ -17,7 +17,7 @@ from compass.integrations.llm.base import (
 @pytest.fixture
 def api_key() -> str:
     """Valid Anthropic API key for testing."""
-    return "sk-ant-test-key-12345"
+    return "sk-ant-test-key-1234567890123456789012345678901234567890"
 
 
 @pytest.fixture
@@ -76,7 +76,7 @@ class TestAnthropicProviderInit:
 
     def test_invalid_api_key_format_raises_error(self) -> None:
         """Test that invalid API key format raises ValidationError."""
-        with pytest.raises(ValidationError, match="expected key to start with 'sk-ant-'"):
+        with pytest.raises(ValidationError, match="expected key to start with 'sk-ant-' and be at least 40 characters"):
             AnthropicProvider(api_key="invalid-key")
 
 

@@ -19,6 +19,7 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+import httpx
 from anthropic import AsyncAnthropic
 from anthropic import RateLimitError as AnthropicRateLimitError
 
@@ -87,12 +88,15 @@ class AnthropicProvider(LLMProvider):
         if not api_key or not api_key.strip():
             raise ValidationError("Anthropic API key cannot be empty")
 
-        if not api_key.startswith("sk-ant-"):
+        if not api_key.startswith("sk-ant-") or len(api_key) < 40:
             raise ValidationError(
-                "Invalid Anthropic API key format: expected key to start with 'sk-ant-'"
+                "Invalid Anthropic API key format: expected key to start with 'sk-ant-' and be at least 40 characters"
             )
 
-        self.client = AsyncAnthropic(api_key=api_key)
+        self.client = AsyncAnthropic(
+            api_key=api_key,
+            timeout=httpx.Timeout(60.0, connect=10.0),
+        )
         self.model = model
 
     async def generate(
@@ -166,6 +170,13 @@ class AnthropicProvider(LLMProvider):
                     )
 
                 content = " ".join(content_blocks)
+
+                # Validate joined content is not empty (all blocks could have empty text)
+                if not content or not content.strip():
+                    raise LLMError(
+                        f"Anthropic API returned empty content after joining blocks "
+                        f"(stop_reason: {response.stop_reason})"
+                    )
 
                 tokens_input = response.usage.input_tokens
                 tokens_output = response.usage.output_tokens

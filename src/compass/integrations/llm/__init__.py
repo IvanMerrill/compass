@@ -16,6 +16,7 @@ from compass.integrations.llm.base import (
     LLMProvider,
     LLMResponse,
     RateLimitError,
+    ValidationError,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "LLMError",
     "BudgetExceededError",
     "RateLimitError",
+    "ValidationError",
 ]

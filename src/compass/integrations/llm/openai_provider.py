@@ -18,6 +18,7 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+import httpx
 import tiktoken
 from openai import AsyncOpenAI
 from openai import RateLimitError as OpenAIRateLimitError
@@ -90,12 +91,15 @@ class OpenAIProvider(LLMProvider):
         if not api_key or not api_key.strip():
             raise ValidationError("OpenAI API key cannot be empty")
 
-        if not api_key.startswith("sk-"):
-            raise ValidationError("Invalid OpenAI API key format: expected key to start with 'sk-'")
+        if not api_key.startswith("sk-") or len(api_key) < 40:
+            raise ValidationError(
+                "Invalid OpenAI API key format: expected key to start with 'sk-' and be at least 40 characters"
+            )
 
         self.client = AsyncOpenAI(
             api_key=api_key,
             organization=organization,
+            timeout=httpx.Timeout(60.0, connect=10.0),
         )
         self.model = model
 
