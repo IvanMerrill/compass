@@ -275,6 +275,13 @@ def test_cli_generates_postmortem_by_default(monkeypatch, mock_llm_response, tmp
     postmortem_files = list(tmp_path.glob("*.md"))
     assert len(postmortem_files) == 1
 
+    # Verify post-mortem content matches investigation data
+    content = postmortem_files[0].read_text()
+    assert "test-service" in content
+    assert "test symptom" in content
+    assert "INCONCLUSIVE" in content  # No hypothesis generated = INCONCLUSIVE
+    assert "medium" in content.lower()  # Severity
+
 
 def test_cli_skips_postmortem_when_flag_set(monkeypatch, mock_llm_response, tmp_path):
     """Verify CLI skips post-mortem when --skip-postmortem flag is set."""

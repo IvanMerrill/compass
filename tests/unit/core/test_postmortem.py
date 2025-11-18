@@ -468,3 +468,22 @@ class TestSavePostmortem:
 
         # Should return absolute path
         assert Path(filepath).is_absolute()
+
+    def test_save_postmortem_handles_short_investigation_id(
+        self, resolved_ooda_result: OODAResult, tmp_path: Path
+    ) -> None:
+        """Verify filename generation handles investigation IDs shorter than 8 chars."""
+        postmortem = PostMortem.from_ooda_result(resolved_ooda_result)
+
+        # Artificially set short ID to test edge case
+        postmortem.investigation_id = "test"
+
+        output_dir = str(tmp_path / "postmortems")
+        filepath = save_postmortem(postmortem, output_dir)
+
+        filename = Path(filepath).name
+
+        # Should use full ID when shorter than 8 chars
+        # Filename format: service-id-timestamp.md
+        assert "test-" in filename
+        assert filename.startswith("payment-service-test-")
