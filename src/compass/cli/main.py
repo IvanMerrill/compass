@@ -100,10 +100,6 @@ def investigate(service: str, symptom: str, severity: str) -> None:
         # LLM provider configuration error (missing/invalid API key)
         click.echo(f"⚠️  {e}", err=True)
         click.echo(
-            "   Set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.\n",
-            err=True,
-        )
-        click.echo(
             "   Continuing without LLM provider (investigation will be INCONCLUSIVE)\n",
             err=True,
         )
@@ -113,7 +109,7 @@ def investigate(service: str, symptom: str, severity: str) -> None:
         # Unsupported provider configuration
         click.echo(f"⚠️  {e}", err=True)
         click.echo(
-            "   Set DEFAULT_LLM_PROVIDER to 'openai' or 'anthropic'.\n",
+            "   Continuing without LLM provider (investigation will be INCONCLUSIVE)\n",
             err=True,
         )
         logger.warning("cli.invalid_provider", reason=str(e))
