@@ -14,8 +14,14 @@ import click
 import structlog
 
 from compass.cli.display import DisplayFormatter
-from compass.cli.factory import create_investigation_runner
+from compass.cli.factory import (
+    create_database_agent,
+    create_investigation_runner,
+    create_llm_provider_from_settings,
+)
+from compass.config import settings
 from compass.core.investigation import InvestigationContext
+from compass.integrations.llm.base import ValidationError
 
 logger = structlog.get_logger(__name__)
 
@@ -62,8 +68,68 @@ def investigate(service: str, symptom: str, severity: str) -> None:
         severity=severity,
     )
 
-    # Create runner and display formatter
-    runner = create_investigation_runner()
+    # Try to create LLM provider and DatabaseAgent
+    agents = []
+    llm_provider = None
+
+    try:
+        # Attempt to create LLM provider from settings
+        llm_provider = create_llm_provider_from_settings()
+
+        # Select budget based on severity
+        if severity.lower() == "critical":
+            budget_limit = settings.critical_cost_budget_usd
+        else:
+            budget_limit = settings.default_cost_budget_usd
+
+        # Create DatabaseAgent with LLM provider
+        db_agent = create_database_agent(
+            llm_provider=llm_provider,
+            budget_limit=budget_limit,
+        )
+        agents.append(db_agent)
+
+        logger.info(
+            "cli.agent.created",
+            agent_id=db_agent.agent_id,
+            budget_limit=budget_limit,
+            severity=severity,
+        )
+
+    except ValidationError as e:
+        # LLM provider configuration error (missing/invalid API key)
+        click.echo(f"⚠️  {e}", err=True)
+        click.echo(
+            "   Set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.\n",
+            err=True,
+        )
+        click.echo(
+            "   Continuing without LLM provider (investigation will be INCONCLUSIVE)\n",
+            err=True,
+        )
+        logger.warning("cli.no_llm_provider", reason=str(e))
+
+    except ValueError as e:
+        # Unsupported provider configuration
+        click.echo(f"⚠️  {e}", err=True)
+        click.echo(
+            "   Set DEFAULT_LLM_PROVIDER to 'openai' or 'anthropic'.\n",
+            err=True,
+        )
+        logger.warning("cli.invalid_provider", reason=str(e))
+
+    # Create disproof strategies for validation
+    strategies = [
+        "temporal_contradiction",
+        "scope_verification",
+        "correlation_vs_causation",
+    ]
+
+    # Create runner with agents and strategies
+    runner = create_investigation_runner(
+        agents=agents,
+        strategies=strategies,
+    )
     formatter = DisplayFormatter()
 
     # Run investigation asynchronously with error handling
