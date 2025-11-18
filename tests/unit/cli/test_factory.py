@@ -173,6 +173,39 @@ class TestLLMProviderFactory:
         with pytest.raises(ValidationError, match="OpenAI API key not configured"):
             create_llm_provider_from_settings()
 
+    def test_create_llm_provider_from_settings_missing_anthropic_key(self, monkeypatch) -> None:
+        """Verify factory raises ValidationError when Anthropic key missing."""
+        from compass.config import settings
+        from compass.integrations.llm.base import ValidationError
+
+        monkeypatch.setattr(settings, "anthropic_api_key", None)
+        monkeypatch.setattr(settings, "default_llm_provider", "anthropic")
+
+        with pytest.raises(ValidationError, match="Anthropic API key not configured"):
+            create_llm_provider_from_settings()
+
+    def test_create_llm_provider_from_settings_empty_openai_key(self, monkeypatch) -> None:
+        """Verify factory raises ValidationError when OpenAI key is empty string."""
+        from compass.config import settings
+        from compass.integrations.llm.base import ValidationError
+
+        monkeypatch.setattr(settings, "openai_api_key", "")
+        monkeypatch.setattr(settings, "default_llm_provider", "openai")
+
+        with pytest.raises(ValidationError, match="OpenAI API key not configured"):
+            create_llm_provider_from_settings()
+
+    def test_create_llm_provider_from_settings_empty_anthropic_key(self, monkeypatch) -> None:
+        """Verify factory raises ValidationError when Anthropic key is empty string."""
+        from compass.config import settings
+        from compass.integrations.llm.base import ValidationError
+
+        monkeypatch.setattr(settings, "anthropic_api_key", "")
+        monkeypatch.setattr(settings, "default_llm_provider", "anthropic")
+
+        with pytest.raises(ValidationError, match="Anthropic API key not configured"):
+            create_llm_provider_from_settings()
+
     def test_create_llm_provider_from_settings_unsupported_provider(self, monkeypatch) -> None:
         """Verify factory raises ValueError for unsupported provider."""
         from compass.config import settings
