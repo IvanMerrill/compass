@@ -7,7 +7,13 @@ Usage:
     compass investigate --service api --symptom "slow response" --severity high
 """
 
+import asyncio
+
 import click
+
+from compass.cli.display import DisplayFormatter
+from compass.cli.factory import create_investigation_runner
+from compass.core.investigation import InvestigationContext
 
 
 @click.group()
@@ -45,9 +51,22 @@ def investigate(service: str, symptom: str, severity: str) -> None:
                           --symptom "500 errors spiking" \\
                           --severity high
     """
-    click.echo(f"Starting investigation for {service}: {symptom} (severity: {severity})")
-    # Runner implementation will go here in Phase 4.2
-    click.echo("Investigation runner not yet implemented.")
+    # Create investigation context
+    context = InvestigationContext(
+        service=service,
+        symptom=symptom,
+        severity=severity,
+    )
+
+    # Create runner and display formatter
+    runner = create_investigation_runner()
+    formatter = DisplayFormatter()
+
+    # Run investigation asynchronously
+    result = asyncio.run(runner.run(context))
+
+    # Display results
+    formatter.show_complete_investigation(result)
 
 
 if __name__ == "__main__":
