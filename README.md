@@ -48,6 +48,8 @@ AI-powered incident investigation platform that reduces MTTR by 67-90% using par
 
 ## Quick Start
 
+**Want to try it now?** → [**Run the Demo**](DEMO.md) (5 minutes)
+
 For new team members or contributors:
 
 1. **Start here**: [`docs/product/COMPASS_Product_Reference_Document_v1_1.md`](docs/product/COMPASS_Product_Reference_Document_v1_1.md)
