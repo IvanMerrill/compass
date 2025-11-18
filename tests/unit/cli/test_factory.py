@@ -1,6 +1,12 @@
 """Tests for component factory."""
 
-from compass.cli.factory import create_ooda_orchestrator, create_investigation_runner
+from unittest.mock import Mock
+
+from compass.cli.factory import (
+    create_database_agent,
+    create_investigation_runner,
+    create_ooda_orchestrator,
+)
 from compass.cli.runner import InvestigationRunner
 from compass.core.ooda_orchestrator import OODAOrchestrator
 from compass.core.phases.act import HypothesisValidator
@@ -77,3 +83,50 @@ class TestComponentFactory:
 
         assert runner.agents == []
         assert runner.strategies == []
+
+
+class TestDatabaseAgentFactory:
+    """Tests for creating DatabaseAgent via factory."""
+
+    def test_create_database_agent_returns_database_agent(self) -> None:
+        """Verify factory creates DatabaseAgent instance."""
+        from compass.agents.workers.database_agent import DatabaseAgent
+
+        agent = create_database_agent()
+
+        assert isinstance(agent, DatabaseAgent)
+        assert agent.agent_id == "database_specialist"
+
+    def test_create_database_agent_with_mcp_clients(self) -> None:
+        """Verify factory accepts MCP client parameters."""
+        from compass.agents.workers.database_agent import DatabaseAgent
+
+        mock_grafana = Mock()
+        mock_tempo = Mock()
+
+        agent = create_database_agent(
+            grafana_client=mock_grafana,
+            tempo_client=mock_tempo,
+        )
+
+        assert isinstance(agent, DatabaseAgent)
+        assert agent.grafana_client == mock_grafana
+        assert agent.tempo_client == mock_tempo
+
+    def test_create_database_agent_with_custom_agent_id(self) -> None:
+        """Verify factory accepts custom agent_id."""
+        from compass.agents.workers.database_agent import DatabaseAgent
+
+        agent = create_database_agent(agent_id="custom_db_agent")
+
+        assert isinstance(agent, DatabaseAgent)
+        assert agent.agent_id == "custom_db_agent"
+
+    def test_create_database_agent_with_budget_limit(self) -> None:
+        """Verify factory accepts budget_limit parameter."""
+        from compass.agents.workers.database_agent import DatabaseAgent
+
+        agent = create_database_agent(budget_limit=5.0)
+
+        assert isinstance(agent, DatabaseAgent)
+        assert agent.budget_limit == 5.0

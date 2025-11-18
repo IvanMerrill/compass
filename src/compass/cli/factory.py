@@ -10,14 +10,17 @@ Design:
 - Returns ready-to-use orchestrator and runner
 """
 
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
+from compass.agents.workers.database_agent import DatabaseAgent
 from compass.cli.runner import InvestigationRunner
 from compass.core.ooda_orchestrator import OODAOrchestrator
 from compass.core.phases.act import HypothesisValidator
 from compass.core.phases.decide import HumanDecisionInterface
 from compass.core.phases.observe import ObservationCoordinator
 from compass.core.phases.orient import HypothesisRanker
+from compass.integrations.mcp.grafana_client import GrafanaMCPClient
+from compass.integrations.mcp.tempo_client import TempoMCPClient
 
 
 def create_ooda_orchestrator() -> OODAOrchestrator:
@@ -79,3 +82,52 @@ def create_investigation_runner(
     )
 
     return runner
+
+
+def create_database_agent(
+    agent_id: str = "database_specialist",
+    grafana_client: Optional[GrafanaMCPClient] = None,
+    tempo_client: Optional[TempoMCPClient] = None,
+    config: Optional[Dict[str, Any]] = None,
+    budget_limit: Optional[float] = None,
+) -> DatabaseAgent:
+    """Create DatabaseAgent with optional MCP clients.
+
+    Args:
+        agent_id: Unique identifier for agent (default: "database_specialist")
+        grafana_client: Optional Grafana MCP client for metrics/logs
+        tempo_client: Optional Tempo MCP client for traces
+        config: Optional configuration dictionary
+        budget_limit: Optional budget limit in USD
+
+    Returns:
+        DatabaseAgent ready to observe and generate hypotheses
+
+    Note:
+        If MCP clients are not provided, the agent will still function
+        but will return empty observations. This allows for testing
+        and incremental integration.
+
+    Example:
+        >>> # Create agent without MCP (for testing)
+        >>> agent = create_database_agent()
+        >>>
+        >>> # Create agent with MCP clients
+        >>> grafana = GrafanaMCPClient(url="...", token="...")
+        >>> tempo = TempoMCPClient(url="...", token="...")
+        >>> agent = create_database_agent(
+        ...     grafana_client=grafana,
+        ...     tempo_client=tempo,
+        ...     budget_limit=5.0
+        ... )
+    """
+    # Create DatabaseAgent with provided clients
+    agent = DatabaseAgent(
+        agent_id=agent_id,
+        grafana_client=grafana_client,
+        tempo_client=tempo_client,
+        config=config,
+        budget_limit=budget_limit,
+    )
+
+    return agent
