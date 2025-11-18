@@ -119,6 +119,8 @@ def create_database_agent(
         >>> agent = create_database_agent()
         >>>
         >>> # Create agent with MCP clients and LLM provider
+        >>> from compass.integrations.mcp.grafana_client import GrafanaMCPClient
+        >>> from compass.integrations.mcp.tempo_client import TempoMCPClient
         >>> grafana = GrafanaMCPClient(url="...", token="...")
         >>> tempo = TempoMCPClient(url="...", token="...")
         >>> llm = create_llm_provider_from_settings()

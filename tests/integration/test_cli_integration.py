@@ -85,7 +85,7 @@ def test_cli_investigate_with_openai_configured(monkeypatch, mock_llm_response):
     assert len(created_agents) == 1
     agent, kwargs = created_agents[0]
     assert kwargs.get("llm_provider") is not None
-    assert kwargs.get("budget_limit") == 5.0  # medium severity uses default budget
+    assert kwargs.get("budget_limit") == 5.0  # medium severity uses default budget (monkeypatched to 5.0 for test)
 
 
 def test_cli_investigate_without_llm_configured(monkeypatch, capsys):

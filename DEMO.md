@@ -71,7 +71,7 @@ Severity: critical
 [RESOLVED] Investigation complete!
   Hypothesis: Database connection pool exhausted
   Confidence: 90% (initial: 85%)
-  Cost: $0.05
+  Cost: $0.25
   Duration: 8.2s
 ```
 
@@ -106,12 +106,12 @@ poetry run compass investigate --help
 | `ANTHROPIC_API_KEY` | Anthropic API key | None |
 | `DEFAULT_LLM_PROVIDER` | LLM provider to use | `openai` |
 | `DEFAULT_MODEL_NAME` | Model for worker agents | `gpt-4o-mini` |
-| `DEFAULT_COST_BUDGET_USD` | Budget for low/medium/high severity | `5.0` |
+| `DEFAULT_COST_BUDGET_USD` | Budget for low/medium/high severity | `10.0` |
 | `CRITICAL_COST_BUDGET_USD` | Budget for critical severity | `20.0` |
 
 ### Severity Levels
 
-- **low/medium/high**: Uses `DEFAULT_COST_BUDGET_USD` ($5.00)
+- **low/medium/high**: Uses `DEFAULT_COST_BUDGET_USD` ($10.00)
 - **critical**: Uses `CRITICAL_COST_BUDGET_USD` ($20.00)
 
 ## Example Investigations
