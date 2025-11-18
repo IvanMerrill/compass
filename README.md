@@ -17,6 +17,7 @@ AI-powered incident investigation platform that reduces MTTR by 67-90% using par
 - ⚡ **Parallel OODA loops**: 5+ agents testing simultaneously (10x faster than sequential)
 - 🤖 **Bring your own LLM**: OpenAI, Anthropic, or any provider (cost-controlled)
 - 👥 **Learning Teams approach**: Focus on contributing causes, not blame
+- 📄 **Automatic post-mortems**: Markdown documentation for every investigation
 - 💰 **Cost-aware**: $10/investigation routine, $20 critical (transparent budgets)
 
 **Current Status**: Production-grade foundation ready for Database Agent implementation
