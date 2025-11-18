@@ -141,11 +141,18 @@ class ObservationCoordinator:
                 obs_data, duration = result
 
                 # Create observation
+                # Parse timestamp and ensure timezone awareness
+                timestamp_str = obs_data["timestamp"]
+                timestamp = datetime.fromisoformat(timestamp_str)
+                # Ensure timezone awareness (add UTC if missing)
+                if timestamp.tzinfo is None or timestamp.tzinfo.utcoffset(timestamp) is None:
+                    timestamp = timestamp.replace(tzinfo=timezone.utc)
+
                 observation = AgentObservation(
                     agent_id=agent_id,
                     data=obs_data,
                     confidence=obs_data.get("confidence", 0.5),
-                    timestamp=datetime.fromisoformat(obs_data["timestamp"]),
+                    timestamp=timestamp,
                 )
                 observations.append(observation)
                 timing[agent_id] = duration

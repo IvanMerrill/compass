@@ -95,6 +95,17 @@ class TestOODAOrchestrator:
             )
         )
 
+        # Mock agent that generates hypothesis
+        agent = AsyncMock()
+        agent.agent_id = "test_agent"
+        agent.generate_hypothesis_with_llm = AsyncMock(
+            return_value=Hypothesis(
+                agent_id="test_agent",
+                statement="Test hypothesis",
+                initial_confidence=0.8,
+            )
+        )
+
         orchestrator = OODAOrchestrator(
             observation_coordinator=observation_coordinator,
             hypothesis_ranker=hypothesis_ranker,
@@ -105,7 +116,7 @@ class TestOODAOrchestrator:
         # Execute full cycle
         result = await orchestrator.execute(
             investigation=investigation,
-            agents=[],
+            agents=[agent],
             strategies=[],
             strategy_executor=lambda s, h: DisproofAttempt(
                 strategy=s, method="test", expected_if_true="", observed="",
@@ -135,8 +146,18 @@ class TestOODAOrchestrator:
         observation_coordinator = AsyncMock()
         observation_coordinator.execute = AsyncMock(
             return_value=ObservationResult(
-                observations=[], combined_confidence=0.5,
-                total_cost=0.0, timing={}, errors={}
+                observations=[
+                    AgentObservation(
+                        agent_id="test",
+                        data={"test": "data"},
+                        confidence=0.5,
+                        timestamp=datetime.now(timezone.utc),
+                    )
+                ],
+                combined_confidence=0.5,
+                total_cost=0.0,
+                timing={},
+                errors={},
             )
         )
 
@@ -181,6 +202,15 @@ class TestOODAOrchestrator:
             )
         )
 
+        # Mock agent that generates hypothesis
+        agent = AsyncMock()
+        agent.agent_id = "test"
+        agent.generate_hypothesis_with_llm = AsyncMock(
+            return_value=Hypothesis(
+                agent_id="test", statement="Test", initial_confidence=0.8
+            )
+        )
+
         orchestrator = OODAOrchestrator(
             observation_coordinator=observation_coordinator,
             hypothesis_ranker=hypothesis_ranker,
@@ -190,7 +220,7 @@ class TestOODAOrchestrator:
 
         result = await orchestrator.execute(
             investigation=investigation,
-            agents=[],
+            agents=[agent],
             strategies=[],
             strategy_executor=lambda s, h: DisproofAttempt(
                 strategy=s, method="test", expected_if_true="", observed="",

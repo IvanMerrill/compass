@@ -9,6 +9,7 @@ State Flow:
                                                                     HYPOTHESIS_GENERATION (loop back if disproven)
 """
 
+import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -114,6 +115,9 @@ class Investigation:
         self.human_decisions: List[Dict[str, Any]] = []
         self.total_cost: float = 0.0
 
+        # Thread safety for state transitions
+        self._transition_lock = threading.Lock()
+
     @classmethod
     def create(cls, context: InvestigationContext) -> "Investigation":
         """Factory method to create a new Investigation.
@@ -152,26 +156,28 @@ class Investigation:
         Raises:
             InvalidTransitionError: If transition is not valid
         """
-        # Check if transition is valid
-        valid_next_states = self.VALID_TRANSITIONS.get(self.status, [])
-        if new_status not in valid_next_states:
-            raise InvalidTransitionError(
-                f"Cannot transition from {self.status.value} to {new_status.value}. "
-                f"Valid transitions: {[s.value for s in valid_next_states]}"
+        # Use lock to prevent race conditions in concurrent transitions
+        with self._transition_lock:
+            # Check if transition is valid
+            valid_next_states = self.VALID_TRANSITIONS.get(self.status, [])
+            if new_status not in valid_next_states:
+                raise InvalidTransitionError(
+                    f"Cannot transition from {self.status.value} to {new_status.value}. "
+                    f"Valid transitions: {[s.value for s in valid_next_states]}"
+                )
+
+            # Perform transition
+            old_status = self.status
+            self.status = new_status
+            self.updated_at = datetime.now(timezone.utc)
+
+            logger.info(
+                "investigation.state_transition",
+                investigation_id=self.id,
+                from_status=old_status.value,
+                to_status=new_status.value,
+                duration_seconds=(self.updated_at - self.created_at).total_seconds(),
             )
-
-        # Perform transition
-        old_status = self.status
-        self.status = new_status
-        self.updated_at = datetime.now(timezone.utc)
-
-        logger.info(
-            "investigation.state_transition",
-            investigation_id=self.id,
-            from_status=old_status.value,
-            to_status=new_status.value,
-            duration_seconds=(self.updated_at - self.created_at).total_seconds(),
-        )
 
     def add_observation(self, observation: Dict[str, Any]) -> None:
         """Add observation data from an agent.

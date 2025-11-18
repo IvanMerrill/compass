@@ -12,7 +12,7 @@ Design:
 """
 
 from dataclasses import dataclass
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Optional
 
 import structlog
 
@@ -21,7 +21,7 @@ from compass.core.phases.act import HypothesisValidator, StrategyExecutor, Valid
 from compass.core.phases.decide import DecisionInput, HumanDecisionInterface
 from compass.core.phases.observe import ObservationCoordinator
 from compass.core.phases.orient import HypothesisRanker
-from compass.core.scientific_framework import Hypothesis
+from compass.core.scientific_framework import Hypothesis, HypothesisStatus
 
 logger = structlog.get_logger(__name__)
 
@@ -32,11 +32,11 @@ class OODAResult:
 
     Attributes:
         investigation: Investigation with final state
-        validation_result: Result from hypothesis validation
+        validation_result: Result from hypothesis validation (None if no hypotheses generated)
     """
 
     investigation: Investigation
-    validation_result: ValidationResult
+    validation_result: Optional[ValidationResult]
 
 
 class OODAOrchestrator:
@@ -156,6 +156,19 @@ class OODAOrchestrator:
             hypothesis_count=len(hypotheses),
         )
 
+        # Check if any hypotheses were generated
+        if not hypotheses:
+            logger.warning(
+                "ooda.no_hypotheses",
+                investigation_id=investigation.id,
+            )
+            investigation.transition_to(InvestigationStatus.INCONCLUSIVE)
+            # Return early with no validation result
+            return OODAResult(
+                investigation=investigation,
+                validation_result=None,  # type: ignore
+            )
+
         # ORIENT: Rank and deduplicate hypotheses
         ranking_result = self.hypothesis_ranker.rank(hypotheses, investigation)
 
@@ -205,8 +218,8 @@ class OODAOrchestrator:
 
         # RESOLUTION: Transition to final state based on validation outcome
         if validation_result.hypothesis.status in [
-            validation_result.hypothesis.status.VALIDATED,
-            validation_result.hypothesis.status.DISPROVEN,
+            HypothesisStatus.VALIDATED,
+            HypothesisStatus.DISPROVEN,
         ]:
             investigation.transition_to(InvestigationStatus.RESOLVED)
         else:
