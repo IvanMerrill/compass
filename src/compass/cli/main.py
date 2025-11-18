@@ -151,9 +151,9 @@ def investigate(service: str, symptom: str, severity: str, output_dir: str, skip
         # Template handles missing hypothesis gracefully
         if not skip_postmortem:
             try:
-                from compass.core.postmortem import generate_postmortem, save_postmortem
+                from compass.core.postmortem import PostMortem, save_postmortem
 
-                postmortem = generate_postmortem(result)
+                postmortem = PostMortem.from_ooda_result(result)
                 filepath = save_postmortem(postmortem, output_dir)
 
                 # Plain text output (no emoji per user preference)

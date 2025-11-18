@@ -161,18 +161,6 @@ class PostMortem:
         )
 
 
-def generate_postmortem(result: OODAResult) -> PostMortem:
-    """Generate post-mortem from investigation result.
-
-    Args:
-        result: Completed OODA investigation result
-
-    Returns:
-        PostMortem document
-    """
-    return PostMortem.from_ooda_result(result)
-
-
 def save_postmortem(postmortem: PostMortem, output_dir: str = "postmortems") -> str:
     """Save post-mortem to markdown file.
 

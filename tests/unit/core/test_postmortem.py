@@ -13,7 +13,7 @@ import pytest
 from compass.core.investigation import Investigation, InvestigationContext, InvestigationStatus
 from compass.core.ooda_orchestrator import OODAResult
 from compass.core.phases.act import ValidationResult
-from compass.core.postmortem import PostMortem, generate_postmortem, save_postmortem
+from compass.core.postmortem import PostMortem, save_postmortem
 from compass.core.scientific_framework import Hypothesis
 
 
@@ -468,17 +468,3 @@ class TestSavePostmortem:
 
         # Should return absolute path
         assert Path(filepath).is_absolute()
-
-
-class TestGeneratePostmortem:
-    """Tests for generate_postmortem convenience function."""
-
-    def test_generate_postmortem_returns_postmortem(
-        self, resolved_ooda_result: OODAResult
-    ) -> None:
-        """Verify generate_postmortem creates PostMortem from OODAResult."""
-        postmortem = generate_postmortem(resolved_ooda_result)
-
-        assert isinstance(postmortem, PostMortem)
-        assert postmortem.service == "payment-service"
-        assert postmortem.status == "resolved"
