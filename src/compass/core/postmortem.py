@@ -99,8 +99,8 @@ class PostMortem:
             md += f"\n**Final Confidence:** {self.validation_result.updated_confidence:.0%}\n\n"
             md += "---\n\n"
 
-        # Recommendations (only if we have a hypothesis)
-        if self.selected_hypothesis:
+        # Recommendations (only if we have a hypothesis with affected systems)
+        if self.selected_hypothesis and self.selected_hypothesis.affected_systems:
             md += "## Recommendations\n\n"
             md += "Based on validated hypothesis and affected systems:\n"
             for system in self.selected_hypothesis.affected_systems:
