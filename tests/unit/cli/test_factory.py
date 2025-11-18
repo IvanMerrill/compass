@@ -2,9 +2,12 @@
 
 from unittest.mock import Mock
 
+import pytest
+
 from compass.cli.factory import (
     create_database_agent,
     create_investigation_runner,
+    create_llm_provider_from_settings,
     create_ooda_orchestrator,
 )
 from compass.cli.runner import InvestigationRunner
@@ -130,3 +133,61 @@ class TestDatabaseAgentFactory:
 
         assert isinstance(agent, DatabaseAgent)
         assert agent.budget_limit == 5.0
+
+
+class TestLLMProviderFactory:
+    """Tests for creating LLM provider from settings."""
+
+    def test_create_llm_provider_from_settings_openai(self, monkeypatch) -> None:
+        """Verify factory creates OpenAI provider from settings."""
+        from compass.config import settings
+        from compass.integrations.llm.openai_provider import OpenAIProvider
+
+        monkeypatch.setattr(settings, "openai_api_key", "sk-test1234567890123456789012345678901234567890")
+        monkeypatch.setattr(settings, "default_llm_provider", "openai")
+
+        provider = create_llm_provider_from_settings()
+
+        assert isinstance(provider, OpenAIProvider)
+
+    def test_create_llm_provider_from_settings_anthropic(self, monkeypatch) -> None:
+        """Verify factory creates Anthropic provider from settings."""
+        from compass.config import settings
+        from compass.integrations.llm.anthropic_provider import AnthropicProvider
+
+        monkeypatch.setattr(settings, "anthropic_api_key", "sk-ant-test1234567890123456789012345678901234567890")
+        monkeypatch.setattr(settings, "default_llm_provider", "anthropic")
+
+        provider = create_llm_provider_from_settings()
+
+        assert isinstance(provider, AnthropicProvider)
+
+    def test_create_llm_provider_from_settings_missing_openai_key(self, monkeypatch) -> None:
+        """Verify factory raises ValidationError when OpenAI key missing."""
+        from compass.config import settings
+        from compass.integrations.llm.base import ValidationError
+
+        monkeypatch.setattr(settings, "openai_api_key", None)
+        monkeypatch.setattr(settings, "default_llm_provider", "openai")
+
+        with pytest.raises(ValidationError, match="OpenAI API key not configured"):
+            create_llm_provider_from_settings()
+
+    def test_create_llm_provider_from_settings_unsupported_provider(self, monkeypatch) -> None:
+        """Verify factory raises ValueError for unsupported provider."""
+        from compass.config import settings
+
+        monkeypatch.setattr(settings, "default_llm_provider", "unsupported")
+
+        with pytest.raises(ValueError, match="Unsupported LLM provider"):
+            create_llm_provider_from_settings()
+
+    def test_create_database_agent_with_llm_provider(self) -> None:
+        """Verify factory passes llm_provider to DatabaseAgent."""
+        from compass.agents.workers.database_agent import DatabaseAgent
+
+        mock_llm = Mock()
+        agent = create_database_agent(llm_provider=mock_llm)
+
+        assert isinstance(agent, DatabaseAgent)
+        assert agent.llm_provider == mock_llm
