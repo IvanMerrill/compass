@@ -23,6 +23,7 @@ Example usage:
     ```
 """
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -90,3 +91,34 @@ class MCPResponse:
         # Validate server_type is not empty
         if not self.server_type or not self.server_type.strip():
             raise MCPValidationError("MCPResponse server_type cannot be empty")
+
+
+class MCPServer(ABC):
+    """Abstract base class for MCP (Model Context Protocol) servers.
+
+    MCP servers provide access to observability data (metrics, logs, traces)
+    through a standardized query interface. Implementations include GrafanaMCPClient
+    (for Prometheus/Mimir metrics and Loki logs) and TempoMCPClient (for traces).
+
+    This is a minimal base class following YAGNI principle - it exists primarily
+    to provide a common type for agent configuration, not to enforce a rigid
+    interface. Real MCP clients may have different methods based on their capabilities.
+
+    Note:
+        Not all MCP clients need to inherit from this class. It's primarily used
+        for type hints in agent initialization (e.g., ScientificAgent.mcp_server).
+    """
+
+    @abstractmethod
+    async def connect(self) -> None:
+        """Establish connection to the MCP server.
+
+        Raises:
+            MCPConnectionError: If connection fails
+        """
+        pass
+
+    @abstractmethod
+    async def disconnect(self) -> None:
+        """Close connection to the MCP server."""
+        pass
