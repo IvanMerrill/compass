@@ -8,12 +8,16 @@ Usage:
 """
 
 import asyncio
+import sys
 
 import click
+import structlog
 
 from compass.cli.display import DisplayFormatter
 from compass.cli.factory import create_investigation_runner
 from compass.core.investigation import InvestigationContext
+
+logger = structlog.get_logger(__name__)
 
 
 @click.group()
@@ -62,11 +66,17 @@ def investigate(service: str, symptom: str, severity: str) -> None:
     runner = create_investigation_runner()
     formatter = DisplayFormatter()
 
-    # Run investigation asynchronously
-    result = asyncio.run(runner.run(context))
-
-    # Display results
-    formatter.show_complete_investigation(result)
+    # Run investigation asynchronously with error handling
+    try:
+        result = asyncio.run(runner.run(context))
+        formatter.show_complete_investigation(result)
+    except KeyboardInterrupt:
+        click.echo("\n\nInvestigation cancelled by user.", err=True)
+        sys.exit(130)
+    except Exception as e:
+        click.echo(f"\n\nInvestigation failed: {e}", err=True)
+        logger.exception("investigation.failed", error=str(e))
+        sys.exit(1)
 
 
 if __name__ == "__main__":

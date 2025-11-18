@@ -35,8 +35,8 @@ class TestHumanDecisionInterface:
 
         interface = HumanDecisionInterface()
 
-        # Mock user input: select hypothesis 1, provide reasoning
-        with patch("builtins.input", side_effect=["1", "This matches recent alerts"]):
+        # Mock user input and TTY: select hypothesis 1, provide reasoning
+        with patch("sys.stdin.isatty", return_value=True), patch("builtins.input", side_effect=["1", "This matches recent alerts"]):
             decision = interface.decide(ranked)
 
         # Verify decision captured
@@ -67,7 +67,7 @@ class TestHumanDecisionInterface:
 
         interface = HumanDecisionInterface()
 
-        with patch("builtins.input", side_effect=["1", "Test"]):
+        with patch("sys.stdin.isatty", return_value=True), patch("builtins.input", side_effect=["1", "Test"]):
             interface.decide(ranked)
 
         captured = capsys.readouterr()
@@ -90,7 +90,7 @@ class TestHumanDecisionInterface:
         interface = HumanDecisionInterface()
 
         # Try invalid inputs, then valid input
-        with patch("builtins.input", side_effect=["0", "2", "abc", "1", "Reasoning"]):
+        with patch("sys.stdin.isatty", return_value=True), patch("builtins.input", side_effect=["0", "2", "abc", "1", "Reasoning"]):
             decision = interface.decide(ranked)
 
         # Should eventually accept valid input
@@ -108,7 +108,7 @@ class TestHumanDecisionInterface:
         interface = HumanDecisionInterface()
 
         # Provide empty reasoning
-        with patch("builtins.input", side_effect=["1", ""]):
+        with patch("sys.stdin.isatty", return_value=True), patch("builtins.input", side_effect=["1", ""]):
             decision = interface.decide(ranked)
 
         # Should accept empty reasoning
@@ -125,7 +125,7 @@ class TestHumanDecisionInterface:
 
         interface = HumanDecisionInterface()
 
-        with patch("builtins.input", side_effect=["1", "Selecting only option"]):
+        with patch("sys.stdin.isatty", return_value=True), patch("builtins.input", side_effect=["1", "Selecting only option"]):
             decision = interface.decide(ranked)
 
         assert decision.selected_hypothesis == hyp
@@ -149,7 +149,7 @@ class TestHumanDecisionInterface:
         interface = HumanDecisionInterface()
 
         # Select hypothesis 3
-        with patch("builtins.input", side_effect=["3", "Middle option"]):
+        with patch("sys.stdin.isatty", return_value=True), patch("builtins.input", side_effect=["3", "Middle option"]):
             decision = interface.decide(hypotheses)
 
         assert decision.selected_hypothesis == hypotheses[2].hypothesis
@@ -183,7 +183,7 @@ class TestHumanDecisionInterface:
         # Provide conflicts to display
         conflicts = ["Conflict: 'Database issue' vs 'Network issue' (0.9 vs 0.8)"]
 
-        with patch("builtins.input", side_effect=["1", "Test"]):
+        with patch("sys.stdin.isatty", return_value=True), patch("builtins.input", side_effect=["1", "Test"]):
             decision = interface.decide(ranked, conflicts=conflicts)
 
         captured = capsys.readouterr()

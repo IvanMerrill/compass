@@ -11,6 +11,7 @@ Design:
 - Simple text-based interface (YAGNI - no fancy formatting yet)
 """
 
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -139,7 +140,17 @@ class HumanDecisionInterface:
 
         Returns:
             Index of selected hypothesis (0-based)
+
+        Raises:
+            RuntimeError: If running in non-interactive environment (no TTY)
         """
+        # Check if running in non-interactive environment
+        if not sys.stdin.isatty():
+            raise RuntimeError(
+                "Cannot prompt for human decision in non-interactive environment. "
+                "Run in a terminal with TTY support."
+            )
+
         while True:
             try:
                 selection = input(
