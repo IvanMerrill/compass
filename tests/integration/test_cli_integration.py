@@ -237,3 +237,158 @@ def test_cli_investigate_handles_invalid_api_key(monkeypatch):
         # Should show error message and continue with investigation (exit 0)
         assert "Invalid API key" in result.output
         assert result.exit_code == 0  # Investigation continues without LLM
+
+
+def test_cli_generates_postmortem_by_default(monkeypatch, mock_llm_response, tmp_path):
+    """Verify CLI generates post-mortem by default."""
+    from compass.config import settings
+    from compass.core.investigation import Investigation
+    from compass.core.ooda_orchestrator import OODAResult
+
+    # Configure OpenAI
+    monkeypatch.setattr(settings, "openai_api_key", "sk-test1234567890123456789012345678901234567890")
+    monkeypatch.setattr(settings, "default_llm_provider", "openai")
+
+    async def mock_run(context):
+        mock_investigation = Investigation.create(context)
+        return OODAResult(investigation=mock_investigation, validation_result=None)
+
+    with patch("compass.integrations.llm.openai_provider.OpenAIProvider.generate", new_callable=AsyncMock) as mock_generate:
+        mock_generate.return_value = mock_llm_response
+
+        with patch("compass.cli.runner.InvestigationRunner.run", new_callable=AsyncMock, side_effect=mock_run):
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "investigate",
+                "--service", "test-service",
+                "--symptom", "test symptom",
+                "--severity", "medium",
+                "--output-dir", str(tmp_path)
+            ])
+
+    # Should generate post-mortem and show path
+    assert result.exit_code == 0
+    assert "Post-mortem saved to:" in result.output
+    assert str(tmp_path) in result.output
+
+    # Verify post-mortem file was created
+    postmortem_files = list(tmp_path.glob("*.md"))
+    assert len(postmortem_files) == 1
+
+
+def test_cli_skips_postmortem_when_flag_set(monkeypatch, mock_llm_response, tmp_path):
+    """Verify CLI skips post-mortem when --skip-postmortem flag is set."""
+    from compass.config import settings
+    from compass.core.investigation import Investigation
+    from compass.core.ooda_orchestrator import OODAResult
+
+    # Configure OpenAI
+    monkeypatch.setattr(settings, "openai_api_key", "sk-test1234567890123456789012345678901234567890")
+    monkeypatch.setattr(settings, "default_llm_provider", "openai")
+
+    async def mock_run(context):
+        mock_investigation = Investigation.create(context)
+        return OODAResult(investigation=mock_investigation, validation_result=None)
+
+    with patch("compass.integrations.llm.openai_provider.OpenAIProvider.generate", new_callable=AsyncMock) as mock_generate:
+        mock_generate.return_value = mock_llm_response
+
+        with patch("compass.cli.runner.InvestigationRunner.run", new_callable=AsyncMock, side_effect=mock_run):
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "investigate",
+                "--service", "test-service",
+                "--symptom", "test symptom",
+                "--severity", "medium",
+                "--output-dir", str(tmp_path),
+                "--skip-postmortem"
+            ])
+
+    # Should NOT generate post-mortem
+    assert result.exit_code == 0
+    assert "Post-mortem saved to:" not in result.output
+
+    # Verify no post-mortem file was created
+    postmortem_files = list(tmp_path.glob("*.md"))
+    assert len(postmortem_files) == 0
+
+
+def test_cli_uses_custom_output_dir(monkeypatch, mock_llm_response, tmp_path):
+    """Verify CLI uses custom output directory for post-mortems."""
+    from compass.config import settings
+    from compass.core.investigation import Investigation
+    from compass.core.ooda_orchestrator import OODAResult
+
+    # Configure OpenAI
+    monkeypatch.setattr(settings, "openai_api_key", "sk-test1234567890123456789012345678901234567890")
+    monkeypatch.setattr(settings, "default_llm_provider", "openai")
+
+    async def mock_run(context):
+        mock_investigation = Investigation.create(context)
+        return OODAResult(investigation=mock_investigation, validation_result=None)
+
+    custom_dir = tmp_path / "custom" / "reports"
+
+    with patch("compass.integrations.llm.openai_provider.OpenAIProvider.generate", new_callable=AsyncMock) as mock_generate:
+        mock_generate.return_value = mock_llm_response
+
+        with patch("compass.cli.runner.InvestigationRunner.run", new_callable=AsyncMock, side_effect=mock_run):
+            runner = CliRunner()
+            result = runner.invoke(cli, [
+                "investigate",
+                "--service", "test-service",
+                "--symptom", "test symptom",
+                "--severity", "medium",
+                "--output-dir", str(custom_dir)
+            ])
+
+    # Should create custom directory and save post-mortem there
+    assert result.exit_code == 0
+    assert "Post-mortem saved to:" in result.output
+    assert str(custom_dir) in result.output
+
+    # Verify directory was created
+    assert custom_dir.exists()
+
+    # Verify post-mortem file was created in custom directory
+    postmortem_files = list(custom_dir.glob("*.md"))
+    assert len(postmortem_files) == 1
+
+
+def test_cli_handles_postmortem_write_failure_gracefully(monkeypatch, mock_llm_response):
+    """Verify CLI handles post-mortem write failure without failing investigation."""
+    from compass.config import settings
+    from compass.core.investigation import Investigation
+    from compass.core.ooda_orchestrator import OODAResult
+
+    # Configure OpenAI
+    monkeypatch.setattr(settings, "openai_api_key", "sk-test1234567890123456789012345678901234567890")
+    monkeypatch.setattr(settings, "default_llm_provider", "openai")
+
+    async def mock_run(context):
+        mock_investigation = Investigation.create(context)
+        return OODAResult(investigation=mock_investigation, validation_result=None)
+
+    # Mock save_postmortem to raise IOError
+    with patch("compass.integrations.llm.openai_provider.OpenAIProvider.generate", new_callable=AsyncMock) as mock_generate:
+        mock_generate.return_value = mock_llm_response
+
+        with patch("compass.cli.runner.InvestigationRunner.run", new_callable=AsyncMock, side_effect=mock_run):
+            with patch("compass.core.postmortem.save_postmortem") as mock_save:
+                mock_save.side_effect = IOError("Permission denied")
+
+                runner = CliRunner()
+                result = runner.invoke(cli, [
+                    "investigate",
+                    "--service", "test-service",
+                    "--symptom", "test symptom",
+                    "--severity", "medium"
+                ])
+
+    # Investigation should succeed (exit 0) despite post-mortem failure
+    assert result.exit_code == 0
+
+    # Should show warning about post-mortem failure
+    assert "Warning: Could not save post-mortem" in result.output
+    assert "Permission denied" in result.output
+    assert "Investigation completed successfully but post-mortem not saved" in result.output

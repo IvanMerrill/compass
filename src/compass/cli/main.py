@@ -49,12 +49,25 @@ def cli() -> None:
     type=click.Choice(["low", "medium", "high", "critical"], case_sensitive=False),
     help="Severity level of the incident",
 )
-def investigate(service: str, symptom: str, severity: str) -> None:
+@click.option(
+    "--output-dir",
+    default="postmortems",
+    help="Directory to save post-mortem (default: postmortems)",
+)
+@click.option(
+    "--skip-postmortem",
+    is_flag=True,
+    help="Skip post-mortem generation",
+)
+def investigate(service: str, symptom: str, severity: str, output_dir: str, skip_postmortem: bool) -> None:
     """Trigger a new incident investigation.
 
     This command starts a new OODA loop investigation for the specified service
     and symptom. The investigation will collect observations, generate hypotheses,
     prompt for human decision, and validate the selected hypothesis.
+
+    After completion, a post-mortem document is automatically generated
+    (unless --skip-postmortem is specified).
 
     Example:
         compass investigate --service api-backend \\
@@ -132,6 +145,30 @@ def investigate(service: str, symptom: str, severity: str) -> None:
     try:
         result = asyncio.run(runner.run(context))
         formatter.show_complete_investigation(result)
+
+        # Generate post-mortem if not skipped
+        # NOTE: Always generate post-mortem, even for INCONCLUSIVE investigations
+        # Template handles missing hypothesis gracefully
+        if not skip_postmortem:
+            try:
+                from compass.core.postmortem import generate_postmortem, save_postmortem
+
+                postmortem = generate_postmortem(result)
+                filepath = save_postmortem(postmortem, output_dir)
+
+                # Plain text output (no emoji per user preference)
+                click.echo(f"\nPost-mortem saved to: {filepath}")
+            except IOError as e:
+                # Don't fail investigation over post-mortem save failure
+                click.echo(
+                    f"\nWarning: Could not save post-mortem: {e}",
+                    err=True,
+                )
+                click.echo(
+                    "Investigation completed successfully but post-mortem not saved.",
+                    err=True,
+                )
+                logger.warning("cli.postmortem.save_failed", error=str(e))
     except KeyboardInterrupt:
         click.echo("\n\nInvestigation cancelled by user.", err=True)
         sys.exit(130)
