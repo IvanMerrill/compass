@@ -5,8 +5,14 @@ of incident investigations following the OODA loop methodology.
 
 State Flow:
     TRIGGERED → OBSERVING → HYPOTHESIS_GENERATION → AWAITING_HUMAN → VALIDATING → RESOLVED
-                                                                              ↓
-                                                                    HYPOTHESIS_GENERATION (loop back if disproven)
+                                     ↓                                     ↓
+                               INCONCLUSIVE                      HYPOTHESIS_GENERATION (loop back)
+                                                                           ↓
+                                                                     INCONCLUSIVE
+
+Terminal States:
+- RESOLVED: Investigation successfully identified contributing factors
+- INCONCLUSIVE: No valid hypotheses found or validation unsuccessful
 """
 
 import threading
