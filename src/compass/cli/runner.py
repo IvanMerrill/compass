@@ -35,7 +35,30 @@ def default_strategy_executor(strategy: str, hypothesis: Hypothesis) -> Disproof
 
     Returns:
         DisproofAttempt with stub data
+
+    Note:
+        Evidence quality should be set based on strategy type:
+        - temporal_contradiction: DIRECT (first-hand timing observation)
+        - scope_verification: CORROBORATED (multiple sources confirm scope)
+        - correlation_vs_causation: INDIRECT (inferred relationships)
+        - baseline_comparison: DIRECT (measured deviation)
+        - similar_incident: CIRCUMSTANTIAL (suggestive patterns)
     """
+    from compass.core.scientific_framework import EvidenceQuality
+
+    # Map strategy to appropriate evidence quality
+    # Real implementation will determine quality based on actual test results
+    quality_map = {
+        "temporal_contradiction": EvidenceQuality.DIRECT,  # Timing tests = direct observation
+        "scope_verification": EvidenceQuality.CORROBORATED,  # Multi-source confirmation
+        "correlation_vs_causation": EvidenceQuality.INDIRECT,  # Inferred causality
+        "baseline_comparison": EvidenceQuality.DIRECT,  # Measured deviation
+        "similar_incident": EvidenceQuality.CIRCUMSTANTIAL,  # Pattern matching
+    }
+
+    # Default to CIRCUMSTANTIAL for unknown strategies (conservative)
+    evidence_quality = quality_map.get(strategy, EvidenceQuality.CIRCUMSTANTIAL)
+
     # Stub implementation - hypothesis always survives
     return DisproofAttempt(
         strategy=strategy,
@@ -48,6 +71,7 @@ def default_strategy_executor(strategy: str, hypothesis: Hypothesis) -> Disproof
                 source="stub_executor",
                 data={"strategy": strategy},
                 interpretation=f"Stub execution of strategy: {strategy}",
+                quality=evidence_quality,  # Set appropriate quality based on strategy
                 timestamp=datetime.now(timezone.utc),
             )
         ],
