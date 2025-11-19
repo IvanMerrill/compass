@@ -102,6 +102,10 @@ addopts = [
     "--no-cov-on-fail",
 ]
 asyncio_mode = "auto"
+markers = [
+    "integration: integration tests requiring external services",
+    "demo: tests requiring full demo environment (docker-compose.observability.yml)",
+]
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]
