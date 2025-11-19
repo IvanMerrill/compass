@@ -26,3 +26,10 @@ scrape_configs:
       - targets: ['postgres-exporter:9187']
         labels:
           service: 'postgres'
+
+  # Scrape application metrics from sample app
+  - job_name: 'sample-app'
+    static_configs:
+      - targets: ['sample-app:8000']
+        labels:
+          service: 'payment-service'

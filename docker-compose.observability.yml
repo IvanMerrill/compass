@@ -165,6 +165,32 @@ services:
         reservations:
           memory: 128M
 
+  # Sample application - generates realistic database incidents
+  sample-app:
+    build: ./observability/sample-app
+    container_name: compass-sample-app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: demo
+      DB_PASSWORD: demo
+      DB_NAME: demo
+      TEMPO_ENDPOINT: http://tempo:4319
+    ports:
+      - "8000:8000"
+    networks:
+      - compass-observability
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - tempo
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
 networks:
   compass-observability:
     name: compass-observability

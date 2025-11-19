@@ -1,0 +1,11 @@
+# Requirements for COMPASS demo sample application
+# Uses minimal dependencies - most are already in main project
+
+fastapi==0.104.1
+asyncpg==0.29.0
+prometheus-client==0.19.0
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-exporter-otlp-proto-grpc==1.21.0
+uvicorn[standard]==0.24.0
