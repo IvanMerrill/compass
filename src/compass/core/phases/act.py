@@ -101,27 +101,27 @@ class HypothesisValidator:
                 evidence_count=len(attempt.evidence),
             )
 
-        # Update hypothesis with attempts
+        # Update hypothesis with attempts using proper API
+        # This ensures observability, validation, and correct confidence calculation
         for attempt in attempts:
-            hypothesis.disproof_attempts.append(attempt)
+            # First, add evidence from the attempt
+            # Evidence quality determines its weight in confidence calculation
+            for evidence in attempt.evidence:
+                # Set whether evidence supports or contradicts hypothesis
+                evidence.supports_hypothesis = not attempt.disproven
+                # Use proper API which handles validation, observability, and recalculation
+                hypothesis.add_evidence(evidence)
 
-            # Categorize evidence based on whether attempt disproved hypothesis
-            if attempt.disproven:
-                # Hypothesis was disproven - evidence contradicts it
-                hypothesis.contradicting_evidence.extend(attempt.evidence)
-            else:
-                # Hypothesis survived - evidence supports it
-                hypothesis.supporting_evidence.extend(attempt.evidence)
+            # Then add the disproof attempt
+            # This triggers confidence recalculation using the framework's algorithm
+            hypothesis.add_disproof_attempt(attempt)
 
-        # Calculate overall outcome and updated confidence
+        # Calculate overall outcome
         outcome = self._determine_outcome(attempts)
-        updated_confidence = self._calculate_updated_confidence(
-            hypothesis.initial_confidence,
-            attempts,
-        )
 
-        # Update hypothesis confidence
-        hypothesis.current_confidence = updated_confidence
+        # Read the confidence calculated by the scientific framework
+        # (already updated by add_evidence and add_disproof_attempt calls)
+        updated_confidence = hypothesis.current_confidence
 
         # Update hypothesis status based on outcome
         if outcome == DisproofOutcome.FAILED:
@@ -173,38 +173,3 @@ class HypothesisValidator:
 
         # Otherwise inconclusive (shouldn't happen with current logic)
         return DisproofOutcome.INCONCLUSIVE
-
-    def _calculate_updated_confidence(
-        self,
-        initial_confidence: float,
-        attempts: List[DisproofAttempt],
-    ) -> float:
-        """Calculate updated confidence based on validation results.
-
-        Args:
-            initial_confidence: Starting confidence (0.0-1.0)
-            attempts: List of disproof attempts
-
-        Returns:
-            Updated confidence (0.0-1.0)
-        """
-        if not attempts:
-            return initial_confidence
-
-        # Calculate confidence adjustment based on results
-        total_adjustment = 0.0
-        for attempt in attempts:
-            if attempt.disproven:
-                # Hypothesis was disproven - decrease confidence significantly
-                total_adjustment -= 0.3
-            else:
-                # Hypothesis survived - increase confidence
-                # More evidence = larger increase
-                evidence_weight = min(len(attempt.evidence), 3) / 3.0
-                total_adjustment += 0.1 * evidence_weight
-
-        # Apply adjustment
-        updated = initial_confidence + total_adjustment
-
-        # Clamp to valid range [0.0, 1.0]
-        return max(0.0, min(1.0, updated))
