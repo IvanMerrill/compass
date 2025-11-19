@@ -65,24 +65,31 @@ def create_ooda_orchestrator() -> OODAOrchestrator:
 def create_investigation_runner(
     agents: Optional[List[Any]] = None,
     strategies: Optional[List[str]] = None,
+    budget_limit: float = 10.0,
 ) -> InvestigationRunner:
     """Create investigation runner with OODA orchestrator.
 
     Args:
         agents: List of specialist agents for observation (default: empty list)
         strategies: Disproof strategies for validation (default: empty list)
+        budget_limit: Maximum cost per investigation in USD (default: $10 routine)
 
     Returns:
         InvestigationRunner ready to execute investigations
+
+    Note:
+        Budget is enforced at investigation level, not per-agent.
+        Use $20 for critical investigations.
     """
     # Create orchestrator with all dependencies
     orchestrator = create_ooda_orchestrator()
 
-    # Create runner with orchestrator and agents/strategies
+    # Create runner with orchestrator, agents, strategies, and budget limit
     runner = InvestigationRunner(
         orchestrator=orchestrator,
         agents=agents or [],
         strategies=strategies or [],
+        budget_limit=budget_limit,
     )
 
     return runner

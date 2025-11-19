@@ -74,6 +74,7 @@ class InvestigationRunner:
         orchestrator: OODAOrchestrator,
         agents: List[Any] | None = None,
         strategies: List[str] | None = None,
+        budget_limit: float = 10.0,
     ):
         """Initialize InvestigationRunner.
 
@@ -81,10 +82,16 @@ class InvestigationRunner:
             orchestrator: OODA orchestrator to execute investigation
             agents: List of specialist agents for observation (default: empty list)
             strategies: Disproof strategies for validation (default: empty list)
+            budget_limit: Maximum allowed cost in USD per investigation (default: $10)
+
+        Note:
+            Budget is enforced at investigation level, not per-agent.
+            Use $20 for critical investigations.
         """
         self.orchestrator = orchestrator
         self.agents = agents or []
         self.strategies = strategies or []
+        self.budget_limit = budget_limit
 
     async def run(self, context: InvestigationContext) -> OODAResult:
         """Run a full investigation from context.
@@ -100,10 +107,11 @@ class InvestigationRunner:
             service=context.service,
             symptom=context.symptom,
             severity=context.severity,
+            budget_limit=self.budget_limit,
         )
 
-        # Create investigation from context
-        investigation = Investigation.create(context)
+        # Create investigation from context with budget limit
+        investigation = Investigation.create(context, budget_limit=self.budget_limit)
 
         # Execute OODA loop
         result = await self.orchestrator.execute(

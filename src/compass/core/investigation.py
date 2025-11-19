@@ -41,6 +41,12 @@ class InvalidTransitionError(Exception):
     pass
 
 
+class BudgetExceededError(Exception):
+    """Raised when investigation cost exceeds budget limit."""
+
+    pass
+
+
 @dataclass
 class InvestigationContext:
     """Context information that triggered the investigation.
@@ -98,8 +104,17 @@ class Investigation:
         status: InvestigationStatus,
         created_at: datetime,
         updated_at: datetime,
+        budget_limit: float = 10.0,  # Default $10 routine investigation budget
     ):
         """Initialize Investigation.
+
+        Args:
+            id: Unique investigation ID
+            context: Investigation trigger context
+            status: Initial investigation status
+            created_at: Creation timestamp
+            updated_at: Last update timestamp
+            budget_limit: Maximum allowed cost in USD (default: $10)
 
         Note: Use Investigation.create() factory method instead of __init__.
         """
@@ -108,6 +123,7 @@ class Investigation:
         self.status = status
         self.created_at = created_at
         self.updated_at = updated_at
+        self.budget_limit = budget_limit
 
         # Investigation data
         self.observations: List[Dict[str, Any]] = []
@@ -119,14 +135,19 @@ class Investigation:
         self._transition_lock = threading.Lock()
 
     @classmethod
-    def create(cls, context: InvestigationContext) -> "Investigation":
+    def create(cls, context: InvestigationContext, budget_limit: float = 10.0) -> "Investigation":
         """Factory method to create a new Investigation.
 
         Args:
             context: Investigation trigger context
+            budget_limit: Maximum allowed cost in USD (default: $10 routine)
 
         Returns:
             New Investigation in TRIGGERED status
+
+        Note:
+            Default budget is $10 for routine investigations. Use $20 for critical.
+            Budget is enforced at investigation level, not per-agent.
         """
         now = datetime.now(timezone.utc)
         investigation_id = str(uuid.uuid4())
@@ -137,6 +158,7 @@ class Investigation:
             service=context.service,
             symptom=context.symptom,
             severity=context.severity,
+            budget_limit=budget_limit,
         )
 
         return cls(
@@ -145,6 +167,7 @@ class Investigation:
             status=InvestigationStatus.TRIGGERED,
             created_at=now,
             updated_at=now,
+            budget_limit=budget_limit,
         )
 
     def transition_to(self, new_status: InvestigationStatus) -> None:
@@ -204,19 +227,58 @@ class Investigation:
         self.human_decisions.append(decision)
 
     def add_cost(self, cost: float) -> None:
-        """Add cost to investigation total.
+        """Add cost to investigation total and enforce budget limit.
 
         Args:
-            cost: Cost in USD
-        """
-        self.total_cost += cost
+            cost: Cost in USD to add
 
-        logger.info(
-            "investigation.cost_added",
-            investigation_id=self.id,
-            cost_added=cost,
-            total_cost=self.total_cost,
-        )
+        Raises:
+            BudgetExceededError: If adding this cost would exceed budget_limit
+        """
+        new_total = self.total_cost + cost
+
+        # Check if adding this cost would exceed budget
+        if new_total > self.budget_limit:
+            logger.error(
+                "investigation.budget_exceeded",
+                investigation_id=self.id,
+                cost_added=cost,
+                total_cost=self.total_cost,
+                new_total=new_total,
+                budget_limit=self.budget_limit,
+                overrun_amount=new_total - self.budget_limit,
+            )
+            raise BudgetExceededError(
+                f"Investigation {self.id} would exceed budget: "
+                f"${new_total:.2f} > ${self.budget_limit:.2f} "
+                f"(overrun: ${new_total - self.budget_limit:.2f})"
+            )
+
+        # Add cost if within budget
+        self.total_cost = new_total
+
+        # Calculate budget utilization percentage
+        utilization_pct = 100.0 * self.total_cost / self.budget_limit
+
+        # Warn if approaching budget limit (>80%)
+        if utilization_pct >= 80.0:
+            logger.warning(
+                "investigation.budget_warning",
+                investigation_id=self.id,
+                total_cost=self.total_cost,
+                budget_limit=self.budget_limit,
+                utilization_pct=utilization_pct,
+                remaining=self.budget_limit - self.total_cost,
+            )
+        else:
+            logger.info(
+                "investigation.cost_added",
+                investigation_id=self.id,
+                cost_added=cost,
+                total_cost=self.total_cost,
+                budget_limit=self.budget_limit,
+                utilization_pct=utilization_pct,
+            )
 
     def get_duration(self) -> timedelta:
         """Get duration of investigation so far.

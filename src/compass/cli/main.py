@@ -85,27 +85,26 @@ def investigate(service: str, symptom: str, severity: str, output_dir: str, skip
     agents = []
     llm_provider = None
 
+    # Select investigation-level budget based on severity
+    # Budget is enforced at investigation level, not per-agent
+    if severity.lower() == "critical":
+        budget_limit = settings.critical_cost_budget_usd  # $20 for critical
+    else:
+        budget_limit = settings.default_cost_budget_usd  # $10 for routine
+
     try:
         # Attempt to create LLM provider from settings
         llm_provider = create_llm_provider_from_settings()
 
-        # Select budget based on severity
-        if severity.lower() == "critical":
-            budget_limit = settings.critical_cost_budget_usd
-        else:
-            budget_limit = settings.default_cost_budget_usd
-
-        # Create DatabaseAgent with LLM provider
+        # Create DatabaseAgent with LLM provider (no per-agent budget)
         db_agent = create_database_agent(
             llm_provider=llm_provider,
-            budget_limit=budget_limit,
         )
         agents.append(db_agent)
 
         logger.info(
             "cli.agent.created",
             agent_id=db_agent.agent_id,
-            budget_limit=budget_limit,
             severity=severity,
         )
 
@@ -134,10 +133,11 @@ def investigate(service: str, symptom: str, severity: str, output_dir: str, skip
         "correlation_vs_causation",
     ]
 
-    # Create runner with agents and strategies
+    # Create runner with agents, strategies, and investigation-level budget
     runner = create_investigation_runner(
         agents=agents,
         strategies=strategies,
+        budget_limit=budget_limit,
     )
     formatter = DisplayFormatter()
 
