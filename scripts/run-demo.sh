@@ -14,6 +14,13 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$PROJECT_ROOT"
 
+# Check Docker is running
+if ! docker info > /dev/null 2>&1; then
+    echo "❌ ERROR: Docker is not running"
+    echo "Please start Docker and try again"
+    exit 1
+fi
+
 case "${1:-start}" in
   start)
     echo "🚀 Starting COMPASS demo environment..."

@@ -30,7 +30,7 @@ app = FastAPI(title="Payment Service Demo", version="1.0.0")
 # Initialize OpenTelemetry tracing to Tempo
 trace.set_tracer_provider(TracerProvider())
 otlp_exporter = OTLPSpanExporter(
-    endpoint=os.getenv("TEMPO_ENDPOINT", "http://tempo:4319"),  # Port 4319 per docker-compose
+    endpoint=os.getenv("TEMPO_ENDPOINT", "http://tempo:4317"),  # Internal container port
     insecure=True
 )
 trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
@@ -107,10 +107,10 @@ async def create_payment(amount: float = 100.0):
 
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("create_payment") as span:
-        payment_id = random.randint(1000, 99999)
-        span.set_attribute("payment.id", payment_id)
         span.set_attribute("payment.amount", amount)
         span.set_attribute("incident.mode", incident_mode)
+
+        payment_id = None  # Will be set from database RETURNING clause
 
         try:
             with payment_duration.time():
@@ -123,10 +123,12 @@ async def create_payment(amount: float = 100.0):
                             "SELECT * FROM payments WHERE amount > $1 ORDER BY created_at DESC LIMIT 100",
                             50.0
                         )
-                        await conn.execute(
-                            "INSERT INTO payments (id, amount, status) VALUES ($1, $2, $3)",
-                            payment_id, amount, 'completed'
+                        result = await conn.fetchrow(
+                            "INSERT INTO payments (amount, status) VALUES ($1, $2) RETURNING id",
+                            amount, 'completed'
                         )
+                        payment_id = result['id']
+                    span.set_attribute("payment.id", payment_id)
                     span.set_attribute("incident.type", "missing_index")
                     span.set_attribute("incident.query", "SELECT without index")
 
@@ -139,10 +141,12 @@ async def create_payment(amount: float = 100.0):
                             # Hold the locks for 2 seconds
                             await asyncio.sleep(2)
                             # Now insert (other queries waiting on locks)
-                            await conn.execute(
-                                "INSERT INTO payments (id, amount, status) VALUES ($1, $2, $3)",
-                                payment_id, amount, 'completed'
+                            result = await conn.fetchrow(
+                                "INSERT INTO payments (amount, status) VALUES ($1, $2) RETURNING id",
+                                amount, 'completed'
                             )
+                            payment_id = result['id']
+                    span.set_attribute("payment.id", payment_id)
                     span.set_attribute("incident.type", "lock_contention")
                     span.set_attribute("incident.lock_duration_seconds", 2)
 
@@ -150,23 +154,27 @@ async def create_payment(amount: float = 100.0):
                     # Realistic incident: Hold connection for too long
                     async with db_pool.acquire() as conn:
                         # Do insert first
-                        await conn.execute(
-                            "INSERT INTO payments (id, amount, status) VALUES ($1, $2, $3)",
-                            payment_id, amount, 'completed'
+                        result = await conn.fetchrow(
+                            "INSERT INTO payments (amount, status) VALUES ($1, $2) RETURNING id",
+                            amount, 'completed'
                         )
+                        payment_id = result['id']
                         # Then hold connection unnecessarily
                         # Other requests will wait for available connection
                         await asyncio.sleep(5)
+                    span.set_attribute("payment.id", payment_id)
                     span.set_attribute("incident.type", "pool_exhaustion")
                     span.set_attribute("incident.connection_hold_seconds", 5)
 
                 else:
                     # Normal operation: fast insert, release connection immediately
                     async with db_pool.acquire() as conn:
-                        await conn.execute(
-                            "INSERT INTO payments (id, amount, status) VALUES ($1, $2, $3)",
-                            payment_id, amount, 'completed'
+                        result = await conn.fetchrow(
+                            "INSERT INTO payments (amount, status) VALUES ($1, $2) RETURNING id",
+                            amount, 'completed'
                         )
+                        payment_id = result['id']
+                    span.set_attribute("payment.id", payment_id)
                     span.set_attribute("incident.type", "normal")
 
             return {"payment_id": payment_id, "status": "completed", "amount": amount}
