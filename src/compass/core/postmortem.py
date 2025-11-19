@@ -71,10 +71,10 @@ class PostMortem:
         md += f"**Agents:** {self.agent_count} specialist agent(s)\n\n"
         md += "---\n\n"
 
-        # Root Cause (conditional on status)
-        md += "## Root Cause\n\n"
+        # Contributing Factors (Learning Teams methodology - no blame language)
+        md += "## Contributing Factors\n\n"
         if self.selected_hypothesis and self.validation_result:
-            md += f"**Hypothesis:** {self.selected_hypothesis.statement}\n"
+            md += f"**Primary Hypothesis:** {self.selected_hypothesis.statement}\n"
             md += f"**Confidence:** {self.validation_result.updated_confidence:.0%} "
             md += f"(initial: {self.selected_hypothesis.initial_confidence:.0%})\n"
             md += f"**Source:** {self.selected_hypothesis.agent_id}\n\n"
@@ -82,11 +82,11 @@ class PostMortem:
             md += f"{self.selected_hypothesis.confidence_reasoning}\n\n"
         else:
             md += "**Status:** INCONCLUSIVE - No hypotheses could be validated\n\n"
-            md += "The investigation did not identify a root cause with sufficient confidence. "
+            md += "The investigation did not identify contributing factors with sufficient confidence. "
             md += "This may indicate:\n"
             md += "- Insufficient observability data available\n"
             md += "- Symptoms resolved before investigation completed\n"
-            md += "- Root cause requires additional specialist agents\n\n"
+            md += "- Contributing factors require additional specialist agents\n\n"
 
         md += "---\n\n"
 
