@@ -49,9 +49,33 @@ AI-powered incident investigation platform that reduces MTTR by 67-90% using par
 
 ## Quick Start
 
-**Want to try it now?** → [**Run the Demo**](DEMO.md) (5 minutes)
+### Try It Now (2 minutes)
 
-For new team members or contributors:
+**Complete demo environment with real observability stack:**
+
+```bash
+# 1. Start demo environment
+./scripts/run-demo.sh
+
+# 2. Trigger an incident (missing index, lock contention, or pool exhaustion)
+./scripts/trigger-incident.sh missing_index
+
+# 3. Investigate with COMPASS
+poetry run compass investigate \
+  --service payment-service \
+  --symptom "slow database queries and high latency" \
+  --severity high
+```
+
+**What you get**:
+- Real Prometheus/Loki/Tempo observability stack
+- Sample payment service generating realistic database incidents
+- DatabaseAgent querying live metrics/logs/traces
+- Automatic post-mortem markdown document
+
+**Full demo guide**: [DEMO.md](DEMO.md) (~10 minutes first run)
+
+### For Contributors
 
 1. **Start here**: [`docs/product/COMPASS_Product_Reference_Document_v1_1.md`](docs/product/COMPASS_Product_Reference_Document_v1_1.md)
 2. **Understand the architecture**: [`docs/architecture/COMPASS_MVP_Architecture_Reference.md`](docs/architecture/COMPASS_MVP_Architecture_Reference.md)

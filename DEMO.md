@@ -1,64 +1,105 @@
-# COMPASS Quick Start Demo
+# COMPASS Demo
 
-This guide shows you how to run COMPASS end-to-end demo.
+Run COMPASS with a complete observability stack in ~10 minutes (first run) or ~2 minutes (subsequent runs).
 
 ## Prerequisites
 
-- Python 3.11+
-- Poetry installed
+- Docker & Docker Compose
+- Python 3.11+ and Poetry
 - OpenAI or Anthropic API key
+- 8GB RAM available (demo stack uses ~2.5GB)
 
-## Setup
+## Quick Start
 
-1. **Install dependencies:**
-   ```bash
-   poetry install
-   ```
+### 1. Setup COMPASS
 
-2. **Set API key** (choose one):
-   ```bash
-   export OPENAI_API_KEY="sk-..."
-   # OR
-   export ANTHROPIC_API_KEY="sk-ant-..."
-   ```
+```bash
+# Clone and install
+git clone <repo>
+cd compass
+poetry install
 
-3. **(Optional) Configure MCP servers:**
-   ```bash
-   # Not required for demo - DatabaseAgent works without MCP
-   export GRAFANA_URL="..."
-   export GRAFANA_TOKEN="..."
-   ```
+# Configure API key
+cp .env.example .env
+# Edit .env and add OPENAI_API_KEY or ANTHROPIC_API_KEY
+```
 
-## Run Demo
+### 2. Start Demo Environment
+
+```bash
+# Start full observability stack + sample app
+docker-compose -f docker-compose.observability.yml up -d
+```
+
+This starts:
+- **Grafana** - http://localhost:3000 (anonymous access, no login)
+- **Prometheus** - http://localhost:9090
+- **Loki** - http://localhost:3100
+- **Tempo** - http://localhost:3200
+- **PostgreSQL** - localhost:5432 (demo/demo)
+- **postgres-exporter** - Database metrics on port 9187
+- **Sample App** - http://localhost:8000 (payment service)
+
+Wait ~30 seconds for all services to be healthy.
+
+### 3. Trigger an Incident
+
+```bash
+# Trigger missing index incident (full table scan)
+curl -X POST http://localhost:8000/trigger-incident \
+  -H "Content-Type: application/json" \
+  -d '{"incident_type": "missing_index"}'
+
+# Generate traffic to observe incident
+for i in {1..20}; do
+  curl -X POST http://localhost:8000/payment \
+    -H "Content-Type: application/json" \
+    -d '{"amount": 100}'
+done
+```
+
+### 4. Investigate with COMPASS
 
 ```bash
 poetry run compass investigate \
   --service payment-service \
-  --symptom "high latency and 500 errors" \
-  --severity critical
+  --symptom "slow database queries and high latency" \
+  --severity high
+```
+
+### 5. Review Post-Mortem
+
+```bash
+# View generated post-mortem
+ls postmortems/
+cat postmortems/*.md
 ```
 
 ## What Happens
 
-1. **Observe**: DatabaseAgent queries metrics/logs/traces (or uses empty data if no MCP)
-2. **Orient**: DatabaseAgent generates hypothesis using LLM
+1. **Observe**: DatabaseAgent queries Prometheus, Loki, and Tempo for metrics, logs, and traces
+2. **Orient**: DatabaseAgent generates hypothesis using LLM based on real observability data
 3. **Decide**: You select which hypothesis to validate
 4. **Act**: System validates hypothesis with disproof strategies
 5. **Result**: Investigation completes with RESOLVED status
+6. **Post-mortem**: Markdown document generated with investigation results
 
 ## Expected Output
 
 ```
 === COMPASS Investigation ===
 Service: payment-service
-Symptom: high latency and 500 errors
-Severity: critical
+Symptom: slow database queries and high latency
+Severity: high
 
 [OBSERVE] Querying 1 specialist agents...
   ✓ database_specialist (confidence: 0.8)
+  Metrics: 45 datapoints
+  Logs: 12 entries
+  Traces: 8 spans
 
 [ORIENT] Generated 1 hypotheses:
-  [1] Database connection pool exhausted (85% confidence)
+  [1] Full table scan due to missing index on amount column (88% confidence)
 
 [DECIDE] Select hypothesis to validate:
 > 1
@@ -69,10 +110,10 @@ Severity: critical
   ✓ correlation_vs_causation: Not disproven
 
 [RESOLVED] Investigation complete!
-  Hypothesis: Database connection pool exhausted
-  Confidence: 90% (initial: 85%)
-  Cost: $0.25
-  Duration: 8.2s
+  Hypothesis: Full table scan due to missing index on amount column
+  Confidence: 92% (initial: 88%)
+  Cost: $0.18
+  Duration: 6.7s
 
 Post-mortem saved to: postmortems/payment-service-a3b2c1d4-2025-11-18-140532.md
 ```
@@ -172,17 +213,67 @@ poetry run compass investigate \
   --skip-postmortem
 ```
 
+## Available Incidents
+
+The sample app supports multiple realistic incident scenarios:
+
+```bash
+# Missing index (full table scan)
+curl -X POST http://localhost:8000/trigger-incident \
+  -H "Content-Type: application/json" \
+  -d '{"incident_type": "missing_index"}'
+
+# Lock contention (hold row locks for 2 seconds)
+curl -X POST http://localhost:8000/trigger-incident \
+  -H "Content-Type: application/json" \
+  -d '{"incident_type": "lock_contention"}'
+
+# Connection pool exhaustion (hold connections for 5 seconds)
+curl -X POST http://localhost:8000/trigger-incident \
+  -H "Content-Type: application/json" \
+  -d '{"incident_type": "pool_exhaustion"}'
+
+# Return to normal operation
+curl -X POST http://localhost:8000/trigger-incident \
+  -H "Content-Type: application/json" \
+  -d '{"incident_type": "normal"}'
+```
+
 ## Troubleshooting
+
+### Services won't start
+```bash
+# Check logs
+docker-compose -f docker-compose.observability.yml logs
+
+# Restart everything
+docker-compose -f docker-compose.observability.yml down
+docker-compose -f docker-compose.observability.yml up -d
+```
+
+### No metrics in Grafana
+```bash
+# Verify Prometheus is scraping
+curl http://localhost:9090/api/v1/targets
+
+# Check sample app is running
+curl http://localhost:8000/health
+```
+
+### Port conflicts
+If ports 3000, 9090, 3100, 3200, 5432, or 8000 are already in use:
+- Stop conflicting services
+- OR modify port mappings in docker-compose.observability.yml
 
 ### No LLM provider configured
 ```
 ⚠️  OpenAI API key not configured. Set OPENAI_API_KEY environment variable.
 ```
-→ Set OPENAI_API_KEY or ANTHROPIC_API_KEY
+→ Edit .env and add OPENAI_API_KEY or ANTHROPIC_API_KEY
 
 ### Investigation INCONCLUSIVE
-→ Normal when no LLM provider configured
 → Check that API key is valid and has sufficient credits
+→ Verify demo environment is running (docker-compose ps)
 
 ### Permission denied or module not found
 ```bash
@@ -237,8 +328,21 @@ poetry run compass investigate \
   --severity medium
 ```
 
+## Clean Up
+
+When done with the demo:
+
+```bash
+# Stop all services
+docker-compose -f docker-compose.observability.yml down
+
+# Remove volumes (deletes all data)
+docker-compose -f docker-compose.observability.yml down -v
+```
+
 ## Next Steps
 
 - See [README.md](README.md) for full documentation
-- Check [Architecture](docs/architecture.md) for system design
-- Review [Contributing](CONTRIBUTING.md) for development guidelines
+- Run integration tests: `poetry run pytest -v -m demo`
+- Try different incident scenarios (see "Available Incidents" above)
+- Check [observability/README.md](observability/README.md) for advanced configuration

@@ -1,14 +1,21 @@
 # COMPASS Local Observability Stack
 
-This directory contains configuration for a **local-only** observability stack for COMPASS development.
+This directory contains configuration for a **local-only** observability stack for COMPASS development and demo.
 
 ## What's Included
 
+### Core Observability (Always Available)
 - **OpenTelemetry Collector** - Receives metrics/traces from COMPASS
 - **Prometheus** - Stores metrics
-- **Grafana** - Visualizes metrics and traces
+- **Grafana** - Visualizes metrics and traces (anonymous Admin access for demo)
 - **Tempo** - Stores distributed traces
 - **Jaeger UI** - Queries and views traces
+
+### Demo Environment (Added in Phase 9)
+- **Loki** - Log aggregation (used by DatabaseAgent for LogQL queries)
+- **PostgreSQL** - Demo database (user: demo, password: demo, db: demo)
+- **postgres-exporter** - Exposes PostgreSQL metrics to Prometheus
+- **Sample App** - Payment service that generates realistic incidents
 
 ## Quick Start
 
@@ -25,13 +32,75 @@ docker-compose -f docker-compose.observability.yml logs -f otel-collector
 
 ## Access UIs
 
-- **Grafana**: http://localhost:3000
-  - Username: `admin`
-  - Password: `admin`
-
+- **Grafana**: http://localhost:3000 (anonymous Admin - no login required)
 - **Prometheus**: http://localhost:9090
-
 - **Jaeger UI**: http://localhost:16686
+- **Loki**: http://localhost:3100
+- **Tempo**: http://localhost:3200
+- **Sample App**: http://localhost:8000
+
+## Demo Environment
+
+The stack now includes a complete demo environment for trying COMPASS with real observability data.
+
+### Sample Application
+
+The payment service (`sample-app`) generates realistic database incidents:
+
+```bash
+# Check sample app status
+curl http://localhost:8000/health
+
+# Trigger missing index incident (full table scan)
+curl -X POST http://localhost:8000/trigger-incident \
+  -H "Content-Type: application/json" \
+  -d '{"incident_type": "missing_index"}'
+
+# Generate traffic
+for i in {1..20}; do
+  curl -X POST http://localhost:8000/payment \
+    -H "Content-Type: application/json" \
+    -d '{"amount": 100}'
+done
+
+# Return to normal
+curl -X POST http://localhost:8000/trigger-incident \
+  -H "Content-Type: application/json" \
+  -d '{"incident_type": "normal"}'
+```
+
+Available incident types:
+- `normal` - Fast database operations
+- `missing_index` - Full table scan on amount column (no index)
+- `lock_contention` - Hold row locks for 2 seconds
+- `pool_exhaustion` - Hold database connections for 5 seconds
+
+### Running an Investigation
+
+```bash
+# Trigger an incident and generate traffic (see above)
+
+# Run COMPASS investigation
+poetry run compass investigate \
+  --service payment-service \
+  --symptom "slow database queries" \
+  --severity high
+
+# DatabaseAgent will query real Prometheus, Loki, and Tempo data!
+```
+
+### Exploring Metrics
+
+```bash
+# View all available metrics
+curl http://localhost:9090/api/v1/label/__name__/values | jq
+
+# Check postgres metrics
+curl http://localhost:9090/api/v1/query?query=pg_up
+
+# Check sample app metrics
+curl http://localhost:9090/api/v1/query?query=payment_requests_total
+```
 
 ## Configure COMPASS
 
