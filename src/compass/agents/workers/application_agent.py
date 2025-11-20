@@ -17,7 +17,7 @@ Key Features:
 """
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import structlog
 
@@ -48,6 +48,15 @@ class ApplicationAgent:
 
     # Time window for observations (Agent Alpha's P1-2)
     OBSERVATION_WINDOW_MINUTES = 15  # ± from incident time
+
+    # Confidence levels for different observation types
+    # Based on data quality and sampling characteristics
+    CONFIDENCE_LOG_DATA = 0.9  # High - complete log data
+    CONFIDENCE_TRACE_DATA = 0.85  # Slightly lower - sampling involved
+    CONFIDENCE_HEURISTIC_SEARCH = 0.8  # Moderate - heuristic-based detection
+
+    # Default service name when affected_services is empty
+    DEFAULT_SERVICE_NAME = "unknown"
 
     def __init__(
         self,
@@ -170,11 +179,33 @@ class ApplicationAgent:
 
             return observations
 
-    def _calculate_time_range(self, incident: Incident) -> tuple:
+    def _get_primary_service(self, incident: Incident) -> str:
+        """
+        Extract primary affected service from incident.
+
+        Args:
+            incident: The incident to investigate
+
+        Returns:
+            Primary service name, or DEFAULT_SERVICE_NAME if none specified
+        """
+        return (
+            incident.affected_services[0]
+            if incident.affected_services
+            else self.DEFAULT_SERVICE_NAME
+        )
+
+    def _calculate_time_range(self, incident: Incident) -> Tuple[datetime, datetime]:
         """
         Calculate observation time window: incident time ± 15 minutes.
 
         Agent Alpha's P1-2: Define time range logic for deployment correlation.
+
+        Args:
+            incident: The incident to investigate
+
+        Returns:
+            Tuple of (start_time, end_time) for observations
         """
         incident_time = datetime.fromisoformat(incident.start_time.replace("Z", "+00:00"))
         start_time = incident_time - timedelta(minutes=self.OBSERVATION_WINDOW_MINUTES)
@@ -182,12 +213,19 @@ class ApplicationAgent:
         return (start_time, end_time)
 
     def _observe_error_rates(
-        self, incident: Incident, time_range: tuple
+        self, incident: Incident, time_range: Tuple[datetime, datetime]
     ) -> List[Observation]:
         """
         Observe error rates using QueryGenerator for sophisticated LogQL.
 
         Agent Alpha & Beta: Use QueryGenerator for structured log parsing.
+
+        Args:
+            incident: The incident to investigate
+            time_range: (start_time, end_time) tuple for observation window
+
+        Returns:
+            List of error rate observations from Loki logs
         """
         observations = []
 
@@ -195,7 +233,7 @@ class ApplicationAgent:
             logger.warning("loki_client_not_available")
             return observations
 
-        service = incident.affected_services[0] if incident.affected_services else "unknown"
+        service = self._get_primary_service(incident)
 
         # Generate query (sophisticated if QueryGenerator available, simple otherwise)
         if self.query_generator:
@@ -243,7 +281,7 @@ class ApplicationAgent:
                     source=f"loki:error_logs:{service}",
                     data={"error_count": len(results), "query": query},
                     description=f"Found {len(results)} error log entries for {service}",
-                    confidence=0.9,  # High confidence in log data
+                    confidence=self.CONFIDENCE_LOG_DATA,
                 )
                 observations.append(observation)
 
@@ -254,12 +292,19 @@ class ApplicationAgent:
         return observations
 
     def _observe_latency(
-        self, incident: Incident, time_range: tuple
+        self, incident: Incident, time_range: Tuple[datetime, datetime]
     ) -> List[Observation]:
         """
         Observe latency from traces.
 
         Queries Tempo for trace data and calculates latency statistics.
+
+        Args:
+            incident: The incident to investigate
+            time_range: (start_time, end_time) tuple for observation window
+
+        Returns:
+            List of latency observations from Tempo traces
         """
         observations = []
 
@@ -267,7 +312,7 @@ class ApplicationAgent:
             logger.warning("tempo_client_not_available")
             return observations
 
-        service = incident.affected_services[0] if incident.affected_services else "unknown"
+        service = self._get_primary_service(incident)
 
         try:
             # Query Tempo for traces
@@ -298,7 +343,7 @@ class ApplicationAgent:
                             "max_duration_ms": max_duration,
                         },
                         description=f"Analyzed {len(results)} traces for {service}, avg latency: {avg_duration:.1f}ms",
-                        confidence=0.85,  # Slightly lower confidence (sampling)
+                        confidence=self.CONFIDENCE_TRACE_DATA,
                     )
                     observations.append(observation)
 
@@ -309,12 +354,19 @@ class ApplicationAgent:
         return observations
 
     def _observe_deployments(
-        self, incident: Incident, time_range: tuple
+        self, incident: Incident, time_range: Tuple[datetime, datetime]
     ) -> List[Observation]:
         """
         Observe recent deployments from logs.
 
         Looks for deployment-related log entries around incident time.
+
+        Args:
+            incident: The incident to investigate
+            time_range: (start_time, end_time) tuple for observation window
+
+        Returns:
+            List of deployment observations from Loki logs
         """
         observations = []
 
@@ -322,7 +374,7 @@ class ApplicationAgent:
             logger.warning("loki_client_not_available_for_deployments")
             return observations
 
-        service = incident.affected_services[0] if incident.affected_services else "unknown"
+        service = self._get_primary_service(incident)
 
         # Simple query for deployment logs
         query = f'{{service="{service}"}} |= "deployment" or |= "deploy"'
@@ -349,7 +401,7 @@ class ApplicationAgent:
                         source=f"loki:deployments:{service}",
                         data={"deployments": deployments, "count": len(deployments)},
                         description=f"Found {len(deployments)} deployment-related log entries for {service}",
-                        confidence=0.8,  # Moderate confidence (heuristic search)
+                        confidence=self.CONFIDENCE_HEURISTIC_SEARCH,
                     )
                     observations.append(observation)
 
