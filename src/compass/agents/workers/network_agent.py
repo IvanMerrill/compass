@@ -610,11 +610,13 @@ class NetworkAgent(ApplicationAgent):
             query = f'{{service="{service}"}} |~ "backend.*(DOWN|UP|MAINT)"'
 
             try:
+                # P1-1 FIX (Alpha): Add timeout to Loki queries
                 results = self.loki.query_range(
                     query=query,
                     start=int(start_time.timestamp()),
                     end=int(end_time.timestamp()),
-                    limit=1000  # P0-3 FIX: Result limiting
+                    limit=1000,  # P0-3 FIX: Result limiting
+                    timeout=30  # P1-1 FIX: 30-second timeout
                 )
 
                 # Count total log entries found
@@ -689,11 +691,13 @@ class NetworkAgent(ApplicationAgent):
         query = f'{{service="{service}"}} |~ "connection.*(refused|timeout|failed)"'
 
         try:
+            # P1-1 FIX (Alpha): Add timeout to Loki queries
             results = self.loki.query_range(
                 query=query,
                 start=int(start_time.timestamp()),
                 end=int(end_time.timestamp()),
-                limit=1000  # P0-3 FIX: Result limiting
+                limit=1000,  # P0-3 FIX: Result limiting
+                timeout=30  # P1-1 FIX: 30-second timeout
             )
 
             # Count total log entries
