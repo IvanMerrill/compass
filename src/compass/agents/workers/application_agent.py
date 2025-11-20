@@ -51,6 +51,9 @@ class ApplicationAgent:
     DECIDE phase: Handled by Orchestrator (returns hypotheses for human selection)
     """
 
+    # Agent identity - child classes MUST override this class attribute (Beta's P0-5)
+    agent_id: str = "application_agent"
+
     # Time window for observations (Agent Alpha's P1-2)
     OBSERVATION_WINDOW_MINUTES = 15  # ± from incident time
 
@@ -84,8 +87,16 @@ class ApplicationAgent:
             tempo_client: Tempo client for trace queries
             prometheus_client: Prometheus client for metric queries
             query_generator: Optional QueryGenerator for sophisticated queries
+
+        Raises:
+            ValueError: If child class doesn't define agent_id class attribute
         """
-        self.agent_id = "application_agent"
+        # Validate that agent_id is properly set (Beta's P0-5)
+        if not hasattr(self.__class__, 'agent_id') or self.__class__.agent_id is None:
+            raise ValueError(
+                f"{self.__class__.__name__} must define 'agent_id' class attribute"
+            )
+
         self.loki = loki_client
         self.tempo = tempo_client
         self.prometheus = prometheus_client
