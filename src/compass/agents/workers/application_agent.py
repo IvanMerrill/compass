@@ -58,6 +58,10 @@ class ApplicationAgent:
     # Default service name when affected_services is empty
     DEFAULT_SERVICE_NAME = "unknown"
 
+    # Hypothesis generation thresholds
+    HIGH_LATENCY_THRESHOLD_MS = 1000  # Latency above this triggers dependency hypothesis
+    MEMORY_LEAK_INCREASE_RATIO = 1.5  # Memory must increase by 50% to indicate leak
+
     def __init__(
         self,
         loki_client: Any = None,
@@ -194,6 +198,27 @@ class ApplicationAgent:
             if incident.affected_services
             else self.DEFAULT_SERVICE_NAME
         )
+
+    def _extract_version_from_log(self, log_line: str) -> str:
+        """
+        Extract version identifier from deployment log line.
+
+        Args:
+            log_line: Log line containing version info (e.g., "Deployment v2.3.1 started")
+
+        Returns:
+            Version string (e.g., "v2.3.1") or "unknown" if not found
+        """
+        if "v" not in log_line:
+            return "unknown"
+
+        # Try to extract version like "v2.3.1"
+        parts = log_line.split()
+        for part in parts:
+            if part.startswith("v") and any(char.isdigit() for char in part):
+                return part
+
+        return "unknown"
 
     def _calculate_time_range(self, incident: Incident) -> Tuple[datetime, datetime]:
         """
@@ -506,15 +531,8 @@ class ApplicationAgent:
         deployment_time = latest_deployment.get("time", "")
         deployment_log = latest_deployment.get("log", "")
 
-        # Extract version from log (simple pattern matching)
-        version = "unknown"
-        if "v" in deployment_log:
-            # Try to extract version like "v2.3.1"
-            parts = deployment_log.split()
-            for part in parts:
-                if part.startswith("v") and any(char.isdigit() for char in part):
-                    version = part
-                    break
+        # Extract version from log
+        version = self._extract_version_from_log(deployment_log)
 
         # Extract service from error observation
         error_data = error_obs[0]
@@ -549,10 +567,10 @@ class ApplicationAgent:
 
         latency_data = latency_obs[0]
 
-        # Check if latency is high (> 1000ms average indicates issue)
+        # Check if latency is high
         avg_latency = latency_data.data.get("avg_duration_ms", 0)
 
-        if avg_latency < 1000:  # Not high enough to be concerning
+        if avg_latency < self.HIGH_LATENCY_THRESHOLD_MS:
             return None
 
         # Extract service
@@ -562,7 +580,7 @@ class ApplicationAgent:
             "service": service,
             "avg_latency_ms": avg_latency,
             "max_latency_ms": latency_data.data.get("max_duration_ms", avg_latency),
-            "threshold": 1000,  # Threshold for "high" latency
+            "threshold": self.HIGH_LATENCY_THRESHOLD_MS,
             "confidence": latency_data.confidence,
             "suspected_time": latency_data.timestamp.isoformat(),
         }
@@ -600,7 +618,7 @@ class ApplicationAgent:
         last_value = values[-1].get("value", 0)
 
         # Need significant increase to indicate leak
-        if last_value <= first_value * 1.5:  # Less than 50% increase
+        if last_value <= first_value * self.MEMORY_LEAK_INCREASE_RATIO:
             return None
 
         # Find corresponding deployment
@@ -614,13 +632,7 @@ class ApplicationAgent:
                 latest = deployments[-1]
                 deployment_time = latest.get("time", deployment_time)
                 log = latest.get("log", "")
-                # Extract version
-                if "v" in log:
-                    parts = log.split()
-                    for part in parts:
-                        if part.startswith("v") and any(char.isdigit() for char in part):
-                            deployment_id = part
-                            break
+                deployment_id = self._extract_version_from_log(log)
 
         # Extract service from source
         service = memory_data.source.split(":")[-1] if ":" in memory_data.source else self.DEFAULT_SERVICE_NAME
