@@ -23,6 +23,16 @@ from compass.agents.workers.application_agent import ApplicationAgent, BudgetExc
 from compass.core.query_generator import QueryGenerator, QueryRequest, QueryType
 from compass.core.scientific_framework import Incident, Observation, Hypothesis
 
+# P0-4 FIX (Alpha): Add OpenTelemetry tracing
+try:
+    from compass.observability import emit_span
+except ImportError:
+    # Fallback if observability not available
+    from contextlib import contextmanager
+    @contextmanager
+    def emit_span(name, attributes=None):
+        yield
+
 logger = structlog.get_logger()
 
 
@@ -94,6 +104,7 @@ class NetworkAgent(ApplicationAgent):
 
         SIMPLE: Just datetime math, no TimeRange dataclass.
         P0-2 FIX: 30-second timeouts on all queries.
+        P0-4 FIX (Alpha): OpenTelemetry tracing for production debugging.
         P1-1 FIX: Structured exception handling.
 
         Args:
@@ -109,89 +120,91 @@ class NetworkAgent(ApplicationAgent):
         # Budget check (inherited from ApplicationAgent)
         self._check_budget()
 
-        # Parse and validate incident time (SIMPLE: no TimeRange class)
-        incident_time = datetime.fromisoformat(incident.start_time.replace("Z", "+00:00"))
-        if incident_time.tzinfo is None:
-            raise ValueError("Incident time must be timezone-aware")
+        # P0-4 FIX (Alpha): Add OpenTelemetry tracing (matches ApplicationAgent pattern)
+        with emit_span("network_agent.observe", attributes={"agent.id": self.agent_id}):
+            # Parse and validate incident time (SIMPLE: no TimeRange class)
+            incident_time = datetime.fromisoformat(incident.start_time.replace("Z", "+00:00"))
+            if incident_time.tzinfo is None:
+                raise ValueError("Incident time must be timezone-aware")
 
-        # Calculate time window (±15 minutes, SIMPLE: inline datetime math)
-        window_minutes = 15
-        start_time = incident_time - timedelta(minutes=window_minutes)
-        end_time = incident_time + timedelta(minutes=window_minutes)
+            # Calculate time window (±15 minutes, SIMPLE: inline datetime math)
+            window_minutes = 15
+            start_time = incident_time - timedelta(minutes=window_minutes)
+            end_time = incident_time + timedelta(minutes=window_minutes)
 
-        observations = []
-        service = incident.affected_services[0] if incident.affected_services else "unknown"
+            observations = []
+            service = incident.affected_services[0] if incident.affected_services else "unknown"
 
-        # Observe DNS (Day 1 implementation)
-        try:
-            dns_obs = self._observe_dns_resolution(incident, service, start_time, end_time)
-            observations.extend(dns_obs)
-        except Exception as e:
-            # P1-1: Structured exception handling
-            logger.warning(
-                "dns_observation_failed",
-                service=service,
-                error=str(e),
-                error_type=type(e).__name__,
+            # Observe DNS (Day 1 implementation)
+            try:
+                dns_obs = self._observe_dns_resolution(incident, service, start_time, end_time)
+                observations.extend(dns_obs)
+            except Exception as e:
+                # P1-1: Structured exception handling
+                logger.warning(
+                    "dns_observation_failed",
+                    service=service,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
+
+            # Day 2: Observe network latency
+            try:
+                latency_obs = self._observe_network_latency(incident, service, start_time, end_time)
+                observations.extend(latency_obs)
+            except Exception as e:
+                logger.warning(
+                    "latency_observation_failed",
+                    service=service,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
+
+            # Day 2: Observe packet loss
+            try:
+                packet_obs = self._observe_packet_loss(incident, service, start_time, end_time)
+                observations.extend(packet_obs)
+            except Exception as e:
+                logger.warning(
+                    "packet_loss_observation_failed",
+                    service=service,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
+
+            # Day 2: Observe load balancer
+            try:
+                lb_obs = self._observe_load_balancer(incident, service, start_time, end_time)
+                observations.extend(lb_obs)
+            except Exception as e:
+                logger.warning(
+                    "load_balancer_observation_failed",
+                    service=service,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
+
+            # Day 2: Observe connection failures
+            try:
+                conn_obs = self._observe_connection_failures(incident, service, start_time, end_time)
+                observations.extend(conn_obs)
+            except Exception as e:
+                logger.warning(
+                    "connection_failures_observation_failed",
+                    service=service,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
+
+            logger.info(
+                "network_agent.observe_completed",
+                agent_id=self.agent_id,
+                incident_id=incident.incident_id,
+                observation_count=len(observations),
+                total_cost=str(self._total_cost),
             )
 
-        # Day 2: Observe network latency
-        try:
-            latency_obs = self._observe_network_latency(incident, service, start_time, end_time)
-            observations.extend(latency_obs)
-        except Exception as e:
-            logger.warning(
-                "latency_observation_failed",
-                service=service,
-                error=str(e),
-                error_type=type(e).__name__,
-            )
-
-        # Day 2: Observe packet loss
-        try:
-            packet_obs = self._observe_packet_loss(incident, service, start_time, end_time)
-            observations.extend(packet_obs)
-        except Exception as e:
-            logger.warning(
-                "packet_loss_observation_failed",
-                service=service,
-                error=str(e),
-                error_type=type(e).__name__,
-            )
-
-        # Day 2: Observe load balancer
-        try:
-            lb_obs = self._observe_load_balancer(incident, service, start_time, end_time)
-            observations.extend(lb_obs)
-        except Exception as e:
-            logger.warning(
-                "load_balancer_observation_failed",
-                service=service,
-                error=str(e),
-                error_type=type(e).__name__,
-            )
-
-        # Day 2: Observe connection failures
-        try:
-            conn_obs = self._observe_connection_failures(incident, service, start_time, end_time)
-            observations.extend(conn_obs)
-        except Exception as e:
-            logger.warning(
-                "connection_failures_observation_failed",
-                service=service,
-                error=str(e),
-                error_type=type(e).__name__,
-            )
-
-        logger.info(
-            "network_agent.observe_completed",
-            agent_id=self.agent_id,
-            incident_id=incident.incident_id,
-            observation_count=len(observations),
-            total_cost=str(self._total_cost),
-        )
-
-        return observations
+            return observations
 
     def _observe_dns_resolution(
         self,
