@@ -80,10 +80,10 @@ def test_network_agent_observes_dns_with_fallback(mock_prometheus, sample_incide
     # Verify Prometheus was called (multiple times for all observation methods)
     assert mock_prometheus.custom_query.call_count > 0, "Should call Prometheus"
 
-    # Check that all calls have timeout parameter
+    # Check that all calls have timeout parameter (P0-1 FIX: direct parameter, not params dict)
     for call in mock_prometheus.custom_query.call_args_list:
         call_kwargs = call[1]
-        assert call_kwargs.get("params", {}).get("timeout") == "30s", "P0-2: All calls must have 30s timeout"
+        assert call_kwargs.get("timeout") == 30, "P0-1 FIX (Alpha): All calls must have timeout=30 (float seconds)"
 
 
 def test_network_agent_dns_handles_timeout(mock_prometheus, sample_incident):

@@ -263,9 +263,10 @@ class NetworkAgent(ApplicationAgent):
         # Query Prometheus with TIMEOUT (P0-2 fix)
         try:
             # P0-2: 30-second timeout using Prometheus timeout parameter
+            # P0-1 FIX (Alpha): Use timeout as direct parameter, not in params dict
             results = self.prometheus.custom_query(
                 query=query,
-                params={"timeout": "30s"}  # Prometheus-side timeout
+                timeout=30  # Float seconds - prometheus-client API
             )
 
             # Convert to Observations
@@ -377,9 +378,10 @@ class NetworkAgent(ApplicationAgent):
 
         # Query Prometheus with TIMEOUT (P0-2 fix)
         try:
+            # P0-1 FIX (Alpha): Use timeout as direct parameter, not in params dict
             results = self.prometheus.custom_query(
                 query=query,
-                params={"timeout": "30s"}
+                timeout=30  # Float seconds - prometheus-client API
             )
 
             # Convert to Observations
@@ -468,9 +470,10 @@ class NetworkAgent(ApplicationAgent):
 
         # Query Prometheus with TIMEOUT (P0-2 fix)
         try:
+            # P0-1 FIX (Alpha): Use timeout as direct parameter, not in params dict
             results = self.prometheus.custom_query(
                 query=query,
-                params={"timeout": "30s"}
+                timeout=30  # Float seconds - prometheus-client API
             )
 
             # Convert to Observations
@@ -538,9 +541,10 @@ class NetworkAgent(ApplicationAgent):
             query = f'haproxy_backend_status{{service="{service}"}}'
 
             try:
+                # P0-1 FIX (Alpha): Use timeout as direct parameter, not in params dict
                 results = self.prometheus.custom_query(
                     query=query,
-                    params={"timeout": "30s"}
+                    timeout=30  # Float seconds - prometheus-client API
                 )
 
                 for result in results:
