@@ -230,6 +230,45 @@ class DisproofOutcome(Enum):
 
 
 @dataclass
+class Incident:
+    """
+    Represents an incident to be investigated.
+
+    An incident is the starting point for COMPASS investigation:
+    - Triggers the OODA loop (Observe, Orient, Decide, Act)
+    - Provides context for agents to gather observations
+    - Defines time boundaries and affected systems
+    """
+
+    incident_id: str
+    title: str
+    start_time: str  # ISO 8601 format
+    affected_services: List[str] = field(default_factory=list)
+    severity: str = "medium"  # low, medium, high, critical
+    description: str = ""
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class Observation:
+    """
+    A single observation made during the Observe phase.
+
+    Observations are raw facts gathered from observability tools:
+    - No interpretation or hypothesis (that's Orient phase)
+    - Includes source attribution for auditability
+    - Time-bound to incident window
+    """
+
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    source: str = ""  # e.g., "loki:error_logs", "tempo:traces"
+    data: Any = None
+    description: str = ""
+    confidence: float = 1.0  # Confidence in the observation accuracy
+
+
+@dataclass
 class Evidence:
     """
     A single piece of evidence supporting or refuting a hypothesis.
