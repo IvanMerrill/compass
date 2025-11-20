@@ -394,12 +394,19 @@ class ApplicationAgent:
         service = self._get_primary_service(incident)
 
         try:
-            # Query Tempo for traces
+            # Query Tempo for traces (currently no QueryGenerator, $0 cost)
+            # Cost tracking infrastructure ready for future TraceQL generation
+            query_cost = Decimal("0.0000")  # Direct Tempo API call, no LLM cost
+
             results = self.tempo.query_traces(
                 service=service,
                 start_time=time_range[0],
                 end_time=time_range[1],
             )
+
+            # Track cost (Agent Alpha's P1-1 - complete cost tracking)
+            self._total_cost += query_cost
+            self._observation_costs["latency"] += query_cost
 
             if results:
                 # Calculate latency statistics
@@ -455,8 +462,10 @@ class ApplicationAgent:
 
         service = self._get_primary_service(incident)
 
-        # Simple query for deployment logs
+        # Simple query for deployment logs (currently no QueryGenerator, $0 cost)
+        # Cost tracking infrastructure ready for future LogQL generation
         query = f'{{service="{service}"}} |= "deployment" or |= "deploy"'
+        query_cost = Decimal("0.0000")  # Direct Loki API call, no LLM cost
 
         try:
             results = self.loki.query_range(
@@ -464,6 +473,10 @@ class ApplicationAgent:
                 start=time_range[0],
                 end=time_range[1],
             )
+
+            # Track cost (Agent Alpha's P1-1 - complete cost tracking)
+            self._total_cost += query_cost
+            self._observation_costs["deployments"] += query_cost
 
             if results:
                 # Extract deployment information
