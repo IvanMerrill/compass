@@ -85,6 +85,12 @@ class QueryGenerator:
     to ask whatever questions they need for hypothesis validation.
     """
 
+    # Default estimated cost per query (used when no cost history available)
+    DEFAULT_ESTIMATED_COST_PER_QUERY = Decimal("0.0020")  # $0.002
+
+    # Target cache hit rate for cost optimization
+    TARGET_CACHE_HIT_RATE = 0.75  # 75%+
+
     def __init__(
         self,
         llm_client: Any,
@@ -147,7 +153,7 @@ class QueryGenerator:
             avg_cost = (
                 self._total_cost / self._non_cached_queries
                 if self._non_cached_queries > 0
-                else Decimal("0.0020")  # Assume $0.002 per query if no history
+                else self.DEFAULT_ESTIMATED_COST_PER_QUERY
             )
 
             # Check if current cost + estimated next query cost would exceed budget
