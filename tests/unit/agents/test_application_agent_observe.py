@@ -54,11 +54,11 @@ def mock_prometheus_client():
 def application_agent(mock_loki_client, mock_tempo_client, mock_prometheus_client, mock_query_generator):
     """Create ApplicationAgent with mocked dependencies."""
     return ApplicationAgent(
+        budget_limit=Decimal("2.00"),
         loki_client=mock_loki_client,
         tempo_client=mock_tempo_client,
         prometheus_client=mock_prometheus_client,
         query_generator=mock_query_generator,
-        budget_limit=Decimal("2.00"),
     )
 
 
@@ -248,6 +248,7 @@ def test_application_agent_without_query_generator_uses_simple_queries(
     """Test that agent works without QueryGenerator (backward compatibility)."""
     # Create agent WITHOUT QueryGenerator
     agent = ApplicationAgent(
+        budget_limit=Decimal("2.00"),
         loki_client=mock_loki_client,
         tempo_client=mock_tempo_client,
         prometheus_client=mock_prometheus_client,
@@ -272,11 +273,11 @@ def test_application_agent_respects_budget_limit(
     """Test that agent respects budget limits."""
     # Create agent with low budget
     agent = ApplicationAgent(
+        budget_limit=Decimal("0.0005"),  # Very low budget
         loki_client=mock_loki_client,
         tempo_client=mock_tempo_client,
         prometheus_client=mock_prometheus_client,
         query_generator=mock_query_generator,
-        budget_limit=Decimal("0.0005"),  # Very low budget
     )
 
     # Mock expensive query

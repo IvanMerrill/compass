@@ -53,11 +53,11 @@ def mock_query_generator():
 def application_agent(mock_loki_client, mock_tempo_client, mock_prometheus_client, mock_query_generator):
     """Create ApplicationAgent with mocked dependencies."""
     return ApplicationAgent(
+        budget_limit=Decimal("2.00"),
         loki_client=mock_loki_client,
         tempo_client=mock_tempo_client,
         prometheus_client=mock_prometheus_client,
         query_generator=mock_query_generator,
-        budget_limit=Decimal("2.00"),
     )
 
 

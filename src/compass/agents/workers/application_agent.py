@@ -69,21 +69,21 @@ class ApplicationAgent:
 
     def __init__(
         self,
+        budget_limit: Decimal,
         loki_client: Any = None,
         tempo_client: Any = None,
         prometheus_client: Any = None,
         query_generator: Optional[QueryGenerator] = None,
-        budget_limit: Optional[Decimal] = Decimal("2.00"),
     ):
         """
         Initialize ApplicationAgent.
 
         Args:
+            budget_limit: Maximum cost for observations (required, e.g., Decimal("2.00"))
             loki_client: Loki client for log queries
             tempo_client: Tempo client for trace queries
             prometheus_client: Prometheus client for metric queries
             query_generator: Optional QueryGenerator for sophisticated queries
-            budget_limit: Maximum cost for observations (default: $2.00)
         """
         self.agent_id = "application_agent"
         self.loki = loki_client
