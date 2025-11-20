@@ -49,7 +49,7 @@ def test_network_agent_enforces_budget():
 
     # Mock Prometheus
     mock_prometheus = Mock()
-    mock_prometheus.custom_query.return_value = []
+    mock_prometheus.custom_query_range.return_value = []
 
     # Create agent with very low budget
     agent = NetworkAgent(
@@ -187,7 +187,7 @@ def test_network_agent_end_to_end_workflow(sample_incident):
     """
     # Mock Prometheus with realistic data
     mock_prometheus = Mock()
-    mock_prometheus.custom_query.return_value = [
+    mock_prometheus.custom_query_range.return_value = [
         {"metric": {"dns_server": "8.8.8.8"}, "value": [1234567890, "0.150"]},  # DNS normal
         {"metric": {"endpoint": "/api/payment"}, "value": [1234567890, "1.5"]},  # High latency!
     ]
@@ -258,7 +258,7 @@ def test_network_agent_graceful_degradation():
     """
     # Mock Prometheus that fails
     mock_prometheus = Mock()
-    mock_prometheus.custom_query.side_effect = Exception("Prometheus unavailable")
+    mock_prometheus.custom_query_range.side_effect = Exception("Prometheus unavailable")
 
     # Mock Loki that works
     mock_loki = Mock()
@@ -310,7 +310,7 @@ def test_network_agent_cost_tracking():
 
     # Mock Prometheus
     mock_prometheus = Mock()
-    mock_prometheus.custom_query.return_value = []
+    mock_prometheus.custom_query_range.return_value = []
 
     agent = NetworkAgent(
         budget_limit=Decimal("10.00"),
@@ -342,7 +342,7 @@ def test_network_agent_multiple_services():
     Verifies observations are collected for all affected services.
     """
     mock_prometheus = Mock()
-    mock_prometheus.custom_query.return_value = [
+    mock_prometheus.custom_query_range.return_value = [
         {"metric": {"service": "payment-service", "dns_server": "8.8.8.8"}, "value": [1234567890, "0.150"]},
     ]
 
@@ -365,4 +365,4 @@ def test_network_agent_multiple_services():
     assert len(observations) > 0, "Should collect observations"
 
     # Verify queries were made (agent uses first service in affected_services list)
-    assert mock_prometheus.custom_query.call_count > 0
+    assert mock_prometheus.custom_query_range.call_count > 0

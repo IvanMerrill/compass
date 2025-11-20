@@ -18,7 +18,7 @@ from compass.core.scientific_framework import Incident, Observation
 def mock_prometheus():
     """Mock Prometheus client."""
     client = Mock()
-    client.custom_query = MagicMock()
+    client.custom_query_range = MagicMock()
     return client
 
 
@@ -57,7 +57,7 @@ def test_network_agent_initialization():
 def test_network_agent_observes_dns_with_fallback(mock_prometheus, sample_incident):
     """Test DNS observation with fallback query (no QueryGenerator)."""
     # Mock Prometheus response
-    mock_prometheus.custom_query.return_value = [
+    mock_prometheus.custom_query_range.return_value = [
         {"metric": {"dns_server": "8.8.8.8"}, "value": [1234567890, "0.150"]},
     ]
 
@@ -78,10 +78,10 @@ def test_network_agent_observes_dns_with_fallback(mock_prometheus, sample_incide
     assert dns_obs[0].data["avg_duration_ms"] == 150.0
 
     # Verify Prometheus was called (multiple times for all observation methods)
-    assert mock_prometheus.custom_query.call_count > 0, "Should call Prometheus"
+    assert mock_prometheus.custom_query_range.call_count > 0, "Should call Prometheus"
 
     # Check that all calls have timeout parameter (P0-1 FIX: direct parameter, not params dict)
-    for call in mock_prometheus.custom_query.call_args_list:
+    for call in mock_prometheus.custom_query_range.call_args_list:
         call_kwargs = call[1]
         assert call_kwargs.get("timeout") == 30, "P0-1 FIX (Alpha): All calls must have timeout=30 (float seconds)"
 
@@ -89,7 +89,7 @@ def test_network_agent_observes_dns_with_fallback(mock_prometheus, sample_incide
 def test_network_agent_dns_handles_timeout(mock_prometheus, sample_incident):
     """P0-2 FIX: Test 30-second timeout on DNS query."""
     # Mock timeout exception
-    mock_prometheus.custom_query.side_effect = requests.Timeout("Connection timeout")
+    mock_prometheus.custom_query_range.side_effect = requests.Timeout("Connection timeout")
 
     agent = NetworkAgent(
         budget_limit=Decimal("10.00"),
@@ -106,7 +106,7 @@ def test_network_agent_dns_handles_timeout(mock_prometheus, sample_incident):
 def test_network_agent_dns_handles_connection_error(mock_prometheus, sample_incident):
     """P1-1 FIX: Test structured exception handling for connection errors."""
     # Mock connection error
-    mock_prometheus.custom_query.side_effect = requests.ConnectionError("Cannot connect")
+    mock_prometheus.custom_query_range.side_effect = requests.ConnectionError("Cannot connect")
 
     agent = NetworkAgent(
         budget_limit=Decimal("10.00"),
@@ -123,7 +123,7 @@ def test_network_agent_dns_handles_connection_error(mock_prometheus, sample_inci
 def test_network_agent_dns_handles_general_exception(mock_prometheus, sample_incident):
     """P1-1 FIX: Test structured exception handling for unknown errors."""
     # Mock general exception
-    mock_prometheus.custom_query.side_effect = ValueError("Unexpected error")
+    mock_prometheus.custom_query_range.side_effect = ValueError("Unexpected error")
 
     agent = NetworkAgent(
         budget_limit=Decimal("10.00"),
@@ -181,7 +181,7 @@ def test_network_agent_uses_query_generator_when_available(mock_prometheus, samp
     mock_query_gen.generate_query.return_value = mock_generated_query
 
     # Mock Prometheus response
-    mock_prometheus.custom_query.return_value = [
+    mock_prometheus.custom_query_range.return_value = [
         {"metric": {"dns_server": "1.1.1.1"}, "value": [1234567890, "0.080"]},
     ]
 
@@ -212,7 +212,7 @@ def test_network_agent_falls_back_when_query_generator_fails(mock_prometheus, sa
     mock_query_gen.generate_query.side_effect = Exception("QueryGenerator failed")
 
     # Mock Prometheus response
-    mock_prometheus.custom_query.return_value = [
+    mock_prometheus.custom_query_range.return_value = [
         {"metric": {"dns_server": "8.8.4.4"}, "value": [1234567890, "0.200"]},
     ]
 
@@ -237,9 +237,12 @@ def test_network_agent_falls_back_when_query_generator_fails(mock_prometheus, sa
 
 
 def test_network_agent_calculates_time_window_correctly(mock_prometheus, sample_incident):
-    """Test that time window calculation is correct (±15 minutes)."""
+    """Test that time window calculation is correct (±15 minutes).
+
+    P0-5 FIX: Verify that start_time and end_time are passed to Prometheus queries.
+    """
     # Mock Prometheus to capture query params
-    mock_prometheus.custom_query.return_value = []
+    mock_prometheus.custom_query_range.return_value = []
 
     agent = NetworkAgent(
         budget_limit=Decimal("10.00"),
@@ -248,9 +251,16 @@ def test_network_agent_calculates_time_window_correctly(mock_prometheus, sample_
 
     agent.observe(sample_incident)
 
-    # Verify custom_query was called (we can't easily check start/end times
-    # without more complex mocking, but we verify the method was called)
-    assert mock_prometheus.custom_query.called
+    # P0-5 FIX (Beta): Verify custom_query_range was called with start_time and end_time
+    assert mock_prometheus.custom_query_range.called, "Should call custom_query_range"
+
+    # Check that all calls have start_time and end_time parameters
+    for call in mock_prometheus.custom_query_range.call_args_list:
+        call_kwargs = call[1]
+        assert "start_time" in call_kwargs, "P0-5: Must pass start_time to query_range"
+        assert "end_time" in call_kwargs, "P0-5: Must pass end_time to query_range"
+        assert call_kwargs["start_time"] is not None, "P0-5: start_time must not be None"
+        assert call_kwargs["end_time"] is not None, "P0-5: end_time must not be None"
 
 
 def test_network_agent_has_hypothesis_detectors():
@@ -294,7 +304,7 @@ def test_network_agent_inherits_budget_enforcement():
 def test_network_agent_observes_network_latency(mock_prometheus, sample_incident):
     """Test network latency observation (p95)."""
     # Mock Prometheus response for p95 latency
-    mock_prometheus.custom_query.return_value = [
+    mock_prometheus.custom_query_range.return_value = [
         {"metric": {"endpoint": "/api/payment"}, "value": [1234567890, "0.850"]},
         {"metric": {"endpoint": "/api/checkout"}, "value": [1234567890, "1.200"]},
     ]
@@ -318,7 +328,7 @@ def test_network_agent_observes_network_latency(mock_prometheus, sample_incident
 
 def test_network_agent_latency_handles_timeout(mock_prometheus, sample_incident):
     """P0-2: Test timeout handling for latency query."""
-    mock_prometheus.custom_query.side_effect = requests.Timeout("Timeout")
+    mock_prometheus.custom_query_range.side_effect = requests.Timeout("Timeout")
 
     agent = NetworkAgent(
         budget_limit=Decimal("10.00"),
@@ -335,7 +345,7 @@ def test_network_agent_latency_handles_timeout(mock_prometheus, sample_incident)
 def test_network_agent_observes_packet_loss(mock_prometheus, sample_incident):
     """Test packet loss observation."""
     # Mock Prometheus response for packet drop rate
-    mock_prometheus.custom_query.return_value = [
+    mock_prometheus.custom_query_range.return_value = [
         {"metric": {"instance": "node-1", "interface": "eth0"}, "value": [1234567890, "0.002"]},
         {"metric": {"instance": "node-2", "interface": "eth0"}, "value": [1234567890, "0.015"]},
     ]
@@ -360,7 +370,7 @@ def test_network_agent_observes_packet_loss(mock_prometheus, sample_incident):
 def test_network_agent_observes_load_balancer(mock_prometheus, mock_loki, sample_incident):
     """Test load balancer observation (Prometheus + Loki)."""
     # Mock Prometheus response for LB backend health
-    mock_prometheus.custom_query.return_value = [
+    mock_prometheus.custom_query_range.return_value = [
         {"metric": {"backend": "backend-1", "status": "UP"}, "value": [1234567890, "1"]},
         {"metric": {"backend": "backend-2", "status": "DOWN"}, "value": [1234567890, "0"]},
     ]

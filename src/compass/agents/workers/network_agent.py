@@ -273,12 +273,15 @@ class NetworkAgent(ApplicationAgent):
             # SIMPLE fallback: just inline the query (no library module)
             query = f'rate(dns_lookup_duration_seconds{{service="{service}"}}[5m])'
 
-        # Query Prometheus with TIMEOUT (P0-2 fix)
+        # Query Prometheus with TIMEOUT and TIME RANGE (P0-2, P0-5 fixes)
         try:
             # P0-2: 30-second timeout using Prometheus timeout parameter
             # P0-1 FIX (Alpha): Use timeout as direct parameter, not in params dict
-            results = self.prometheus.custom_query(
+            # P0-5 FIX (Beta): Use query_range() with start/end times, not instant query
+            results = self.prometheus.custom_query_range(
                 query=query,
+                start_time=start_time,
+                end_time=end_time,
                 timeout=30  # Float seconds - prometheus-client API
             )
 
@@ -392,11 +395,14 @@ class NetworkAgent(ApplicationAgent):
             # SIMPLE fallback: inline p95 query
             query = f'histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{{service="{service}"}}[5m]))'
 
-        # Query Prometheus with TIMEOUT (P0-2 fix)
+        # Query Prometheus with TIMEOUT and TIME RANGE (P0-2, P0-5 fixes)
         try:
             # P0-1 FIX (Alpha): Use timeout as direct parameter, not in params dict
-            results = self.prometheus.custom_query(
+            # P0-5 FIX (Beta): Use query_range() with start/end times, not instant query
+            results = self.prometheus.custom_query_range(
                 query=query,
+                start_time=start_time,
+                end_time=end_time,
                 timeout=30  # Float seconds - prometheus-client API
             )
 
@@ -487,11 +493,14 @@ class NetworkAgent(ApplicationAgent):
             # SIMPLE fallback: inline packet drop query
             query = 'rate(node_network_transmit_drop_total[5m])'
 
-        # Query Prometheus with TIMEOUT (P0-2 fix)
+        # Query Prometheus with TIMEOUT and TIME RANGE (P0-2, P0-5 fixes)
         try:
             # P0-1 FIX (Alpha): Use timeout as direct parameter, not in params dict
-            results = self.prometheus.custom_query(
+            # P0-5 FIX (Beta): Use query_range() with start/end times, not instant query
+            results = self.prometheus.custom_query_range(
                 query=query,
+                start_time=start_time,
+                end_time=end_time,
                 timeout=30  # Float seconds - prometheus-client API
             )
 
@@ -564,8 +573,11 @@ class NetworkAgent(ApplicationAgent):
 
             try:
                 # P0-1 FIX (Alpha): Use timeout as direct parameter, not in params dict
-                results = self.prometheus.custom_query(
+                # P0-5 FIX (Beta): Use query_range() with start/end times, not instant query
+                results = self.prometheus.custom_query_range(
                     query=query,
+                    start_time=start_time,
+                    end_time=end_time,
                     timeout=30  # Float seconds - prometheus-client API
                 )
 
