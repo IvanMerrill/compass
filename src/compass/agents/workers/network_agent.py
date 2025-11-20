@@ -135,11 +135,53 @@ class NetworkAgent(ApplicationAgent):
                 error_type=type(e).__name__,
             )
 
-        # TODO Day 2: Add remaining observations
-        # - network latency
-        # - packet loss
-        # - load balancer
-        # - connection failures
+        # Day 2: Observe network latency
+        try:
+            latency_obs = self._observe_network_latency(incident, service, start_time, end_time)
+            observations.extend(latency_obs)
+        except Exception as e:
+            logger.warning(
+                "latency_observation_failed",
+                service=service,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+
+        # Day 2: Observe packet loss
+        try:
+            packet_obs = self._observe_packet_loss(incident, service, start_time, end_time)
+            observations.extend(packet_obs)
+        except Exception as e:
+            logger.warning(
+                "packet_loss_observation_failed",
+                service=service,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+
+        # Day 2: Observe load balancer
+        try:
+            lb_obs = self._observe_load_balancer(incident, service, start_time, end_time)
+            observations.extend(lb_obs)
+        except Exception as e:
+            logger.warning(
+                "load_balancer_observation_failed",
+                service=service,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+
+        # Day 2: Observe connection failures
+        try:
+            conn_obs = self._observe_connection_failures(incident, service, start_time, end_time)
+            observations.extend(conn_obs)
+        except Exception as e:
+            logger.warning(
+                "connection_failures_observation_failed",
+                service=service,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
 
         logger.info(
             "network_agent.observe_completed",
@@ -276,6 +318,382 @@ class NetworkAgent(ApplicationAgent):
                 "dns_query_failed_unknown",
                 service=service,
                 query=query,
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+
+        return observations
+
+    def _observe_network_latency(
+        self,
+        incident: Incident,
+        service: str,
+        start_time: datetime,
+        end_time: datetime,
+    ) -> List[Observation]:
+        """
+        Observe network latency metrics (p95).
+
+        P0-2 FIX: 30-second timeout on Prometheus queries.
+        SIMPLE: Inline fallback query.
+
+        Args:
+            incident: The incident being investigated
+            service: The affected service name
+            start_time: Start of observation window
+            end_time: End of observation window
+
+        Returns:
+            List of network latency observations (empty on failure)
+        """
+        observations = []
+
+        if not self.prometheus:
+            return observations
+
+        # Generate or use fallback query (SIMPLE inline approach)
+        if self.query_generator:
+            self._check_budget(estimated_cost=Decimal("0.003"))
+
+            try:
+                request = QueryRequest(
+                    query_type=QueryType.PROMQL,
+                    intent="Find p95 network latency for service endpoints",
+                    context={
+                        "service": service,
+                        "metric_type": "http_request_duration",
+                        "quantile": "0.95",
+                    },
+                )
+                generated = self.query_generator.generate_query(request)
+                query = generated.query
+                self._total_cost += generated.cost
+            except Exception as e:
+                logger.warning("query_generator_failed_using_fallback", error=str(e))
+                query = f'histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{{service="{service}"}}[5m]))'
+        else:
+            # SIMPLE fallback: inline p95 query
+            query = f'histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{{service="{service}"}}[5m]))'
+
+        # Query Prometheus with TIMEOUT (P0-2 fix)
+        try:
+            results = self.prometheus.custom_query(
+                query=query,
+                params={"timeout": "30s"}
+            )
+
+            # Convert to Observations
+            for result in results:
+                endpoint = result.get("metric", {}).get("endpoint", "unknown")
+                p95_latency_s = float(result.get("value", [0, "0"])[1])
+
+                observations.append(
+                    Observation(
+                        source=f"prometheus:network_latency:{endpoint}",
+                        data={
+                            "endpoint": endpoint,
+                            "p95_latency_s": p95_latency_s,
+                            "query": query,
+                            "service": service,
+                        },
+                        description=f"p95 latency for {endpoint}: {p95_latency_s:.3f}s",
+                        confidence=0.85,
+                    )
+                )
+
+            logger.info(
+                "latency_observation_completed",
+                service=service,
+                observation_count=len(observations),
+            )
+
+        except requests.Timeout:
+            logger.error("latency_query_timeout", service=service, query=query, timeout_seconds=30)
+        except requests.ConnectionError as e:
+            logger.error("latency_query_connection_failed", service=service, error=str(e))
+        except Exception as e:
+            logger.error("latency_query_failed_unknown", service=service, error=str(e), error_type=type(e).__name__)
+
+        return observations
+
+    def _observe_packet_loss(
+        self,
+        incident: Incident,
+        service: str,
+        start_time: datetime,
+        end_time: datetime,
+    ) -> List[Observation]:
+        """
+        Observe packet loss metrics.
+
+        P0-2 FIX: 30-second timeout on Prometheus queries.
+        SIMPLE: Inline fallback query.
+
+        Args:
+            incident: The incident being investigated
+            service: The affected service name
+            start_time: Start of observation window
+            end_time: End of observation window
+
+        Returns:
+            List of packet loss observations (empty on failure)
+        """
+        observations = []
+
+        if not self.prometheus:
+            return observations
+
+        # Generate or use fallback query
+        if self.query_generator:
+            self._check_budget(estimated_cost=Decimal("0.003"))
+
+            try:
+                request = QueryRequest(
+                    query_type=QueryType.PROMQL,
+                    intent="Find packet drop rate for network interfaces",
+                    context={
+                        "service": service,
+                        "metric_type": "node_network_transmit_drop",
+                    },
+                )
+                generated = self.query_generator.generate_query(request)
+                query = generated.query
+                self._total_cost += generated.cost
+            except Exception as e:
+                logger.warning("query_generator_failed_using_fallback", error=str(e))
+                query = 'rate(node_network_transmit_drop_total[5m])'
+        else:
+            # SIMPLE fallback: inline packet drop query
+            query = 'rate(node_network_transmit_drop_total[5m])'
+
+        # Query Prometheus with TIMEOUT (P0-2 fix)
+        try:
+            results = self.prometheus.custom_query(
+                query=query,
+                params={"timeout": "30s"}
+            )
+
+            # Convert to Observations
+            for result in results:
+                instance = result.get("metric", {}).get("instance", "unknown")
+                interface = result.get("metric", {}).get("interface", "unknown")
+                drop_rate = float(result.get("value", [0, "0"])[1])
+
+                observations.append(
+                    Observation(
+                        source=f"prometheus:packet_loss:{instance}:{interface}",
+                        data={
+                            "instance": instance,
+                            "interface": interface,
+                            "drop_rate": drop_rate,
+                            "query": query,
+                        },
+                        description=f"Packet drop rate on {instance}/{interface}: {drop_rate:.4f}",
+                        confidence=0.80,
+                    )
+                )
+
+            logger.info(
+                "packet_loss_observation_completed",
+                observation_count=len(observations),
+            )
+
+        except requests.Timeout:
+            logger.error("packet_loss_query_timeout", query=query, timeout_seconds=30)
+        except requests.ConnectionError as e:
+            logger.error("packet_loss_query_connection_failed", error=str(e))
+        except Exception as e:
+            logger.error("packet_loss_query_failed_unknown", error=str(e), error_type=type(e).__name__)
+
+        return observations
+
+    def _observe_load_balancer(
+        self,
+        incident: Incident,
+        service: str,
+        start_time: datetime,
+        end_time: datetime,
+    ) -> List[Observation]:
+        """
+        Observe load balancer backend health (Prometheus + Loki).
+
+        P0-2 FIX: 30-second timeout on Prometheus queries.
+        P0-3 FIX: 1000-entry limit on Loki queries.
+        P0-4 FIX: Correct LogQL syntax (|~ for regex, not |= with OR).
+        SIMPLE: Inline fallback queries.
+
+        Args:
+            incident: The incident being investigated
+            service: The affected service name
+            start_time: Start of observation window
+            end_time: End of observation window
+
+        Returns:
+            List of load balancer observations (empty on failure)
+        """
+        observations = []
+
+        # Prometheus: Backend health metrics
+        if self.prometheus:
+            query = f'haproxy_backend_status{{service="{service}"}}'
+
+            try:
+                results = self.prometheus.custom_query(
+                    query=query,
+                    params={"timeout": "30s"}
+                )
+
+                for result in results:
+                    backend = result.get("metric", {}).get("backend", "unknown")
+                    status = result.get("metric", {}).get("status", "unknown")
+                    value = float(result.get("value", [0, "0"])[1])
+
+                    observations.append(
+                        Observation(
+                            source=f"prometheus:load_balancer:{backend}",
+                            data={
+                                "backend": backend,
+                                "status": status,
+                                "value": value,
+                                "service": service,
+                            },
+                            description=f"Load balancer backend {backend}: {status}",
+                            confidence=0.90,
+                        )
+                    )
+
+            except Exception as e:
+                logger.warning("lb_prometheus_query_failed", error=str(e), error_type=type(e).__name__)
+
+        # Loki: Backend state changes in logs
+        if self.loki:
+            # P0-4 FIX: Use |~ for regex matching multiple patterns (not |= with OR)
+            query = f'{{service="{service}"}} |~ "backend.*(DOWN|UP|MAINT)"'
+
+            try:
+                results = self.loki.query_range(
+                    query=query,
+                    start=int(start_time.timestamp()),
+                    end=int(end_time.timestamp()),
+                    limit=1000  # P0-3 FIX: Result limiting
+                )
+
+                # Count total log entries found
+                total_entries = sum(len(stream.get("values", [])) for stream in results)
+
+                # P0-3: Warn if results might be truncated
+                if total_entries >= 1000:
+                    logger.warning(
+                        "loki_results_truncated",
+                        service=service,
+                        limit=1000,
+                        message="Results may be incomplete due to limit"
+                    )
+
+                for stream in results:
+                    for value in stream.get("values", []):
+                        timestamp_ns, log_line = value
+                        observations.append(
+                            Observation(
+                                source=f"loki:load_balancer_logs:{service}",
+                                data={
+                                    "log_line": log_line,
+                                    "timestamp_ns": timestamp_ns,
+                                    "service": service,
+                                },
+                                description=f"LB log: {log_line[:100]}",
+                                confidence=0.75,
+                            )
+                        )
+
+            except Exception as e:
+                logger.warning("lb_loki_query_failed", error=str(e), error_type=type(e).__name__)
+
+        logger.info(
+            "load_balancer_observation_completed",
+            service=service,
+            observation_count=len(observations),
+        )
+
+        return observations
+
+    def _observe_connection_failures(
+        self,
+        incident: Incident,
+        service: str,
+        start_time: datetime,
+        end_time: datetime,
+    ) -> List[Observation]:
+        """
+        Observe connection failure logs.
+
+        P0-3 FIX: 1000-entry limit on Loki queries.
+        P0-4 FIX: Correct LogQL syntax (|~ for regex, not |= with OR).
+        SIMPLE: Inline fallback query.
+
+        Args:
+            incident: The incident being investigated
+            service: The affected service name
+            start_time: Start of observation window
+            end_time: End of observation window
+
+        Returns:
+            List of connection failure observations (empty on failure)
+        """
+        observations = []
+
+        if not self.loki:
+            return observations
+
+        # P0-4 FIX: Use |~ for regex matching multiple patterns
+        query = f'{{service="{service}"}} |~ "connection.*(refused|timeout|failed)"'
+
+        try:
+            results = self.loki.query_range(
+                query=query,
+                start=int(start_time.timestamp()),
+                end=int(end_time.timestamp()),
+                limit=1000  # P0-3 FIX: Result limiting
+            )
+
+            # Count total log entries
+            total_entries = sum(len(stream.get("values", [])) for stream in results)
+
+            # P0-3: Warn if results truncated
+            if total_entries >= 1000:
+                logger.warning(
+                    "connection_failures_truncated",
+                    service=service,
+                    limit=1000,
+                    message="Results may be incomplete due to limit"
+                )
+
+            for stream in results:
+                for value in stream.get("values", []):
+                    timestamp_ns, log_line = value
+                    observations.append(
+                        Observation(
+                            source=f"loki:connection_failures:{service}",
+                            data={
+                                "log_line": log_line,
+                                "timestamp_ns": timestamp_ns,
+                                "service": service,
+                            },
+                            description=f"Connection failure: {log_line[:100]}",
+                            confidence=0.80,
+                        )
+                    )
+
+            logger.info(
+                "connection_failures_observation_completed",
+                service=service,
+                observation_count=len(observations),
+            )
+
+        except Exception as e:
+            logger.error(
+                "connection_failures_query_failed",
+                service=service,
                 error=str(e),
                 error_type=type(e).__name__,
             )

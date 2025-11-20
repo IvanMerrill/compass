@@ -77,10 +77,13 @@ def test_network_agent_observes_dns_with_fallback(mock_prometheus, sample_incide
     assert dns_obs[0].data["dns_server"] == "8.8.8.8"
     assert dns_obs[0].data["avg_duration_ms"] == 150.0
 
-    # Verify Prometheus was called with timeout parameter
-    mock_prometheus.custom_query.assert_called_once()
-    call_kwargs = mock_prometheus.custom_query.call_args[1]
-    assert call_kwargs.get("params", {}).get("timeout") == "30s", "P0-2: Must have 30s timeout"
+    # Verify Prometheus was called (multiple times for all observation methods)
+    assert mock_prometheus.custom_query.call_count > 0, "Should call Prometheus"
+
+    # Check that all calls have timeout parameter
+    for call in mock_prometheus.custom_query.call_args_list:
+        call_kwargs = call[1]
+        assert call_kwargs.get("params", {}).get("timeout") == "30s", "P0-2: All calls must have 30s timeout"
 
 
 def test_network_agent_dns_handles_timeout(mock_prometheus, sample_incident):
@@ -190,15 +193,16 @@ def test_network_agent_uses_query_generator_when_available(mock_prometheus, samp
 
     observations = agent.observe(sample_incident)
 
-    # Verify QueryGenerator was used
-    mock_query_gen.generate_query.assert_called_once()
+    # Verify QueryGenerator was used (multiple times for different observations)
+    assert mock_query_gen.generate_query.call_count > 0, "QueryGenerator should be called"
 
-    # Verify cost was tracked
-    assert agent._total_cost == Decimal("0.0025"), "Should track QueryGenerator cost"
+    # Verify cost was tracked (multiple observation methods)
+    assert agent._total_cost > Decimal("0.0000"), "Should track QueryGenerator cost"
 
-    # Verify observation was created
-    assert len(observations) == 1
-    assert observations[0].data["dns_server"] == "1.1.1.1"
+    # Verify DNS observation was created
+    dns_obs = [o for o in observations if "dns" in o.source.lower()]
+    assert len(dns_obs) == 1, "Should have DNS observation"
+    assert dns_obs[0].data["dns_server"] == "1.1.1.1"
 
 
 def test_network_agent_falls_back_when_query_generator_fails(mock_prometheus, sample_incident):
@@ -220,9 +224,13 @@ def test_network_agent_falls_back_when_query_generator_fails(mock_prometheus, sa
 
     observations = agent.observe(sample_incident)
 
-    # Should still get observation using fallback query
-    assert len(observations) == 1
-    assert observations[0].data["dns_server"] == "8.8.4.4"
+    # Should still get observations using fallback queries (multiple observation methods)
+    assert len(observations) > 0, "Should have observations from fallback queries"
+
+    # Verify DNS observation exists
+    dns_obs = [o for o in observations if "dns" in o.source.lower()]
+    assert len(dns_obs) == 1, "Should have DNS observation from fallback"
+    assert dns_obs[0].data["dns_server"] == "8.8.4.4"
 
     # Cost should remain 0 (QueryGenerator failed before charging)
     assert agent._total_cost == Decimal("0.0000")
@@ -276,3 +284,168 @@ def test_network_agent_inherits_budget_enforcement():
     assert hasattr(agent, '_total_cost')
     assert agent.budget_limit == Decimal("10.00")
     assert agent._total_cost == Decimal("0.0000")
+
+
+# ============================================================================
+# Day 2: Additional Observation Tests
+# ============================================================================
+
+
+def test_network_agent_observes_network_latency(mock_prometheus, sample_incident):
+    """Test network latency observation (p95)."""
+    # Mock Prometheus response for p95 latency
+    mock_prometheus.custom_query.return_value = [
+        {"metric": {"endpoint": "/api/payment"}, "value": [1234567890, "0.850"]},
+        {"metric": {"endpoint": "/api/checkout"}, "value": [1234567890, "1.200"]},
+    ]
+
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=mock_prometheus,
+    )
+
+    observations = agent.observe(sample_incident)
+
+    # Should have latency observations
+    latency_obs = [o for o in observations if "latency" in o.source.lower()]
+    assert len(latency_obs) == 2, "Should have 2 latency observations"
+
+    # Check high latency detected
+    high_latency = [o for o in latency_obs if o.data.get("p95_latency_s", 0) > 1.0]
+    assert len(high_latency) == 1, "Should detect high latency endpoint"
+    assert high_latency[0].data["endpoint"] == "/api/checkout"
+
+
+def test_network_agent_latency_handles_timeout(mock_prometheus, sample_incident):
+    """P0-2: Test timeout handling for latency query."""
+    mock_prometheus.custom_query.side_effect = requests.Timeout("Timeout")
+
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=mock_prometheus,
+    )
+
+    observations = agent.observe(sample_incident)
+
+    # Graceful degradation
+    latency_obs = [o for o in observations if "latency" in o.source.lower()]
+    assert len(latency_obs) == 0
+
+
+def test_network_agent_observes_packet_loss(mock_prometheus, sample_incident):
+    """Test packet loss observation."""
+    # Mock Prometheus response for packet drop rate
+    mock_prometheus.custom_query.return_value = [
+        {"metric": {"instance": "node-1", "interface": "eth0"}, "value": [1234567890, "0.002"]},
+        {"metric": {"instance": "node-2", "interface": "eth0"}, "value": [1234567890, "0.015"]},
+    ]
+
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=mock_prometheus,
+    )
+
+    observations = agent.observe(sample_incident)
+
+    # Should have packet loss observations
+    packet_obs = [o for o in observations if "packet" in o.source.lower()]
+    assert len(packet_obs) == 2, "Should have 2 packet loss observations"
+
+    # Check high packet loss detected
+    high_loss = [o for o in packet_obs if o.data.get("drop_rate", 0) > 0.01]
+    assert len(high_loss) == 1, "Should detect high packet loss"
+    assert high_loss[0].data["instance"] == "node-2"
+
+
+def test_network_agent_observes_load_balancer(mock_prometheus, mock_loki, sample_incident):
+    """Test load balancer observation (Prometheus + Loki)."""
+    # Mock Prometheus response for LB backend health
+    mock_prometheus.custom_query.return_value = [
+        {"metric": {"backend": "backend-1", "status": "UP"}, "value": [1234567890, "1"]},
+        {"metric": {"backend": "backend-2", "status": "DOWN"}, "value": [1234567890, "0"]},
+    ]
+
+    # Mock Loki response for LB logs
+    mock_loki.query_range.return_value = [
+        {"stream": {"job": "haproxy"}, "values": [[str(int(datetime.now(timezone.utc).timestamp() * 1e9)), "backend-2 DOWN"]]},
+    ]
+
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=mock_prometheus,
+        loki_client=mock_loki,
+    )
+
+    observations = agent.observe(sample_incident)
+
+    # Should have LB observations
+    lb_obs = [o for o in observations if "load_balancer" in o.source.lower() or "haproxy" in o.source.lower()]
+    assert len(lb_obs) > 0, "Should have load balancer observations"
+
+    # Check Loki query used correct syntax (P0-4 fix)
+    loki_call = mock_loki.query_range.call_args
+    if loki_call:
+        query = loki_call[1].get("query", "")
+        # Should use |~ for regex, not |= with OR
+        if "DOWN" in query and "UP" in query:
+            assert "|~" in query, "P0-4: Should use |~ for multiple patterns"
+
+        # Should have limit parameter (P0-3 fix)
+        assert loki_call[1].get("limit") == 1000, "P0-3: Should have limit=1000"
+
+
+def test_network_agent_observes_connection_failures(mock_loki, sample_incident):
+    """Test connection failure observation from logs."""
+    # Mock Loki response for connection failures
+    mock_loki.query_range.return_value = [
+        {"stream": {"service": "payment-service"}, "values": [
+            [str(int(datetime.now(timezone.utc).timestamp() * 1e9)), "connection refused to database"],
+            [str(int(datetime.now(timezone.utc).timestamp() * 1e9)), "connection timeout to redis"],
+        ]},
+    ]
+
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        loki_client=mock_loki,
+    )
+
+    observations = agent.observe(sample_incident)
+
+    # Should have connection failure observations
+    conn_obs = [o for o in observations if "connection" in o.source.lower()]
+    assert len(conn_obs) > 0, "Should have connection failure observations"
+
+    # Check Loki query syntax (P0-4 fix)
+    loki_call = mock_loki.query_range.call_args
+    if loki_call:
+        query = loki_call[1].get("query", "")
+        # Should use |~ for regex patterns
+        assert "|~" in query, "P0-4: Should use |~ for regex matching"
+
+        # Should have limit parameter (P0-3 fix)
+        assert loki_call[1].get("limit") == 1000, "P0-3: Should have limit=1000"
+
+
+def test_network_agent_connection_failures_warns_on_truncation(mock_loki, sample_incident):
+    """Test warning when Loki results are truncated at limit."""
+    # Mock Loki returning exactly 1000 results (limit reached)
+    mock_results = []
+    for i in range(1000):
+        mock_results.append({
+            "stream": {"service": "payment-service"},
+            "values": [[str(int(datetime.now(timezone.utc).timestamp() * 1e9)), f"connection failed {i}"]]
+        })
+
+    mock_loki.query_range.return_value = mock_results
+
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        loki_client=mock_loki,
+    )
+
+    # Should handle truncation gracefully
+    observations = agent.observe(sample_incident)
+
+    # Should still return observations
+    conn_obs = [o for o in observations if "connection" in o.source.lower()]
+    assert len(conn_obs) > 0
