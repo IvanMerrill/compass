@@ -449,3 +449,177 @@ def test_network_agent_connection_failures_warns_on_truncation(mock_loki, sample
     # Should still return observations
     conn_obs = [o for o in observations if "connection" in o.source.lower()]
     assert len(conn_obs) > 0
+
+
+# ============================================================================
+# Day 2: Hypothesis Detector Tests
+# ============================================================================
+
+
+def test_network_agent_detects_dns_hypothesis():
+    """Test DNS hypothesis detection when duration exceeds threshold."""
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=Mock(),
+    )
+
+    # Create observations with high DNS duration
+    observations = [
+        Observation(
+            source="prometheus:dns_resolution:8.8.8.8",
+            data={
+                "dns_server": "8.8.8.8",
+                "avg_duration_ms": 1500,  # Above 1000ms threshold
+            },
+            description="DNS slow",
+            confidence=0.85,
+        )
+    ]
+
+    # Generate hypotheses using generate_hypothesis() method inherited from ApplicationAgent
+    hypotheses = agent.generate_hypothesis(observations)
+
+    # Should detect DNS hypothesis
+    dns_hypotheses = [h for h in hypotheses if "dns" in h.statement.lower()]
+    assert len(dns_hypotheses) > 0, "Should detect DNS hypothesis"
+    assert dns_hypotheses[0].agent_id == "network_agent"
+    assert dns_hypotheses[0].initial_confidence > 0
+
+
+def test_network_agent_does_not_detect_dns_hypothesis_when_normal():
+    """Test DNS hypothesis not created when duration is normal."""
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=Mock(),
+    )
+
+    # Create observations with normal DNS duration
+    observations = [
+        Observation(
+            source="prometheus:dns_resolution:8.8.8.8",
+            data={
+                "dns_server": "8.8.8.8",
+                "avg_duration_ms": 50,  # Below 1000ms threshold
+            },
+            description="DNS normal",
+            confidence=0.85,
+        )
+    ]
+
+    hypotheses = agent.generate_hypothesis(observations)
+
+    # Should not detect DNS hypothesis
+    dns_hypotheses = [h for h in hypotheses if "dns" in h.statement.lower()]
+    assert len(dns_hypotheses) == 0, "Should not detect DNS hypothesis for normal duration"
+
+
+def test_network_agent_detects_routing_hypothesis():
+    """Test routing/latency hypothesis detection when p95 exceeds threshold."""
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=Mock(),
+    )
+
+    # Create observations with high latency
+    observations = [
+        Observation(
+            source="prometheus:network_latency:/api/payment",
+            data={
+                "endpoint": "/api/payment",
+                "p95_latency_s": 1.5,  # Above 1.0s threshold
+            },
+            description="High latency",
+            confidence=0.85,
+        )
+    ]
+
+    hypotheses = agent.generate_hypothesis(observations)
+
+    # Should detect routing/latency hypothesis
+    latency_hypotheses = [h for h in hypotheses if "latency" in h.statement.lower() or "routing" in h.statement.lower()]
+    assert len(latency_hypotheses) > 0, "Should detect latency/routing hypothesis"
+
+
+def test_network_agent_detects_load_balancer_hypothesis():
+    """Test load balancer hypothesis detection when backends are DOWN."""
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=Mock(),
+    )
+
+    # Create observations with DOWN backend
+    observations = [
+        Observation(
+            source="prometheus:load_balancer:backend-1",
+            data={
+                "backend": "backend-1",
+                "status": "DOWN",
+                "value": 0,
+            },
+            description="Backend down",
+            confidence=0.90,
+        )
+    ]
+
+    hypotheses = agent.generate_hypothesis(observations)
+
+    # Should detect load balancer hypothesis
+    lb_hypotheses = [h for h in hypotheses if "load" in h.statement.lower() or "backend" in h.statement.lower()]
+    assert len(lb_hypotheses) > 0, "Should detect load balancer hypothesis"
+
+
+def test_network_agent_detects_connection_exhaustion_hypothesis():
+    """Test connection exhaustion hypothesis detection when failures exceed threshold."""
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        loki_client=Mock(),
+    )
+
+    # Create observations with many connection failures
+    observations = []
+    for i in range(15):  # Above 10 threshold
+        observations.append(
+            Observation(
+                source="loki:connection_failures:payment-service",
+                data={
+                    "log_line": f"connection refused {i}",
+                    "service": "payment-service",
+                },
+                description=f"Connection failure {i}",
+                confidence=0.80,
+            )
+        )
+
+    hypotheses = agent.generate_hypothesis(observations)
+
+    # Should detect connection exhaustion hypothesis
+    conn_hypotheses = [h for h in hypotheses if "connection" in h.statement.lower()]
+    assert len(conn_hypotheses) > 0, "Should detect connection exhaustion hypothesis"
+
+
+def test_network_agent_hypothesis_includes_metadata():
+    """Test that hypothesis includes proper metadata for traceability."""
+    agent = NetworkAgent(
+        budget_limit=Decimal("10.00"),
+        prometheus_client=Mock(),
+    )
+
+    observations = [
+        Observation(
+            source="prometheus:dns_resolution:8.8.8.8",
+            data={
+                "dns_server": "8.8.8.8",
+                "avg_duration_ms": 2000,
+            },
+            description="DNS slow",
+            confidence=0.85,
+        )
+    ]
+
+    hypotheses = agent.generate_hypothesis(observations)
+
+    # Check hypothesis has metadata
+    dns_hyp = [h for h in hypotheses if "dns" in h.statement.lower()][0]
+    assert dns_hyp.metadata is not None
+    assert "metric" in dns_hyp.metadata or "threshold" in dns_hyp.metadata
+    assert "hypothesis_type" in dns_hyp.metadata

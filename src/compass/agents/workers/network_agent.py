@@ -700,8 +700,8 @@ class NetworkAgent(ApplicationAgent):
 
         return observations
 
-    # Placeholder hypothesis detectors (implemented Day 2-3)
-    # These return None for now, will be implemented in Day 2
+    # Hypothesis detectors (Day 2 implementation)
+    # Pattern: Check observations against thresholds, create domain-specific hypotheses
 
     def _detect_and_create_dns_hypothesis(
         self, observations: List[Observation]
@@ -709,7 +709,7 @@ class NetworkAgent(ApplicationAgent):
         """
         Detect DNS failure pattern and create hypothesis.
 
-        TODO Day 2: Implement DNS hypothesis detection.
+        Checks if DNS resolution duration exceeds threshold (1000ms).
 
         Args:
             observations: List of observations to analyze
@@ -717,16 +717,38 @@ class NetworkAgent(ApplicationAgent):
         Returns:
             Hypothesis if DNS issue detected, None otherwise
         """
-        # Placeholder - implement Day 2
+        for obs in observations:
+            if "dns" in obs.source.lower():
+                avg_duration_ms = obs.data.get("avg_duration_ms", 0)
+
+                if avg_duration_ms > self.DNS_DURATION_THRESHOLD_MS:
+                    dns_server = obs.data.get("dns_server", "unknown")
+
+                    return Hypothesis(
+                        agent_id=self.agent_id,
+                        statement=f"DNS resolution failing for {dns_server} causing timeouts",
+                        initial_confidence=obs.confidence,
+                        affected_systems=[dns_server],
+                        metadata={
+                            "metric": "dns_lookup_duration_ms",
+                            "threshold": self.DNS_DURATION_THRESHOLD_MS,
+                            "operator": ">",
+                            "observed_value": avg_duration_ms,
+                            "suspected_time": datetime.now(timezone.utc).isoformat(),
+                            "hypothesis_type": "dns_failure",
+                            "source": obs.source,
+                        },
+                    )
+
         return None
 
     def _detect_and_create_routing_hypothesis(
         self, observations: List[Observation]
     ) -> Optional[Hypothesis]:
         """
-        Detect routing issue pattern and create hypothesis.
+        Detect routing/latency issue pattern and create hypothesis.
 
-        TODO Day 2: Implement routing hypothesis detection.
+        Checks if p95 latency exceeds threshold (1.0s).
 
         Args:
             observations: List of observations to analyze
@@ -734,7 +756,29 @@ class NetworkAgent(ApplicationAgent):
         Returns:
             Hypothesis if routing issue detected, None otherwise
         """
-        # Placeholder - implement Day 2
+        for obs in observations:
+            if "latency" in obs.source.lower():
+                p95_latency_s = obs.data.get("p95_latency_s", 0)
+
+                if p95_latency_s > self.HIGH_LATENCY_THRESHOLD_S:
+                    endpoint = obs.data.get("endpoint", "unknown")
+
+                    return Hypothesis(
+                        agent_id=self.agent_id,
+                        statement=f"High network latency to {endpoint} indicating routing or congestion issue",
+                        initial_confidence=obs.confidence,
+                        affected_systems=[endpoint],
+                        metadata={
+                            "metric": "p95_latency_s",
+                            "threshold": self.HIGH_LATENCY_THRESHOLD_S,
+                            "operator": ">",
+                            "observed_value": p95_latency_s,
+                            "suspected_time": datetime.now(timezone.utc).isoformat(),
+                            "hypothesis_type": "routing_latency",
+                            "source": obs.source,
+                        },
+                    )
+
         return None
 
     def _detect_and_create_load_balancer_hypothesis(
@@ -743,7 +787,7 @@ class NetworkAgent(ApplicationAgent):
         """
         Detect load balancer failure pattern and create hypothesis.
 
-        TODO Day 2: Implement LB hypothesis detection.
+        Checks if any backend is DOWN.
 
         Args:
             observations: List of observations to analyze
@@ -751,7 +795,28 @@ class NetworkAgent(ApplicationAgent):
         Returns:
             Hypothesis if LB issue detected, None otherwise
         """
-        # Placeholder - implement Day 2
+        for obs in observations:
+            if "load_balancer" in obs.source.lower():
+                backend = obs.data.get("backend", "unknown")
+                status = obs.data.get("status", "unknown")
+
+                if status == "DOWN":
+                    return Hypothesis(
+                        agent_id=self.agent_id,
+                        statement=f"Load balancer backend {backend} is DOWN causing traffic failures",
+                        initial_confidence=obs.confidence,
+                        affected_systems=[backend],
+                        metadata={
+                            "metric": "backend_status",
+                            "threshold": "UP",
+                            "operator": "!=",
+                            "observed_value": status,
+                            "suspected_time": datetime.now(timezone.utc).isoformat(),
+                            "hypothesis_type": "load_balancer_failure",
+                            "source": obs.source,
+                        },
+                    )
+
         return None
 
     def _detect_and_create_connection_exhaustion_hypothesis(
@@ -760,7 +825,7 @@ class NetworkAgent(ApplicationAgent):
         """
         Detect connection exhaustion pattern and create hypothesis.
 
-        TODO Day 2: Implement connection hypothesis detection.
+        Checks if connection failures exceed threshold (10).
 
         Args:
             observations: List of observations to analyze
@@ -768,5 +833,32 @@ class NetworkAgent(ApplicationAgent):
         Returns:
             Hypothesis if connection issue detected, None otherwise
         """
-        # Placeholder - implement Day 2
+        # Count connection failure observations
+        connection_failures = [
+            obs for obs in observations if "connection" in obs.source.lower()
+        ]
+
+        if len(connection_failures) > self.CONNECTION_FAILURE_THRESHOLD:
+            # Group by service if available
+            services = set()
+            for obs in connection_failures:
+                service = obs.data.get("service", "unknown")
+                services.add(service)
+
+            return Hypothesis(
+                agent_id=self.agent_id,
+                statement=f"Connection exhaustion detected with {len(connection_failures)} failures across {len(services)} service(s)",
+                initial_confidence=0.80,  # High confidence with multiple failures
+                affected_systems=list(services),
+                metadata={
+                    "metric": "connection_failure_count",
+                    "threshold": self.CONNECTION_FAILURE_THRESHOLD,
+                    "operator": ">",
+                    "observed_value": len(connection_failures),
+                    "suspected_time": datetime.now(timezone.utc).isoformat(),
+                    "hypothesis_type": "connection_exhaustion",
+                    "source": "loki:connection_failures",
+                },
+            )
+
         return None
