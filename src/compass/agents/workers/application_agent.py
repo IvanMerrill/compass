@@ -100,11 +100,20 @@ class ApplicationAgent:
             "deployments": Decimal("0.0000"),
         }
 
+        # Hypothesis detectors (Agent Beta's P0-1 - extensibility)
+        # Each detector examines observations and returns Hypothesis or None
+        self._hypothesis_detectors = [
+            self._detect_and_create_deployment_hypothesis,
+            self._detect_and_create_dependency_hypothesis,
+            self._detect_and_create_memory_leak_hypothesis,
+        ]
+
         logger.info(
             "application_agent_initialized",
             agent_id=self.agent_id,
             has_query_generator=query_generator is not None,
             budget_limit=str(budget_limit) if budget_limit else "unlimited",
+            hypothesis_detectors=len(self._hypothesis_detectors),
         )
 
     def _check_budget(self, estimated_cost: Decimal = Decimal("0")) -> None:
@@ -512,28 +521,29 @@ class ApplicationAgent:
                 "generating_hypotheses",
                 agent_id=self.agent_id,
                 observation_count=len(observations),
+                detector_count=len(self._hypothesis_detectors),
             )
 
-            # Detect deployment correlations (Agent Beta's P1-3 - domain-specific)
-            deployment_issue = self._detect_deployment_correlation(observations)
-            if deployment_issue:
-                hyp = self._create_deployment_hypothesis(deployment_issue)
-                hypotheses.append(hyp)
-                logger.debug("deployment_hypothesis_created", statement=hyp.statement)
-
-            # Detect dependency failures
-            dependency_issue = self._detect_dependency_failure(observations)
-            if dependency_issue:
-                hyp = self._create_dependency_hypothesis(dependency_issue)
-                hypotheses.append(hyp)
-                logger.debug("dependency_hypothesis_created", statement=hyp.statement)
-
-            # Detect memory leaks
-            memory_issue = self._detect_memory_leak(observations)
-            if memory_issue:
-                hyp = self._create_memory_leak_hypothesis(memory_issue)
-                hypotheses.append(hyp)
-                logger.debug("memory_leak_hypothesis_created", statement=hyp.statement)
+            # Run all registered hypothesis detectors (Agent Beta's P0-1 - extensibility)
+            # Each detector returns Hypothesis or None
+            for detector in self._hypothesis_detectors:
+                try:
+                    hypothesis = detector(observations)
+                    if hypothesis:
+                        hypotheses.append(hypothesis)
+                        logger.debug(
+                            "hypothesis_generated",
+                            detector=detector.__name__,
+                            statement=hypothesis.statement,
+                            confidence=hypothesis.initial_confidence,
+                        )
+                except Exception as e:
+                    logger.warning(
+                        "hypothesis_detector_failed",
+                        detector=detector.__name__,
+                        error=str(e),
+                    )
+                    # Continue with other detectors (graceful degradation)
 
             # Rank by confidence (Agent's requirement)
             hypotheses.sort(key=lambda h: h.initial_confidence, reverse=True)
@@ -546,6 +556,62 @@ class ApplicationAgent:
             )
 
             return hypotheses
+
+    def _detect_and_create_deployment_hypothesis(
+        self, observations: List[Observation]
+    ) -> Optional[Hypothesis]:
+        """
+        Detect deployment correlation pattern and create hypothesis.
+
+        Combines detection and hypothesis creation for extensibility.
+
+        Args:
+            observations: List of observations to analyze
+
+        Returns:
+            Hypothesis if pattern detected, None otherwise
+        """
+        detection = self._detect_deployment_correlation(observations)
+        if not detection:
+            return None
+
+        return self._create_deployment_hypothesis(detection)
+
+    def _detect_and_create_dependency_hypothesis(
+        self, observations: List[Observation]
+    ) -> Optional[Hypothesis]:
+        """
+        Detect dependency failure pattern and create hypothesis.
+
+        Args:
+            observations: List of observations to analyze
+
+        Returns:
+            Hypothesis if pattern detected, None otherwise
+        """
+        detection = self._detect_dependency_failure(observations)
+        if not detection:
+            return None
+
+        return self._create_dependency_hypothesis(detection)
+
+    def _detect_and_create_memory_leak_hypothesis(
+        self, observations: List[Observation]
+    ) -> Optional[Hypothesis]:
+        """
+        Detect memory leak pattern and create hypothesis.
+
+        Args:
+            observations: List of observations to analyze
+
+        Returns:
+            Hypothesis if pattern detected, None otherwise
+        """
+        detection = self._detect_memory_leak(observations)
+        if not detection:
+            return None
+
+        return self._create_memory_leak_hypothesis(detection)
 
     def _detect_deployment_correlation(self, observations: List[Observation]) -> Optional[Dict[str, Any]]:
         """
