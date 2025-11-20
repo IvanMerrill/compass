@@ -410,3 +410,346 @@ class ApplicationAgent:
             raise
 
         return observations
+
+    def generate_hypothesis(self, observations: List[Observation]) -> List[Hypothesis]:
+        """
+        Generate testable, falsifiable hypotheses from observations.
+
+        Returns hypotheses ranked by initial confidence.
+
+        Metadata Contracts (Agent Alpha's P0-2):
+        - All hypotheses include "suspected_time" (for TemporalContradictionStrategy)
+        - Metric-based hypotheses include "metric", "threshold", "operator"
+        - Deployment hypotheses include "deployment_id", "service"
+        - Dependency hypotheses include "dependency", "metric", "threshold"
+
+        Note: This is ORIENT phase. DECIDE phase (human selection) handled by Orchestrator.
+
+        Args:
+            observations: List of observations from observe() phase
+
+        Returns:
+            List of hypotheses ranked by confidence (highest first)
+        """
+        with emit_span("application_agent.generate_hypothesis", attributes={"agent.id": self.agent_id}):
+            hypotheses = []
+
+            if not observations:
+                logger.info("no_observations_for_hypothesis_generation", agent_id=self.agent_id)
+                return hypotheses
+
+            logger.info(
+                "generating_hypotheses",
+                agent_id=self.agent_id,
+                observation_count=len(observations),
+            )
+
+            # Detect deployment correlations (Agent Beta's P1-3 - domain-specific)
+            deployment_issue = self._detect_deployment_correlation(observations)
+            if deployment_issue:
+                hyp = self._create_deployment_hypothesis(deployment_issue)
+                hypotheses.append(hyp)
+                logger.debug("deployment_hypothesis_created", statement=hyp.statement)
+
+            # Detect dependency failures
+            dependency_issue = self._detect_dependency_failure(observations)
+            if dependency_issue:
+                hyp = self._create_dependency_hypothesis(dependency_issue)
+                hypotheses.append(hyp)
+                logger.debug("dependency_hypothesis_created", statement=hyp.statement)
+
+            # Detect memory leaks
+            memory_issue = self._detect_memory_leak(observations)
+            if memory_issue:
+                hyp = self._create_memory_leak_hypothesis(memory_issue)
+                hypotheses.append(hyp)
+                logger.debug("memory_leak_hypothesis_created", statement=hyp.statement)
+
+            # Rank by confidence (Agent's requirement)
+            hypotheses.sort(key=lambda h: h.initial_confidence, reverse=True)
+
+            logger.info(
+                "hypotheses_generated",
+                agent_id=self.agent_id,
+                hypothesis_count=len(hypotheses),
+                top_confidence=hypotheses[0].initial_confidence if hypotheses else 0.0,
+            )
+
+            return hypotheses
+
+    def _detect_deployment_correlation(self, observations: List[Observation]) -> Optional[Dict[str, Any]]:
+        """
+        Detect if deployment correlates with errors/issues.
+
+        Args:
+            observations: List of observations to analyze
+
+        Returns:
+            Detection data dict if pattern found, None otherwise
+        """
+        # Find deployment observations
+        deployment_obs = [obs for obs in observations if "deployment" in obs.source.lower()]
+        error_obs = [obs for obs in observations if "error" in obs.source.lower()]
+
+        if not deployment_obs or not error_obs:
+            return None
+
+        # Extract deployment info
+        deployment_data = deployment_obs[0].data
+        deployments = deployment_data.get("deployments", [])
+
+        if not deployments:
+            return None
+
+        # Get latest deployment
+        latest_deployment = deployments[-1]  # Last deployment in list
+        deployment_time = latest_deployment.get("time", "")
+        deployment_log = latest_deployment.get("log", "")
+
+        # Extract version from log (simple pattern matching)
+        version = "unknown"
+        if "v" in deployment_log:
+            # Try to extract version like "v2.3.1"
+            parts = deployment_log.split()
+            for part in parts:
+                if part.startswith("v") and any(char.isdigit() for char in part):
+                    version = part
+                    break
+
+        # Extract service from error observation
+        error_data = error_obs[0]
+        service = error_data.source.split(":")[-1] if ":" in error_data.source else self.DEFAULT_SERVICE_NAME
+
+        # Calculate confidence based on observation confidence
+        confidence = (deployment_obs[0].confidence + error_obs[0].confidence) / 2
+
+        return {
+            "deployment_id": version,
+            "deployment_time": deployment_time,
+            "service": service,
+            "error_count": error_data.data.get("error_count", 0) if hasattr(error_data, "data") else 0,
+            "confidence": confidence,
+        }
+
+    def _detect_dependency_failure(self, observations: List[Observation]) -> Optional[Dict[str, Any]]:
+        """
+        Detect if high latency indicates dependency failure.
+
+        Args:
+            observations: List of observations to analyze
+
+        Returns:
+            Detection data dict if pattern found, None otherwise
+        """
+        # Find latency observations
+        latency_obs = [obs for obs in observations if "latency" in obs.description.lower() or "trace" in obs.source.lower()]
+
+        if not latency_obs:
+            return None
+
+        latency_data = latency_obs[0]
+
+        # Check if latency is high (> 1000ms average indicates issue)
+        avg_latency = latency_data.data.get("avg_duration_ms", 0)
+
+        if avg_latency < 1000:  # Not high enough to be concerning
+            return None
+
+        # Extract service
+        service = latency_data.source.split(":")[-1] if ":" in latency_data.source else self.DEFAULT_SERVICE_NAME
+
+        return {
+            "service": service,
+            "avg_latency_ms": avg_latency,
+            "max_latency_ms": latency_data.data.get("max_duration_ms", avg_latency),
+            "threshold": 1000,  # Threshold for "high" latency
+            "confidence": latency_data.confidence,
+            "suspected_time": latency_data.timestamp.isoformat(),
+        }
+
+    def _detect_memory_leak(self, observations: List[Observation]) -> Optional[Dict[str, Any]]:
+        """
+        Detect if memory usage pattern indicates memory leak.
+
+        Args:
+            observations: List of observations to analyze
+
+        Returns:
+            Detection data dict if pattern found, None otherwise
+        """
+        # Find memory observations
+        memory_obs = [obs for obs in observations if "memory" in obs.description.lower() or "memory" in obs.source.lower()]
+
+        if not memory_obs:
+            return None
+
+        memory_data = memory_obs[0]
+
+        # Check if trend is increasing
+        trend = memory_data.data.get("trend", "")
+        if trend != "increasing":
+            return None
+
+        # Get values to calculate increase
+        values = memory_data.data.get("values", [])
+        if len(values) < 2:
+            return None
+
+        # Calculate memory increase
+        first_value = values[0].get("value", 0)
+        last_value = values[-1].get("value", 0)
+
+        # Need significant increase to indicate leak
+        if last_value <= first_value * 1.5:  # Less than 50% increase
+            return None
+
+        # Find corresponding deployment
+        deployment_obs = [obs for obs in observations if "deployment" in obs.source.lower()]
+        deployment_id = "unknown"
+        deployment_time = memory_data.timestamp.isoformat()
+
+        if deployment_obs:
+            deployments = deployment_obs[0].data.get("deployments", [])
+            if deployments:
+                latest = deployments[-1]
+                deployment_time = latest.get("time", deployment_time)
+                log = latest.get("log", "")
+                # Extract version
+                if "v" in log:
+                    parts = log.split()
+                    for part in parts:
+                        if part.startswith("v") and any(char.isdigit() for char in part):
+                            deployment_id = part
+                            break
+
+        # Extract service from source
+        service = memory_data.source.split(":")[-1] if ":" in memory_data.source else self.DEFAULT_SERVICE_NAME
+
+        return {
+            "service": service,
+            "deployment_id": deployment_id,
+            "deployment_time": deployment_time,
+            "memory_threshold": last_value,
+            "memory_increase_bytes": last_value - first_value,
+            "confidence": memory_data.confidence,
+            "suspected_time": deployment_time,
+        }
+
+    def _create_deployment_hypothesis(self, detection_data: Dict[str, Any]) -> Hypothesis:
+        """
+        Create domain-specific deployment correlation hypothesis.
+
+        Agent Beta's P1-3: Hypotheses must be specific causes, not observations.
+        Agent Alpha's P0-2: Must include metadata for disproof strategies.
+
+        Args:
+            detection_data: Detection data from _detect_deployment_correlation()
+
+        Returns:
+            Hypothesis with complete metadata contracts
+        """
+        deployment_id = detection_data["deployment_id"]
+        service = detection_data["service"]
+        deployment_time = detection_data["deployment_time"]
+
+        return Hypothesis(
+            agent_id=self.agent_id,
+            statement=f"Deployment {deployment_id} introduced error regression in {service}",
+            initial_confidence=detection_data["confidence"],
+            affected_systems=[service],
+            metadata={
+                # Required for TemporalContradictionStrategy
+                "suspected_time": deployment_time,
+
+                # Required for ScopeVerificationStrategy
+                "claimed_scope": "specific_services",
+                "affected_services": [service],
+
+                # Domain-specific context
+                "deployment_id": deployment_id,
+                "service": service,
+                "hypothesis_type": "deployment_correlation",
+                "error_count": detection_data.get("error_count", 0),
+            },
+        )
+
+    def _create_dependency_hypothesis(self, detection_data: Dict[str, Any]) -> Hypothesis:
+        """
+        Create domain-specific dependency failure hypothesis.
+
+        Args:
+            detection_data: Detection data from _detect_dependency_failure()
+
+        Returns:
+            Hypothesis with complete metadata contracts
+        """
+        service = detection_data["service"]
+        avg_latency = detection_data["avg_latency_ms"]
+        threshold = detection_data["threshold"]
+
+        return Hypothesis(
+            agent_id=self.agent_id,
+            statement=f"External dependency timeout causing {service} latency spike (avg {avg_latency:.0f}ms)",
+            initial_confidence=detection_data["confidence"],
+            affected_systems=[service],
+            metadata={
+                # Required for MetricThresholdValidationStrategy
+                "metric": "avg_duration_ms",
+                "threshold": threshold,
+                "operator": ">",
+                "observed_value": avg_latency,
+
+                # Required for TemporalContradictionStrategy
+                "suspected_time": detection_data["suspected_time"],
+
+                # Required for ScopeVerificationStrategy
+                "claimed_scope": "specific_services",
+                "affected_services": [service],
+
+                # Domain-specific context
+                "hypothesis_type": "dependency_failure",
+                "service": service,
+                "max_latency_ms": detection_data["max_latency_ms"],
+            },
+        )
+
+    def _create_memory_leak_hypothesis(self, detection_data: Dict[str, Any]) -> Hypothesis:
+        """
+        Create domain-specific memory leak hypothesis.
+
+        Args:
+            detection_data: Detection data from _detect_memory_leak()
+
+        Returns:
+            Hypothesis with complete metadata contracts
+        """
+        deployment_id = detection_data["deployment_id"]
+        service = detection_data["service"]
+        memory_threshold = detection_data["memory_threshold"]
+
+        return Hypothesis(
+            agent_id=self.agent_id,
+            statement=f"Memory leak in deployment {deployment_id} causing OOM errors in {service}",
+            initial_confidence=detection_data["confidence"],
+            affected_systems=[service],
+            metadata={
+                # Required for MetricThresholdValidationStrategy
+                "metric": "memory_usage",
+                "threshold": memory_threshold,
+                "operator": ">=",
+                "observed_value": memory_threshold,
+
+                # Required for TemporalContradictionStrategy
+                "suspected_time": detection_data["suspected_time"],
+
+                # Required for ScopeVerificationStrategy
+                "claimed_scope": "specific_services",
+                "affected_services": [service],
+
+                # Domain-specific context
+                "deployment_id": deployment_id,
+                "service": service,
+                "hypothesis_type": "memory_leak",
+                "memory_increase_bytes": detection_data["memory_increase_bytes"],
+            },
+        )
