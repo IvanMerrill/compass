@@ -18,6 +18,7 @@ Key Features:
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
+import threading  # P1-2 FIX (Alpha): Thread-safety for cost tracking
 
 import structlog
 
@@ -104,6 +105,8 @@ class ApplicationAgent:
         self.budget_limit = budget_limit
 
         # Cost tracking (Agent Alpha's P1-1)
+        # P1-2 FIX (Alpha): Thread-safe cost tracking with lock
+        self._cost_lock = threading.Lock()
         self._total_cost = Decimal("0.0000")
         self._observation_costs = {
             "error_rates": Decimal("0.0000"),
@@ -340,8 +343,10 @@ class ApplicationAgent:
                 )
                 generated = self.query_generator.generate_query(request)
                 query = generated.query
-                self._total_cost += generated.cost
-                self._observation_costs["error_rates"] += generated.cost
+                # P1-2 FIX (Alpha): Thread-safe cost tracking
+                with self._cost_lock:
+                    self._total_cost += generated.cost
+                    self._observation_costs["error_rates"] += generated.cost
 
                 logger.debug(
                     "error_query_generated",
@@ -416,8 +421,10 @@ class ApplicationAgent:
             )
 
             # Track cost (Agent Alpha's P1-1 - complete cost tracking)
-            self._total_cost += query_cost
-            self._observation_costs["latency"] += query_cost
+            # P1-2 FIX (Alpha): Thread-safe cost tracking
+            with self._cost_lock:
+                self._total_cost += query_cost
+                self._observation_costs["latency"] += query_cost
 
             if results:
                 # Calculate latency statistics
@@ -486,8 +493,10 @@ class ApplicationAgent:
             )
 
             # Track cost (Agent Alpha's P1-1 - complete cost tracking)
-            self._total_cost += query_cost
-            self._observation_costs["deployments"] += query_cost
+            # P1-2 FIX (Alpha): Thread-safe cost tracking
+            with self._cost_lock:
+                self._total_cost += query_cost
+                self._observation_costs["deployments"] += query_cost
 
             if results:
                 # Extract deployment information

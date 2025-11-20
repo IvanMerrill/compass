@@ -251,7 +251,9 @@ class NetworkAgent(ApplicationAgent):
                 )
                 generated = self.query_generator.generate_query(request)
                 query = generated.query
-                self._total_cost += generated.cost
+                # P1-2 FIX (Alpha): Thread-safe cost tracking
+                with self._cost_lock:
+                    self._total_cost += generated.cost
 
                 logger.debug(
                     "query_generator_used",
@@ -387,7 +389,9 @@ class NetworkAgent(ApplicationAgent):
                 )
                 generated = self.query_generator.generate_query(request)
                 query = generated.query
-                self._total_cost += generated.cost
+                # P1-2 FIX (Alpha): Thread-safe cost tracking
+                with self._cost_lock:
+                    self._total_cost += generated.cost
             except Exception as e:
                 logger.warning("query_generator_failed_using_fallback", error=str(e))
                 query = f'histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{{service="{service}"}}[5m]))'
@@ -485,7 +489,9 @@ class NetworkAgent(ApplicationAgent):
                 )
                 generated = self.query_generator.generate_query(request)
                 query = generated.query
-                self._total_cost += generated.cost
+                # P1-2 FIX (Alpha): Thread-safe cost tracking
+                with self._cost_lock:
+                    self._total_cost += generated.cost
             except Exception as e:
                 logger.warning("query_generator_failed_using_fallback", error=str(e))
                 query = 'rate(node_network_transmit_drop_total[5m])'
