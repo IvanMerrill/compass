@@ -318,6 +318,7 @@ class NetworkAgent(ApplicationAgent):
                 query=query,
                 timeout_seconds=30,
             )
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
         except requests.ConnectionError as e:
             # P1-1 FIX: Structured exception handling - connection
             logger.error(
@@ -326,6 +327,7 @@ class NetworkAgent(ApplicationAgent):
                 query=query,
                 error=str(e),
             )
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
         except Exception as e:
             # P1-1 FIX: Structured exception handling - general
             logger.error(
@@ -335,6 +337,7 @@ class NetworkAgent(ApplicationAgent):
                 error=str(e),
                 error_type=type(e).__name__,
             )
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
 
         return observations
 
@@ -424,10 +427,13 @@ class NetworkAgent(ApplicationAgent):
 
         except requests.Timeout:
             logger.error("latency_query_timeout", service=service, query=query, timeout_seconds=30)
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
         except requests.ConnectionError as e:
             logger.error("latency_query_connection_failed", service=service, error=str(e))
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
         except Exception as e:
             logger.error("latency_query_failed_unknown", service=service, error=str(e), error_type=type(e).__name__)
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
 
         return observations
 
@@ -516,10 +522,13 @@ class NetworkAgent(ApplicationAgent):
 
         except requests.Timeout:
             logger.error("packet_loss_query_timeout", query=query, timeout_seconds=30)
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
         except requests.ConnectionError as e:
             logger.error("packet_loss_query_connection_failed", error=str(e))
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
         except Exception as e:
             logger.error("packet_loss_query_failed_unknown", error=str(e), error_type=type(e).__name__)
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
 
         return observations
 
@@ -581,6 +590,7 @@ class NetworkAgent(ApplicationAgent):
 
             except Exception as e:
                 logger.warning("lb_prometheus_query_failed", error=str(e), error_type=type(e).__name__)
+                raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
 
         # Loki: Backend state changes in logs
         if self.loki:
@@ -625,6 +635,7 @@ class NetworkAgent(ApplicationAgent):
 
             except Exception as e:
                 logger.warning("lb_loki_query_failed", error=str(e), error_type=type(e).__name__)
+                raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
 
         logger.info(
             "load_balancer_observation_completed",
@@ -714,6 +725,7 @@ class NetworkAgent(ApplicationAgent):
                 error=str(e),
                 error_type=type(e).__name__,
             )
+            raise  # P0-3 FIX (Beta): Raise after logging for consistent error handling
 
         return observations
 
