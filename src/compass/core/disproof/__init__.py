@@ -13,5 +13,10 @@ Available Strategies:
 
 from compass.core.disproof.temporal_contradiction import TemporalContradictionStrategy
 from compass.core.disproof.scope_verification import ScopeVerificationStrategy
+from compass.core.disproof.metric_threshold_validation import MetricThresholdValidationStrategy
 
-__all__ = ["TemporalContradictionStrategy", "ScopeVerificationStrategy"]
+__all__ = [
+    "TemporalContradictionStrategy",
+    "ScopeVerificationStrategy",
+    "MetricThresholdValidationStrategy",
+]

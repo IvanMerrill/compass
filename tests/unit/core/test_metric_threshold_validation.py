@@ -70,7 +70,7 @@ def test_metric_threshold_disproves_unsupported_claim():
     assert result.strategy == "metric_threshold_validation"
     assert len(result.evidence) > 0
     assert result.evidence[0].quality == EvidenceQuality.DIRECT
-    assert "45" in result.reasoning or "0.45" in result.reasoning
+    assert "0.45" in result.observed or "45" in result.observed
 
 
 def test_metric_threshold_survives_when_claim_supported():
@@ -108,7 +108,7 @@ def test_metric_threshold_survives_when_claim_supported():
 
     # Hypothesis should SURVIVE
     assert result.disproven is False
-    assert "supports" in result.reasoning.lower() or "matches" in result.reasoning.lower()
+    assert "supported" in result.reasoning.lower() or "validated successfully" in result.reasoning.lower()
 
 
 def test_metric_threshold_with_no_metric_claims():
@@ -235,7 +235,7 @@ def test_metric_threshold_with_multiple_claims():
 
     # Hypothesis should be DISPROVEN (memory claim not supported)
     assert result.disproven is True
-    assert "memory" in result.reasoning.lower()
+    assert "memory" in result.observed.lower()
 
 
 def test_metric_threshold_with_tolerance():
