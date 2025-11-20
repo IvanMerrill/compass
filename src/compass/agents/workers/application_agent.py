@@ -24,6 +24,11 @@ import structlog
 from compass.core.query_generator import QueryGenerator, QueryRequest, QueryType
 from compass.core.scientific_framework import Incident, Observation, Hypothesis
 
+
+class BudgetExceededError(Exception):
+    """Raised when operation would exceed investigation budget limit."""
+    pass
+
 try:
     from compass.observability import emit_span
 except ImportError:
@@ -102,6 +107,36 @@ class ApplicationAgent:
             budget_limit=str(budget_limit) if budget_limit else "unlimited",
         )
 
+    def _check_budget(self, estimated_cost: Decimal = Decimal("0")) -> None:
+        """
+        Check if operation would exceed budget limit.
+
+        Args:
+            estimated_cost: Estimated cost of upcoming operation
+
+        Raises:
+            BudgetExceededError: If operation would exceed budget_limit
+        """
+        if not self.budget_limit:
+            return  # No budget limit set
+
+        projected_cost = self._total_cost + estimated_cost
+
+        if projected_cost > self.budget_limit:
+            logger.error(
+                "budget_exceeded",
+                agent_id=self.agent_id,
+                current_cost=str(self._total_cost),
+                estimated_cost=str(estimated_cost),
+                budget_limit=str(self.budget_limit),
+                projected_cost=str(projected_cost),
+            )
+            raise BudgetExceededError(
+                f"Operation would exceed budget limit: "
+                f"${projected_cost:.4f} > ${self.budget_limit:.4f} "
+                f"(current: ${self._total_cost:.4f}, estimated: ${estimated_cost:.4f})"
+            )
+
     def observe(self, incident: Incident) -> List[Observation]:
         """
         Gather application-level observations.
@@ -114,7 +149,13 @@ class ApplicationAgent:
             - Deployment observations (from Loki)
 
         Graceful Degradation: Returns partial observations if sources unavailable.
+
+        Raises:
+            BudgetExceededError: If budget already exceeded before observations
         """
+        # Check budget before starting observations (fail fast)
+        self._check_budget()
+
         with emit_span("application_agent.observe", attributes={"agent.id": self.agent_id}):
             observations = []
             successful_sources = 0
@@ -263,6 +304,10 @@ class ApplicationAgent:
         # Generate query (sophisticated if QueryGenerator available, simple otherwise)
         if self.query_generator:
             try:
+                # Check budget before expensive QueryGenerator call
+                # Estimate $0.003 per query (typical GPT-4 cost for query generation)
+                self._check_budget(estimated_cost=Decimal("0.003"))
+
                 request = QueryRequest(
                     query_type=QueryType.LOGQL,
                     intent="Find error logs with structured parsing for rate calculation",
