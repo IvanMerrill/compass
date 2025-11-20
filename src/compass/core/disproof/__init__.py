@@ -12,5 +12,6 @@ Available Strategies:
 """
 
 from compass.core.disproof.temporal_contradiction import TemporalContradictionStrategy
+from compass.core.disproof.scope_verification import ScopeVerificationStrategy
 
-__all__ = ["TemporalContradictionStrategy"]
+__all__ = ["TemporalContradictionStrategy", "ScopeVerificationStrategy"]
