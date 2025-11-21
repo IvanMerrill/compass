@@ -116,6 +116,37 @@ class Orchestrator:
                 )
                 raise  # Re-raise to be caught by caller
 
+    def _validate_incident(self, incident: Incident) -> None:
+        """
+        Validate incident has required fields for investigation (P1-2 FIX).
+
+        Args:
+            incident: Incident to validate
+
+        Raises:
+            ValueError: If incident is missing required fields or has invalid data
+        """
+        if not incident.incident_id:
+            raise ValueError("Incident must have non-empty incident_id")
+
+        if not incident.start_time:
+            raise ValueError("Incident must have start_time")
+
+        # Validate start_time is parseable (ISO8601)
+        try:
+            from datetime import datetime
+            datetime.fromisoformat(incident.start_time.replace("Z", "+00:00"))
+        except (ValueError, AttributeError) as e:
+            raise ValueError(f"Incident start_time must be valid ISO8601: {e}")
+
+        if not incident.affected_services:
+            logger.warning(
+                "incident_missing_services",
+                incident_id=incident.incident_id,
+                defaulting_to="unknown",
+            )
+            # Don't fail, but warn - agents will handle missing services
+
     def observe(self, incident: Incident) -> List[Observation]:
         """
         Dispatch all agents to observe incident (SEQUENTIAL).
@@ -131,8 +162,12 @@ class Orchestrator:
             Consolidated list of observations from all agents
 
         Raises:
+            ValueError: If incident has invalid fields
             BudgetExceededError: If total cost exceeds budget or agent raises it
         """
+        # P1-2 FIX: Validate incident before dispatching agents
+        self._validate_incident(incident)
+
         with emit_span("orchestrator.observe", attributes={"incident.id": incident.incident_id}):
             observations = []
 
@@ -165,17 +200,37 @@ class Orchestrator:
                     )
                 except Exception as e:
                     # P1-2 FIX: Structured exception handling
+                    # P1-4 FIX: Enhanced structured logging with context
                     logger.warning(
                         "application_agent_failed",
+                        incident_id=incident.incident_id,
+                        agent="application",
                         error=str(e),
                         error_type=type(e).__name__,
-                        agent="application",
+                        observations_collected=len(observations),
+                        current_cost=str(self.get_total_cost()),
+                        budget_limit=str(self.budget_limit),
+                        exc_info=True,  # Include stack trace
                     )
 
                 # P0-3 FIX (Agent Alpha): Check budget after EACH agent
-                if self.get_total_cost() > self.budget_limit:
+                # P1-1 FIX (Agent Gamma): Log cost metrics for observability
+                current_cost = self.get_total_cost()
+                remaining_budget = self.budget_limit - current_cost
+                utilization_pct = (current_cost / self.budget_limit * 100) if self.budget_limit > 0 else 0
+
+                logger.info(
+                    "orchestrator.budget_check",
+                    agent="application",
+                    current_cost=str(current_cost),
+                    budget_limit=str(self.budget_limit),
+                    remaining_budget=str(remaining_budget),
+                    utilization_percent=f"{utilization_pct:.1f}",
+                )
+
+                if current_cost > self.budget_limit:
                     raise BudgetExceededError(
-                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"Investigation cost ${current_cost} exceeds budget ${self.budget_limit} "
                         f"after application agent"
                     )
 
@@ -206,17 +261,37 @@ class Orchestrator:
                         timeout=self.agent_timeout,
                     )
                 except Exception as e:
+                    # P1-4 FIX: Enhanced structured logging with context
                     logger.warning(
                         "database_agent_failed",
+                        incident_id=incident.incident_id,
+                        agent="database",
                         error=str(e),
                         error_type=type(e).__name__,
-                        agent="database",
+                        observations_collected=len(observations),
+                        current_cost=str(self.get_total_cost()),
+                        budget_limit=str(self.budget_limit),
+                        exc_info=True,
                     )
 
                 # P0-3 FIX: Check budget after database agent
-                if self.get_total_cost() > self.budget_limit:
+                # P1-1 FIX: Log cost metrics for observability
+                current_cost = self.get_total_cost()
+                remaining_budget = self.budget_limit - current_cost
+                utilization_pct = (current_cost / self.budget_limit * 100) if self.budget_limit > 0 else 0
+
+                logger.info(
+                    "orchestrator.budget_check",
+                    agent="database",
+                    current_cost=str(current_cost),
+                    budget_limit=str(self.budget_limit),
+                    remaining_budget=str(remaining_budget),
+                    utilization_percent=f"{utilization_pct:.1f}",
+                )
+
+                if current_cost > self.budget_limit:
                     raise BudgetExceededError(
-                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"Investigation cost ${current_cost} exceeds budget ${self.budget_limit} "
                         f"after database agent"
                     )
 
@@ -247,17 +322,37 @@ class Orchestrator:
                         timeout=self.agent_timeout,
                     )
                 except Exception as e:
+                    # P1-4 FIX: Enhanced structured logging with context
                     logger.warning(
                         "network_agent_failed",
+                        incident_id=incident.incident_id,
+                        agent="network",
                         error=str(e),
                         error_type=type(e).__name__,
-                        agent="network",
+                        observations_collected=len(observations),
+                        current_cost=str(self.get_total_cost()),
+                        budget_limit=str(self.budget_limit),
+                        exc_info=True,
                     )
 
                 # P0-3 FIX: Final budget check
-                if self.get_total_cost() > self.budget_limit:
+                # P1-1 FIX: Log cost metrics for observability
+                current_cost = self.get_total_cost()
+                remaining_budget = self.budget_limit - current_cost
+                utilization_pct = (current_cost / self.budget_limit * 100) if self.budget_limit > 0 else 0
+
+                logger.info(
+                    "orchestrator.budget_check",
+                    agent="network",
+                    current_cost=str(current_cost),
+                    budget_limit=str(self.budget_limit),
+                    remaining_budget=str(remaining_budget),
+                    utilization_percent=f"{utilization_pct:.1f}",
+                )
+
+                if current_cost > self.budget_limit:
                     raise BudgetExceededError(
-                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"Investigation cost ${current_cost} exceeds budget ${self.budget_limit} "
                         f"after network agent"
                     )
 
@@ -302,9 +397,23 @@ class Orchestrator:
                     logger.warning("application_agent_hypothesis_failed", error=str(e))
 
                 # P0-2 FIX: Check budget after EACH agent's hypothesis generation
-                if self.get_total_cost() > self.budget_limit:
+                # P1-1 FIX: Log cost metrics for observability
+                current_cost = self.get_total_cost()
+                remaining_budget = self.budget_limit - current_cost
+                utilization_pct = (current_cost / self.budget_limit * 100) if self.budget_limit > 0 else 0
+
+                logger.info(
+                    "orchestrator.budget_check_hypothesis",
+                    agent="application",
+                    current_cost=str(current_cost),
+                    budget_limit=str(self.budget_limit),
+                    remaining_budget=str(remaining_budget),
+                    utilization_percent=f"{utilization_pct:.1f}",
+                )
+
+                if current_cost > self.budget_limit:
                     raise BudgetExceededError(
-                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"Investigation cost ${current_cost} exceeds budget ${self.budget_limit} "
                         f"after application agent hypothesis generation"
                     )
 
@@ -322,9 +431,23 @@ class Orchestrator:
                     logger.warning("database_agent_hypothesis_failed", error=str(e))
 
                 # P0-2 FIX: Check budget after EACH agent's hypothesis generation
-                if self.get_total_cost() > self.budget_limit:
+                # P1-1 FIX: Log cost metrics for observability
+                current_cost = self.get_total_cost()
+                remaining_budget = self.budget_limit - current_cost
+                utilization_pct = (current_cost / self.budget_limit * 100) if self.budget_limit > 0 else 0
+
+                logger.info(
+                    "orchestrator.budget_check_hypothesis",
+                    agent="database",
+                    current_cost=str(current_cost),
+                    budget_limit=str(self.budget_limit),
+                    remaining_budget=str(remaining_budget),
+                    utilization_percent=f"{utilization_pct:.1f}",
+                )
+
+                if current_cost > self.budget_limit:
                     raise BudgetExceededError(
-                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"Investigation cost ${current_cost} exceeds budget ${self.budget_limit} "
                         f"after database agent hypothesis generation"
                     )
 
@@ -342,9 +465,23 @@ class Orchestrator:
                     logger.warning("network_agent_hypothesis_failed", error=str(e))
 
                 # P0-2 FIX: Check budget after EACH agent's hypothesis generation
-                if self.get_total_cost() > self.budget_limit:
+                # P1-1 FIX: Log cost metrics for observability
+                current_cost = self.get_total_cost()
+                remaining_budget = self.budget_limit - current_cost
+                utilization_pct = (current_cost / self.budget_limit * 100) if self.budget_limit > 0 else 0
+
+                logger.info(
+                    "orchestrator.budget_check_hypothesis",
+                    agent="network",
+                    current_cost=str(current_cost),
+                    budget_limit=str(self.budget_limit),
+                    remaining_budget=str(remaining_budget),
+                    utilization_percent=f"{utilization_pct:.1f}",
+                )
+
+                if current_cost > self.budget_limit:
                     raise BudgetExceededError(
-                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"Investigation cost ${current_cost} exceeds budget ${self.budget_limit} "
                         f"after network agent hypothesis generation"
                     )
 
