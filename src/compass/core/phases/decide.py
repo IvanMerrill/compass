@@ -107,6 +107,14 @@ class HumanDecisionInterface:
             ranked_hypotheses: List of ranked hypotheses
             conflicts: Optional conflict descriptions
         """
+        # Log for observability
+        logger.info(
+            "decide.presenting_hypotheses",
+            hypothesis_count=len(ranked_hypotheses),
+            conflict_count=len(conflicts) if conflicts else 0,
+        )
+
+        # User-facing display
         print("\n" + "=" * 80)
         print("RANKED HYPOTHESES FOR INVESTIGATION")
         print("=" * 80 + "\n")
@@ -115,6 +123,16 @@ class HumanDecisionInterface:
             hyp = ranked.hypothesis
             confidence_pct = hyp.initial_confidence * 100
 
+            # Log each hypothesis for audit trail
+            logger.info(
+                "decide.hypothesis_presented",
+                rank=ranked.rank,
+                statement=hyp.statement,
+                confidence=hyp.initial_confidence,
+                agent=hyp.agent_id,
+            )
+
+            # User display
             print(f"[{ranked.rank}] {hyp.statement}")
             print(f"    Confidence: {confidence_pct:.0f}%")
             print(f"    Agent: {hyp.agent_id}")
@@ -123,6 +141,12 @@ class HumanDecisionInterface:
 
         # Display conflicts if present
         if conflicts:
+            logger.warning(
+                "decide.conflicts_detected",
+                conflict_count=len(conflicts),
+                conflicts=conflicts,
+            )
+
             print("-" * 80)
             print("CONFLICTS DETECTED:")
             print("-" * 80)
@@ -146,10 +170,16 @@ class HumanDecisionInterface:
         """
         # Check if running in non-interactive environment
         if not sys.stdin.isatty():
+            logger.error(
+                "decide.non_interactive_environment",
+                message="Cannot prompt for decision without TTY",
+            )
             raise RuntimeError(
                 "Cannot prompt for human decision in non-interactive environment. "
                 "Run in a terminal with TTY support."
             )
+
+        logger.info("decide.prompting_selection", num_hypotheses=num_hypotheses)
 
         while True:
             try:
@@ -160,14 +190,29 @@ class HumanDecisionInterface:
 
                 # Validate range
                 if 1 <= selection_num <= num_hypotheses:
+                    logger.info(
+                        "decide.hypothesis_selected",
+                        selection=selection_num,
+                        index=selection_num - 1,
+                    )
                     return selection_num - 1  # Convert to 0-based index
                 else:
+                    logger.warning(
+                        "decide.invalid_selection_range",
+                        selection=selection_num,
+                        valid_range=f"1-{num_hypotheses}",
+                    )
                     print(
                         f"❌ Invalid selection. Please enter a number between 1 and {num_hypotheses}."
                     )
             except ValueError:
+                logger.warning(
+                    "decide.invalid_selection_type",
+                    message="User entered non-numeric input",
+                )
                 print("❌ Invalid input. Please enter a number.")
             except (KeyboardInterrupt, EOFError):
+                logger.info("decide.cancelled_by_user")
                 print("\n❌ Decision cancelled by user.")
                 raise
 
@@ -177,5 +222,14 @@ class HumanDecisionInterface:
         Returns:
             User's reasoning for their decision
         """
+        logger.info("decide.prompting_reasoning")
         reasoning = input("Why did you select this hypothesis? (optional): ")
-        return reasoning.strip()
+        reasoning_stripped = reasoning.strip()
+
+        logger.info(
+            "decide.reasoning_provided",
+            reasoning_length=len(reasoning_stripped),
+            has_reasoning=bool(reasoning_stripped),
+        )
+
+        return reasoning_stripped
