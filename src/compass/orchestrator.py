@@ -23,7 +23,7 @@ import structlog
 from compass.agents.workers.application_agent import ApplicationAgent, BudgetExceededError
 from compass.agents.workers.database_agent import DatabaseAgent
 from compass.agents.workers.network_agent import NetworkAgent
-from compass.core.scientific_framework import Incident, Observation, Hypothesis
+from compass.core.scientific_framework import Incident, Observation, Hypothesis, DisproofAttempt
 from compass.observability import emit_span
 
 logger = structlog.get_logger()
@@ -543,3 +543,154 @@ class Orchestrator:
             costs["network"] = Decimal("0.0000")
 
         return costs
+
+    def test_hypotheses(
+        self,
+        hypotheses: List[Hypothesis],
+        incident: Incident,
+        max_hypotheses: int = 3,
+        test_budget_percent: float = 0.30,
+    ) -> List[Hypothesis]:
+        """
+        Test top hypotheses using existing HypothesisValidator (Phase 6 Integration).
+
+        This method wires the existing Act phase (HypothesisValidator) into the
+        Orchestrator investigation flow. It does NOT reimplement hypothesis testing.
+
+        Args:
+            hypotheses: List of hypotheses from generate_hypotheses()
+            incident: The incident being investigated
+            max_hypotheses: Maximum hypotheses to test (default: 3)
+            test_budget_percent: % of remaining budget to allocate (default: 30%)
+
+        Returns:
+            List of tested hypotheses with updated confidence
+
+        Raises:
+            BudgetExceededError: If testing exceeds allocated budget
+        """
+        from compass.core.phases.act import HypothesisValidator
+        from compass.core.disproof.temporal_contradiction import (
+            TemporalContradictionStrategy,
+        )
+
+        logger.info(
+            "orchestrator.test_hypotheses.started",
+            hypothesis_count=len(hypotheses),
+            max_to_test=max_hypotheses,
+            incident_id=incident.incident_id,
+        )
+
+        # Calculate budget allocation for testing phase
+        remaining_budget = self.budget_limit - self.get_total_cost()
+        test_budget = remaining_budget * Decimal(str(test_budget_percent))
+        budget_per_hypothesis = (
+            test_budget / max_hypotheses if max_hypotheses > 0 else test_budget
+        )
+
+        logger.info(
+            "orchestrator.test_budget_allocated",
+            total_remaining=str(remaining_budget),
+            test_allocation=str(test_budget),
+            per_hypothesis=str(budget_per_hypothesis),
+        )
+
+        # Use existing HypothesisValidator (NOT reimplementing)
+        validator = HypothesisValidator()
+
+        # Initialize testing cost tracker
+        if not hasattr(self, "_testing_cost"):
+            self._testing_cost = Decimal("0.00")
+
+        # Rank hypotheses by confidence (highest first)
+        ranked = sorted(
+            hypotheses,
+            key=lambda h: h.initial_confidence,
+            reverse=True,
+        )
+
+        # Test top N hypotheses
+        tested = []
+
+        for i, hyp in enumerate(ranked[:max_hypotheses]):
+            logger.info(
+                "orchestrator.testing_hypothesis",
+                index=i + 1,
+                total=min(len(ranked), max_hypotheses),
+                hypothesis=hyp.statement,
+                initial_confidence=hyp.initial_confidence,
+            )
+
+            try:
+                # Simple strategy executor - just returns empty attempt for now
+                # Real implementation would query Grafana/Loki
+                def execute_strategy(strategy_name: str, hyp: Hypothesis) -> DisproofAttempt:
+                    """Placeholder strategy executor."""
+                    from compass.core.scientific_framework import DisproofAttempt
+
+                    # Check budget before executing
+                    current_cost = self.get_total_cost()
+                    if current_cost > self.budget_limit:
+                        raise BudgetExceededError(
+                            f"Budget ${current_cost} exceeds limit ${self.budget_limit} "
+                            f"during hypothesis testing"
+                        )
+
+                    # Return empty attempt (no actual strategy execution for now)
+                    # Real implementation would call temporal_contradiction strategy
+                    return DisproofAttempt(
+                        strategy=strategy_name,
+                        method="placeholder",
+                        expected_if_true="Not implemented yet",
+                        observed="Placeholder",
+                        disproven=False,
+                        evidence=[],
+                        reasoning="Placeholder - real strategy not integrated yet",
+                    )
+
+                # Use existing validator
+                result = validator.validate(
+                    hyp,
+                    strategies=["temporal_contradiction"],
+                    strategy_executor=execute_strategy,
+                )
+
+                tested.append(result.hypothesis)
+
+                logger.info(
+                    "orchestrator.hypothesis_tested",
+                    hypothesis=hyp.statement,
+                    outcome=result.outcome.value,
+                    initial_confidence=hyp.initial_confidence,
+                    updated_confidence=result.updated_confidence,
+                    attempts=len(result.attempts),
+                )
+
+            except BudgetExceededError:
+                # Stop testing, propagate error
+                logger.error(
+                    "orchestrator.testing_budget_exceeded",
+                    tested_count=len(tested),
+                    remaining_hypotheses=max_hypotheses - len(tested),
+                )
+                raise
+
+            except Exception as e:
+                # Unexpected error - log and continue with other hypotheses
+                logger.error(
+                    "orchestrator.hypothesis_test_failed",
+                    hypothesis=hyp.statement,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                    exc_info=True,
+                )
+                # Continue testing other hypotheses (graceful degradation)
+
+        logger.info(
+            "orchestrator.test_hypotheses.completed",
+            tested_count=len(tested),
+            testing_cost=str(self._testing_cost),
+            total_cost=str(self.get_total_cost()),
+        )
+
+        return tested
