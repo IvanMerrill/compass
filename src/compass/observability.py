@@ -76,6 +76,40 @@ def is_observability_enabled() -> bool:
     return _tracer_provider is not None
 
 
+def shutdown_observability(timeout_millis: int = 5000) -> None:
+    """
+    Shut down OpenTelemetry tracing and flush pending spans (P0-1 FIX).
+
+    This should be called at application shutdown or in test teardown
+    to ensure all spans are exported before the process exits.
+
+    Args:
+        timeout_millis: Maximum time to wait for span export (default: 5000ms)
+
+    Note:
+        After shutdown, observability will be disabled and cannot be re-enabled
+        without calling setup_observability() again.
+    """
+    global _tracer_provider
+
+    if _tracer_provider is not None:
+        # Force flush pending spans before shutdown
+        try:
+            _tracer_provider.force_flush(timeout_millis=timeout_millis)
+        except Exception:
+            # Ignore flush errors - we're shutting down anyway
+            pass
+
+        # Shutdown the tracer provider (stops background threads)
+        try:
+            _tracer_provider.shutdown()
+        except Exception:
+            # Ignore shutdown errors
+            pass
+
+        _tracer_provider = None
+
+
 @contextmanager
 def emit_span(
     name: str,

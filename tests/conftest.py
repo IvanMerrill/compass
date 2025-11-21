@@ -1,5 +1,19 @@
 """Pytest configuration and shared fixtures for COMPASS tests."""
 import pytest
+from compass.observability import shutdown_observability
+
+
+@pytest.fixture(autouse=True)
+def cleanup_observability():
+    """
+    Automatically shutdown OpenTelemetry after each test (P0-1 FIX).
+
+    This prevents resource leaks from BatchSpanProcessor background threads
+    trying to export spans after stdout is closed.
+    """
+    yield  # Run the test
+    # Cleanup after test
+    shutdown_observability(timeout_millis=100)  # Short timeout for tests
 
 
 @pytest.fixture
