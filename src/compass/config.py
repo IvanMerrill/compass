@@ -72,6 +72,33 @@ class Settings(BaseSettings):
         default=20.0, description="Cost budget for critical investigations in USD"
     )
     max_parallel_agents: int = Field(default=7, description="Maximum parallel agents")
+    agent_timeout: int = Field(default=120, description="Agent timeout in seconds")
+
+    # Observability Stack Configuration
+    # Grafana
+    grafana_url: Optional[str] = Field(default=None, description="Grafana API URL")
+    grafana_token: Optional[str] = Field(default=None, description="Grafana service account token")
+    grafana_ui_url: Optional[str] = Field(default=None, description="Grafana UI URL for dashboards")
+
+    # Tempo (Distributed Tracing)
+    tempo_url: Optional[str] = Field(default=None, description="Tempo URL")
+    tempo_mcp_url: Optional[str] = Field(default=None, description="Tempo MCP endpoint URL")
+
+    # Loki (Log Aggregation)
+    loki_url: Optional[str] = Field(default=None, description="Loki URL")
+    loki_query_url: Optional[str] = Field(default=None, description="Loki query endpoint URL")
+
+    # Mimir/Prometheus (Metrics)
+    mimir_url: Optional[str] = Field(default=None, description="Mimir URL")
+    prometheus_url: Optional[str] = Field(default=None, description="Prometheus URL")
+
+    # OTLP (OpenTelemetry Protocol)
+    otlp_http_endpoint: Optional[str] = Field(
+        default=None, description="OTLP HTTP endpoint for sending telemetry"
+    )
+    otlp_grpc_endpoint: Optional[str] = Field(
+        default=None, description="OTLP gRPC endpoint for sending telemetry"
+    )
 
     # Feature Flags
     enable_learning: bool = Field(default=True, description="Enable learning from investigations")

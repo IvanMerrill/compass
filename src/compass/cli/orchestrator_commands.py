@@ -16,6 +16,7 @@ from compass.agents.workers.network_agent import NetworkAgent
 from compass.core.scientific_framework import Incident
 from compass.integrations.mcp.grafana_client import GrafanaMCPClient
 from compass.integrations.mcp.tempo_client import TempoMCPClient
+from compass.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -76,12 +77,34 @@ def investigate_with_orchestrator(
     orchestrator = None
 
     try:
-        # Initialize data source clients
-        # Note: In production, these would come from config/environment
-        loki_client = None  # Would be initialized from config
-        prometheus_client = None  # Would be initialized from config
-        tempo_client = None  # Would be initialized from config
-        grafana_client = None  # Would be initialized from config
+        # Initialize data source clients from config
+        grafana_client = None
+        if settings.grafana_url and settings.grafana_token:
+            try:
+                grafana_client = GrafanaMCPClient(
+                    url=settings.grafana_url,
+                    token=settings.grafana_token,
+                    timeout=float(settings.agent_timeout)
+                )
+                logger.info("grafana_client_initialized", url=settings.grafana_url)
+            except Exception as e:
+                logger.warning("grafana_client_init_failed", error=str(e))
+
+        tempo_client = None
+        if settings.tempo_mcp_url:
+            try:
+                tempo_client = TempoMCPClient(
+                    url=settings.tempo_mcp_url,
+                    timeout=float(settings.agent_timeout)
+                )
+                logger.info("tempo_client_initialized", url=settings.tempo_mcp_url)
+            except Exception as e:
+                logger.warning("tempo_client_init_failed", error=str(e))
+
+        # Note: Loki and Prometheus queries go through Grafana MCP client
+        # These are provided as separate references for agents
+        loki_client = grafana_client  # Grafana MCP can query Loki
+        prometheus_client = grafana_client  # Grafana MCP can query Prometheus/Mimir
 
         # Application agent
         app_agent = ApplicationAgent(

@@ -82,24 +82,26 @@ class TempoMCPClient:
         self.token = token
         self.timeout = timeout
         self._session: Optional[httpx.AsyncClient] = None
+        self._mcp_session_id: Optional[str] = None  # MCP session management
 
         logger.info("tempo_mcp_client_initialized", url=self.url, timeout=timeout)
 
     async def connect(self) -> None:
-        """Establish HTTP session to Tempo MCP server.
+        """Establish HTTP session to Tempo MCP server and initialize MCP session.
 
-        Creates an httpx AsyncClient session that will be reused for
-        all subsequent requests. This method is idempotent - calling
+        Creates an httpx AsyncClient session and initializes an MCP protocol
+        session with the server. This method is idempotent - calling
         it multiple times is safe.
 
         Raises:
             MCPConnectionError: If connection fails
         """
-        if self._session is not None and not self._session.is_closed:
-            # Already connected
+        if self._session is not None and not self._session.is_closed and self._mcp_session_id:
+            # Already connected and MCP session initialized
             return
 
         try:
+            # Create HTTP session
             headers = {"Content-Type": "application/json"}
             if self.token:
                 headers["Authorization"] = f"Bearer {self.token}"
@@ -109,23 +111,117 @@ class TempoMCPClient:
                 headers=headers,
             )
             logger.info("tempo_mcp_session_created", url=self.url)
+
+            # Initialize MCP session
+            await self._initialize_mcp_session()
+
         except Exception as e:
             raise MCPConnectionError(f"Failed to create HTTP session: {e}") from e
 
-    async def disconnect(self) -> None:
-        """Close HTTP session to Tempo MCP server.
+    async def _initialize_mcp_session(self) -> None:
+        """Initialize MCP protocol session with Tempo server.
 
-        Closes the httpx AsyncClient session and releases resources.
+        Sends an initialize request to establish a session ID for
+        subsequent tool calls.
+
+        Raises:
+            MCPConnectionError: If session initialization fails
+        """
+        if self._session is None:
+            raise MCPConnectionError("HTTP session not established")
+
+        try:
+            # MCP initialize request
+            init_request = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {
+                        "name": "compass-tempo-client",
+                        "version": "0.1.0"
+                    }
+                }
+            }
+
+            # Get MCP endpoint URL
+            mcp_url = self.url if self.url.endswith("/api/mcp") else f"{self.url}/api/mcp"
+
+            response = await self._session.post(mcp_url, json=init_request)
+            response.raise_for_status()
+
+            # Extract session ID from Mcp-Session-Id header (per MCP spec)
+            self._mcp_session_id = response.headers.get("Mcp-Session-Id")
+
+            # Fallback: try response body if header not present
+            if not self._mcp_session_id:
+                result = response.json()
+                if "result" in result:
+                    session_info = result["result"]
+                    self._mcp_session_id = session_info.get("sessionId")
+
+            # Final fallback: use request ID
+            if not self._mcp_session_id:
+                self._mcp_session_id = str(init_request["id"])
+
+            logger.info(
+                "mcp_session_initialized",
+                url=self.url,
+                session_id=self._mcp_session_id
+            )
+
+        except httpx.HTTPStatusError as e:
+            raise MCPConnectionError(
+                f"Failed to initialize MCP session: HTTP {e.response.status_code}"
+            ) from e
+        except Exception as e:
+            raise MCPConnectionError(f"Failed to initialize MCP session: {e}") from e
+
+    async def disconnect(self) -> None:
+        """Close MCP session and HTTP session to Tempo MCP server.
+
+        Closes the MCP protocol session, then the httpx AsyncClient session.
         Safe to call multiple times.
         """
         if self._session is not None:
             try:
+                # Close MCP session if initialized
+                if self._mcp_session_id:
+                    await self._close_mcp_session()
+
                 await self._session.aclose()
                 logger.info("tempo_mcp_session_closed", url=self.url)
             except Exception as e:
                 logger.warning("error_closing_session", url=self.url, error=str(e))
             finally:
                 self._session = None
+                self._mcp_session_id = None
+
+    async def _close_mcp_session(self) -> None:
+        """Close MCP protocol session.
+
+        Sends a notifications/cancelled or similar cleanup message.
+        Failures are logged but don't raise exceptions.
+        """
+        if self._session is None or self._mcp_session_id is None:
+            return
+
+        try:
+            # MCP close notification
+            close_request = {
+                "jsonrpc": "2.0",
+                "method": "notifications/cancelled",
+                "params": {}
+            }
+
+            mcp_url = self.url if self.url.endswith("/api/mcp") else f"{self.url}/api/mcp"
+            await self._session.post(mcp_url, json=close_request)
+
+            logger.info("mcp_session_closed", session_id=self._mcp_session_id)
+        except Exception as e:
+            logger.warning("error_closing_mcp_session", error=str(e))
 
     async def __aenter__(self) -> "TempoMCPClient":
         """Async context manager entry.
@@ -147,6 +243,46 @@ class TempoMCPClient:
         Ensures session is closed even if exceptions occur.
         """
         await self.disconnect()
+
+    async def list_tools(self) -> Dict[str, Any]:
+        """List available tools from Tempo MCP server.
+
+        Returns:
+            Dictionary containing available tools and their schemas
+
+        Raises:
+            MCPConnectionError: If connection fails
+        """
+        if self._session is None:
+            await self.connect()
+
+        try:
+            list_request = {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tools/list",
+                "params": {}
+            }
+
+            mcp_url = self.url if self.url.endswith("/api/mcp") else f"{self.url}/api/mcp"
+
+            # Add session ID header if we have one (per MCP spec)
+            headers = {}
+            if self._mcp_session_id:
+                headers["Mcp-Session-Id"] = self._mcp_session_id
+
+            response = await self._session.post(
+                mcp_url,
+                json=list_request,
+                headers=headers if headers else None
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            return result
+
+        except Exception as e:
+            raise MCPConnectionError(f"Failed to list tools: {e}") from e
 
     async def query_traceql(
         self,
@@ -193,8 +329,9 @@ class TempoMCPClient:
         if end:
             tool_params["end"] = end.isoformat()
 
+        # Use the correct Tempo MCP tool name
         result = await self._call_mcp_tool(
-            tool_name="tempo_query",
+            tool_name="traceql-search",
             params=tool_params,
         )
 
@@ -235,27 +372,49 @@ class TempoMCPClient:
         # Ensure session is connected after connect()
         assert self._session is not None, "Session should be initialized after connect()"
 
+        # Ensure MCP session is initialized
+        if self._mcp_session_id is None:
+            await self.connect()
+
         # Merge kwargs into params
         merged_params = {**params, **kwargs}
 
-        # MCP protocol request format (JSON-RPC-like)
+        # MCP protocol request format (JSON-RPC 2.0)
+        # Use tools/call method for calling tools within a session
+        # Include session ID in meta field for session-based servers
         mcp_request = {
-            "tool": tool_name,
-            "params": merged_params,
+            "jsonrpc": "2.0",
+            "id": 2,  # Use different ID than initialize (which was 1)
+            "method": "tools/call",
+            "params": {
+                "name": tool_name,
+                "arguments": merged_params,
+                "_meta": {
+                    "sessionId": self._mcp_session_id
+                }
+            }
         }
 
         # Retry logic: 3 attempts with exponential backoff
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                # MCP endpoint at /api/mcp (Tempo MCP server standard)
-                # Note: Tempo MCP uses /api/mcp, while Grafana MCP uses /mcp
-                # This is per official Grafana Tempo 2.9+ MCP implementation.
-                mcp_url = f"{self.url}/api/mcp"
+                # MCP endpoint - use URL as-is if it already ends with /api/mcp
+                # Otherwise append it (for backward compatibility)
+                if self.url.endswith("/api/mcp"):
+                    mcp_url = self.url
+                else:
+                    mcp_url = f"{self.url}/api/mcp"
+
+                # Add session ID header for session-based servers (per MCP spec)
+                headers = {}
+                if self._mcp_session_id:
+                    headers["Mcp-Session-Id"] = self._mcp_session_id
 
                 response = await self._session.post(
                     mcp_url,
                     json=mcp_request,
+                    headers=headers if headers else None,
                 )
 
                 # Check HTTP status
@@ -288,9 +447,22 @@ class TempoMCPClient:
                     else:
                         raise MCPConnectionError(f"MCP server error: {response.status_code}")
 
-                # Success - return response
+                # Success - parse JSON-RPC 2.0 response
                 response.raise_for_status()
-                return cast(Dict[str, Any], response.json())
+                json_response = response.json()
+
+                # Check for JSON-RPC error
+                if "error" in json_response:
+                    error = json_response["error"]
+                    error_msg = error.get("message", "Unknown error")
+                    raise MCPQueryError(f"MCP tool error: {error_msg}")
+
+                # Extract result from JSON-RPC response
+                if "result" in json_response:
+                    return cast(Dict[str, Any], json_response["result"])
+                else:
+                    # Fallback: return whole response if no result field
+                    return cast(Dict[str, Any], json_response)
 
             except httpx.TimeoutException as e:
                 if attempt < max_retries - 1:
@@ -338,3 +510,69 @@ class TempoMCPClient:
         raise MCPConnectionError(
             f"Failed to call MCP tool '{tool_name}' after {max_retries} attempts"
         )
+
+    # ========================================================================
+    # Synchronous Wrapper Methods (for agent compatibility)
+    # ========================================================================
+    # NOTE: These are temporary adapters until agents are refactored to async.
+    # They run async methods in a new event loop via asyncio.run().
+
+    def query_traces(
+        self,
+        query: Optional[str] = None,
+        service: Optional[str] = None,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
+        limit: int = 20,
+        **kwargs: Any,
+    ) -> Any:
+        """Synchronous wrapper for query_traceql (TraceQL trace queries).
+
+        Args:
+            query: TraceQL query string (e.g., '{service.name="my-service"}')
+            service: Service name (alternative to query - will construct query)
+            start_time: Start time (ISO8601 format)
+            end_time: End time (ISO8601 format)
+            limit: Maximum number of traces (default: 20)
+            **kwargs: Additional parameters (ignored for compatibility)
+
+        Returns:
+            Trace data (list/dict) from MCP server
+
+        Raises:
+            MCPQueryError: If query fails
+            MCPConnectionError: If connection fails
+        """
+        # If service is provided instead of query, construct the query
+        if service and not query:
+            query = f'{{service.name="{service}"}}'
+        elif not query:
+            raise ValueError("Either 'query' or 'service' must be provided")
+
+        # Convert ISO8601 strings to datetime if needed
+        start_dt: Optional[datetime] = None
+        end_dt: Optional[datetime] = None
+
+        if start_time:
+            if isinstance(start_time, str):
+                start_dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+            else:
+                start_dt = start_time
+
+        if end_time:
+            if isinstance(end_time, str):
+                end_dt = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+            else:
+                end_dt = end_time
+
+        # Call async method and extract data from MCPResponse
+        response = asyncio.run(
+            self.query_traceql(
+                query=query,
+                start=start_dt,
+                end=end_dt,
+                limit=limit,
+            )
+        )
+        # Return just the data field for agent compatibility
+        return response.data

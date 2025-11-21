@@ -85,6 +85,7 @@ class GrafanaMCPClient:
         self.token = token
         self.timeout = timeout
         self._session: Optional[httpx.AsyncClient] = None
+        self._datasource_cache: Dict[str, str] = {}  # type -> UID cache
 
         logger.info("grafana_mcp_client_initialized", url=self.url, timeout=timeout)
 
@@ -149,6 +150,70 @@ class GrafanaMCPClient:
         Ensures session is closed even if exceptions occur.
         """
         await self.disconnect()
+
+    async def discover_datasource(self, datasource_type: str) -> Optional[str]:
+        """Auto-discover datasource UID by type using Grafana API.
+
+        Queries Grafana's REST API to find the first datasource matching
+        the specified type. Results are cached to avoid repeated queries.
+
+        Args:
+            datasource_type: Datasource type (e.g., "loki", "prometheus", "tempo")
+
+        Returns:
+            Datasource UID if found, None otherwise
+
+        Raises:
+            MCPConnectionError: If Grafana API request fails
+        """
+        # Check cache first
+        if datasource_type in self._datasource_cache:
+            logger.debug(
+                "datasource_cache_hit",
+                type=datasource_type,
+                uid=self._datasource_cache[datasource_type],
+            )
+            return self._datasource_cache[datasource_type]
+
+        if self._session is None:
+            await self.connect()
+
+        assert self._session is not None, "Session should be initialized after connect()"
+
+        try:
+            # Query Grafana API for datasources
+            response = await self._session.get(f"{self.url}/api/datasources")
+            response.raise_for_status()
+
+            datasources = response.json()
+
+            # Find first datasource matching type (case-insensitive)
+            for ds in datasources:
+                ds_type = ds.get("type", "").lower()
+                # Handle common type variations
+                if datasource_type.lower() in ds_type or ds_type in datasource_type.lower():
+                    uid = ds.get("uid")
+                    if uid:
+                        self._datasource_cache[datasource_type] = uid
+                        logger.info(
+                            "datasource_discovered",
+                            type=datasource_type,
+                            uid=uid,
+                            name=ds.get("name"),
+                        )
+                        return uid
+
+            logger.warning("datasource_not_found", type=datasource_type)
+            return None
+
+        except httpx.HTTPStatusError as e:
+            raise MCPConnectionError(
+                f"Failed to discover datasource '{datasource_type}': HTTP {e.response.status_code}"
+            ) from e
+        except Exception as e:
+            raise MCPConnectionError(
+                f"Failed to discover datasource '{datasource_type}': {e}"
+            ) from e
 
     async def query_promql(
         self,
@@ -414,3 +479,173 @@ class GrafanaMCPClient:
         raise MCPConnectionError(
             f"Failed to call MCP tool '{tool_name}' after {max_retries} attempts"
         )
+
+    # ========================================================================
+    # Synchronous Wrapper Methods (for agent compatibility)
+    # ========================================================================
+    # NOTE: These are temporary adapters until agents are refactored to async.
+    # They run async methods in a new event loop via asyncio.run().
+
+    def query_range(
+        self,
+        query: str,
+        datasource_uid: Optional[str] = None,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
+        limit: int = 100,
+        **kwargs: Any,
+    ) -> MCPResponse:
+        """Synchronous wrapper for query_logql (Loki log queries).
+
+        Auto-discovers Loki datasource if datasource_uid not specified.
+
+        Args:
+            query: LogQL query string
+            datasource_uid: Loki datasource UID (auto-discovered if None)
+            start: Start time (ISO8601 format) - alias for start_time
+            end: End time (ISO8601 format) - alias for end_time
+            start_time: Start time (ISO8601 format)
+            end_time: End time (ISO8601 format)
+            limit: Maximum number of log lines (default: 100)
+            **kwargs: Additional parameters (ignored for compatibility)
+
+        Returns:
+            MCPResponse with log query results
+
+        Raises:
+            MCPQueryError: If query fails
+            MCPConnectionError: If connection fails or datasource not found
+        """
+        # Accept both start/end and start_time/end_time for compatibility
+        actual_start = start_time or start
+        actual_end = end_time or end
+
+        # Convert datetime objects to ISO8601 strings
+        if isinstance(actual_start, datetime):
+            actual_start = actual_start.isoformat()
+        if isinstance(actual_end, datetime):
+            actual_end = actual_end.isoformat()
+
+        # Call async method in sync context
+        async def _query() -> MCPResponse:
+            # Auto-discover datasource if not specified
+            uid = datasource_uid
+            if not uid:
+                uid = await self.discover_datasource("loki")
+                if not uid:
+                    raise MCPConnectionError(
+                        "No Loki datasource found. Please configure Loki in Grafana."
+                    )
+
+            # Build params for MCP tool
+            tool_params: Dict[str, Any] = {
+                "query": query,
+                "datasource_uid": uid,
+                "limit": limit,
+            }
+            if actual_start:
+                tool_params["start"] = actual_start
+            if actual_end:
+                tool_params["end"] = actual_end
+
+            result = await self._call_mcp_tool(
+                tool_name="execute_logql_query",
+                params=tool_params,
+            )
+
+            return MCPResponse(
+                query=query,
+                data=result.get("data", {}),
+                timestamp=datetime.now(timezone.utc),
+                metadata=result.get("metadata", {"query": query}),
+                server_type="grafana",
+            )
+
+        return asyncio.run(_query())
+
+    def custom_query_range(
+        self,
+        query: str,
+        datasource_uid: Optional[str] = None,
+        start: Optional[str] = None,
+        end: Optional[str] = None,
+        start_time: Optional[str] = None,
+        end_time: Optional[str] = None,
+        step: str = "15s",
+        timeout: Optional[float] = None,
+        **kwargs: Any,
+    ) -> MCPResponse:
+        """Synchronous wrapper for query_promql (Prometheus/Mimir queries).
+
+        Auto-discovers Prometheus/Mimir datasource if datasource_uid not specified.
+
+        Args:
+            query: PromQL query string
+            datasource_uid: Prometheus/Mimir datasource UID (auto-discovered if None)
+            start: Start time (ISO8601 format) - alias for start_time
+            end: End time (ISO8601 format) - alias for end_time
+            start_time: Start time (ISO8601 format)
+            end_time: End time (ISO8601 format)
+            step: Query step duration (default: "15s")
+            timeout: Query timeout in seconds (ignored - uses client timeout)
+            **kwargs: Additional parameters (ignored for compatibility)
+
+        Returns:
+            MCPResponse with metric query results
+
+        Raises:
+            MCPQueryError: If query fails
+            MCPConnectionError: If connection fails or datasource not found
+        """
+        # Accept both start/end and start_time/end_time for compatibility
+        actual_start = start_time or start
+        actual_end = end_time or end
+
+        # Convert datetime objects to ISO8601 strings
+        if isinstance(actual_start, datetime):
+            actual_start = actual_start.isoformat()
+        if isinstance(actual_end, datetime):
+            actual_end = actual_end.isoformat()
+
+        # Call async method in sync context
+        async def _query() -> MCPResponse:
+            # Auto-discover datasource if not specified
+            # Try prometheus first, then mimir
+            uid = datasource_uid
+            if not uid:
+                uid = await self.discover_datasource("prometheus")
+                if not uid:
+                    uid = await self.discover_datasource("mimir")
+                if not uid:
+                    raise MCPConnectionError(
+                        "No Prometheus or Mimir datasource found. "
+                        "Please configure metrics datasource in Grafana."
+                    )
+
+            # Build params for MCP tool
+            tool_params: Dict[str, Any] = {
+                "query": query,
+                "datasource_uid": uid,
+                "step": step,
+            }
+            if actual_start:
+                tool_params["start"] = actual_start
+            if actual_end:
+                tool_params["end"] = actual_end
+
+            result = await self._call_mcp_tool(
+                tool_name="execute_promql_query",
+                params=tool_params,
+            )
+
+            return MCPResponse(
+                query=query,
+                data=result.get("data", {}),
+                timestamp=datetime.now(timezone.utc),
+                metadata=result.get("metadata", {"query": query}),
+                server_type="grafana",
+            )
+
+        return asyncio.run(_query())
