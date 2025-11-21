@@ -6,12 +6,13 @@ metrics, logs, and traces from MCP servers (Grafana and Tempo).
 Design:
 - Inherits from ScientificAgent for hypothesis-driven investigation
 - Implements OODA loop with observe(), generate_disproof_strategies()
-- Queries Grafana MCP (metrics + logs) and Tempo MCP (traces) in parallel
+- Queries Grafana MCP (metrics + logs) and Tempo MCP (traces) sequentially
 - Caches observe() results for 5 minutes to avoid redundant queries
 - Uses LLM for hypothesis generation with cost tracking
+- Fully synchronous for MVP simplicity (P0-3 fix)
 """
 
-import asyncio
+import threading
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, cast
@@ -39,14 +40,14 @@ class DatabaseAgent(ScientificAgent):
     and distributed traces (Tempo).
 
     Example:
-        >>> async with GrafanaMCPClient(...) as grafana, \
-        ...            TempoMCPClient(...) as tempo:
+        >>> with GrafanaMCPClient(...) as grafana, \
+        ...      TempoMCPClient(...) as tempo:
         ...     agent = DatabaseAgent(
         ...         agent_id="database_specialist",
         ...         grafana_client=grafana,
         ...         tempo_client=tempo
         ...     )
-        ...     observations = await agent.observe()
+        ...     observations = agent.observe()
         ...     print(f"Confidence: {observations['confidence']}")
     """
 
@@ -82,7 +83,7 @@ class DatabaseAgent(ScientificAgent):
         # Cache for observe() results
         self._observe_cache: Optional[Dict[str, Any]] = None
         self._observe_cache_time: Optional[float] = None
-        self._cache_lock = asyncio.Lock()  # Prevent race conditions in cache access
+        self._cache_lock = threading.Lock()  # Prevent race conditions in cache access
 
         logger.info(
             "database_agent.initialized",
@@ -91,12 +92,12 @@ class DatabaseAgent(ScientificAgent):
             has_tempo=tempo_client is not None,
         )
 
-    async def observe(self) -> Dict[str, Any]:
+    def observe(self) -> Dict[str, Any]:
         """Execute Observe phase: gather database metrics, logs, traces.
 
         Queries Grafana MCP for metrics (PromQL) and logs (LogQL), and
-        Tempo MCP for distributed traces (TraceQL). All queries execute
-        in parallel for performance.
+        Tempo MCP for distributed traces (TraceQL). Queries execute
+        sequentially for MVP simplicity (P0-3 fix).
 
         Results are cached for 5 minutes to avoid redundant MCP queries
         during repeated observe() calls.
@@ -124,7 +125,7 @@ class DatabaseAgent(ScientificAgent):
             },
         ) as span:
             # Use lock to prevent race conditions in concurrent cache access
-            async with self._cache_lock:
+            with self._cache_lock:
                 # Check cache first
                 current_time = time.time()
                 if (
@@ -161,79 +162,68 @@ class DatabaseAgent(ScientificAgent):
                     self._observe_cache_time = current_time
                     return result
 
-                # Query all MCP sources in parallel
-                tasks = []
-                if self.grafana_client is not None:
-                    tasks.append(self._query_metrics())
-                    tasks.append(self._query_logs())
-                if self.tempo_client is not None:
-                    tasks.append(self._query_traces())
-
-                # Execute queries in parallel and collect results
-                results = await asyncio.gather(*tasks, return_exceptions=True)
-
-                # Process results and calculate confidence
+                # Query all MCP sources sequentially (P0-3 fix)
+                # Execute queries sequentially and collect results
                 successful_sources = 0
                 total_sources = 0
 
                 # Metrics
                 if self.grafana_client is not None:
                     total_sources += 1
-                    metrics_result = results[0] if len(results) > 0 else None
-                    if isinstance(metrics_result, Exception):
+                    try:
+                        metrics_result = self._query_metrics()
+                        result["metrics"] = metrics_result
+                        successful_sources += 1
+                    except Exception as e:
                         logger.warning(
                             "database_agent.metrics_query_failed",
                             agent_id=self.agent_id,
-                            error_type=type(metrics_result).__name__,
-                            error=str(metrics_result),
+                            error_type=type(e).__name__,
+                            error=str(e),
                             query="db_connections",
                             datasource_uid="prometheus",
                             exc_info=True,
                         )
                         result["metrics"] = {}
-                    elif metrics_result is not None:
-                        result["metrics"] = metrics_result
-                        successful_sources += 1
 
-                    # Logs
+                # Logs
+                if self.grafana_client is not None:
                     total_sources += 1
-                    logs_result = results[1] if len(results) > 1 else None
-                    if isinstance(logs_result, Exception):
+                    try:
+                        logs_result = self._query_logs()
+                        result["logs"] = logs_result
+                        successful_sources += 1
+                    except Exception as e:
                         logger.warning(
                             "database_agent.logs_query_failed",
                             agent_id=self.agent_id,
-                            error_type=type(logs_result).__name__,
-                            error=str(logs_result),
+                            error_type=type(e).__name__,
+                            error=str(e),
                             query='{app="postgres"}',
                             datasource_uid="loki",
                             duration="5m",
                             exc_info=True,
                         )
                         result["logs"] = {}
-                    elif logs_result is not None:
-                        result["logs"] = logs_result
-                        successful_sources += 1
 
                 # Traces
                 if self.tempo_client is not None:
                     total_sources += 1
-                    # Traces is last in results
-                    traces_index = 2 if self.grafana_client is not None else 0
-                    traces_result = results[traces_index] if len(results) > traces_index else None
-                    if isinstance(traces_result, Exception):
+                    try:
+                        traces_result = self._query_traces()
+                        result["traces"] = traces_result
+                        successful_sources += 1
+                    except Exception as e:
                         logger.warning(
                             "database_agent.traces_query_failed",
                             agent_id=self.agent_id,
-                            error_type=type(traces_result).__name__,
-                            error=str(traces_result),
+                            error_type=type(e).__name__,
+                            error=str(e),
                             query='{service.name="database"}',
                             limit=20,
                             exc_info=True,
                         )
                         result["traces"] = {}
-                    elif traces_result is not None:
-                        result["traces"] = traces_result
-                        successful_sources += 1
 
                 # Calculate confidence based on successful sources
                 if total_sources > 0:
@@ -260,7 +250,7 @@ class DatabaseAgent(ScientificAgent):
 
                 return result
 
-    async def _query_metrics(self) -> Dict[str, Any]:
+    def _query_metrics(self) -> Dict[str, Any]:
         """Query Prometheus/Mimir metrics via Grafana MCP.
 
         Returns:
@@ -275,14 +265,15 @@ class DatabaseAgent(ScientificAgent):
 
         # Query database-specific metrics
         # TODO: Make these queries configurable
-        response = await self.grafana_client.query_promql(
+        # Note: Synchronous call (P0-3 fix)
+        response = self.grafana_client.query_promql(
             query="db_connections",
             datasource_uid="prometheus",
         )
 
         return cast(Dict[str, Any], response.data)
 
-    async def _query_logs(self) -> Dict[str, Any]:
+    def _query_logs(self) -> Dict[str, Any]:
         """Query Loki logs via Grafana MCP.
 
         Returns:
@@ -297,7 +288,8 @@ class DatabaseAgent(ScientificAgent):
 
         # Query database-specific logs
         # TODO: Make these queries configurable
-        response = await self.grafana_client.query_logql(
+        # Note: Synchronous call (P0-3 fix)
+        response = self.grafana_client.query_logql(
             query='{app="postgres"}',
             datasource_uid="loki",
             duration="5m",
@@ -305,7 +297,7 @@ class DatabaseAgent(ScientificAgent):
 
         return cast(Dict[str, Any], response.data)
 
-    async def _query_traces(self) -> Dict[str, Any]:
+    def _query_traces(self) -> Dict[str, Any]:
         """Query Tempo traces via Tempo MCP.
 
         Returns:
@@ -320,7 +312,8 @@ class DatabaseAgent(ScientificAgent):
 
         # Query database-specific traces
         # TODO: Make these queries configurable
-        response = await self.tempo_client.query_traceql(
+        # Note: Synchronous call (P0-3 fix)
+        response = self.tempo_client.query_traceql(
             query='{service.name="database"}',
             limit=20,
         )
@@ -414,7 +407,7 @@ class DatabaseAgent(ScientificAgent):
         # Return top 5-7 strategies (we generated 7, so return all)
         return strategies
 
-    async def generate_hypothesis_with_llm(
+    def generate_hypothesis_with_llm(
         self,
         observations: Dict[str, Any],
         context: Optional[str] = None,
@@ -436,8 +429,8 @@ class DatabaseAgent(ScientificAgent):
             BudgetExceededError: If generating hypothesis would exceed budget
 
         Example:
-            >>> observations = await agent.observe()
-            >>> hypothesis = await agent.generate_hypothesis_with_llm(
+            >>> observations = agent.observe()
+            >>> hypothesis = agent.generate_hypothesis_with_llm(
             ...     observations,
             ...     context="User reported 500 errors at 14:00 UTC"
             ... )
@@ -475,8 +468,8 @@ class DatabaseAgent(ScientificAgent):
             has_context=context is not None,
         )
 
-        # Call LLM provider
-        response = await self.llm_provider.generate(
+        # Call LLM provider (synchronous - P0-3 fix)
+        response = self.llm_provider.generate(
             system=SYSTEM_PROMPT,
             prompt=prompt,
         )
