@@ -30,12 +30,15 @@ logger = structlog.get_logger(__name__)
               show_default=True,
               help="Incident severity")
 @click.option('--title', help="Incident title/description")
+@click.option('--test/--no-test', default=True, show_default=True,
+              help="Test top hypotheses using Act phase (default: enabled)")
 def investigate_with_orchestrator(
     incident_id: str,
     budget: str,
     affected_services: str,
     severity: str,
     title: str,
+    test: bool,
 ) -> None:
     """
     Investigate an incident using multi-agent orchestration.
@@ -126,14 +129,56 @@ def investigate_with_orchestrator(
         hypotheses = orchestrator.generate_hypotheses(observations)
         click.echo(f"✅ Generated {len(hypotheses)} hypotheses\n")
 
-        # Display top 5 hypotheses
-        if hypotheses:
-            click.echo("🏆 Top Hypotheses (ranked by confidence):\n")
-            for i, hyp in enumerate(hypotheses[:5], 1):
-                click.echo(f"{i}. [{hyp.agent_id}] {hyp.statement}")
-                click.echo(f"   Confidence: {hyp.initial_confidence:.2%}\n")
+        # Test hypotheses (Phase 6 - NEW)
+        if test and hypotheses:
+            click.echo(f"🔬 Testing top hypotheses...")
+            tested = orchestrator.test_hypotheses(hypotheses, incident)
+            click.echo(f"✅ Tested {len(tested)} hypotheses\n")
+
+            # Display tested hypotheses with confidence updates
+            if tested:
+                click.echo("🏆 Tested Hypotheses (with confidence updates):\n")
+                for i, hyp in enumerate(tested, 1):
+                    # Determine outcome
+                    if hyp.status.value == "disproven":
+                        icon = "❌"
+                        color = "red"
+                        outcome = "DISPROVEN"
+                    elif hyp.status.value == "validated":
+                        icon = "✅"
+                        color = "green"
+                        outcome = "VALIDATED"
+                    else:
+                        icon = "⚠️"
+                        color = "yellow"
+                        outcome = "VALIDATING"
+
+                    # Show confidence change
+                    conf_change = hyp.current_confidence - hyp.initial_confidence
+                    if conf_change > 0:
+                        conf_str = click.style(f"+{conf_change:.2f}", fg="green")
+                    elif conf_change < 0:
+                        conf_str = click.style(f"{conf_change:.2f}", fg="red")
+                    else:
+                        conf_str = click.style("±0.00", fg="yellow")
+
+                    click.echo(
+                        f"{i}. {icon} [{int(hyp.current_confidence * 100)}%] "
+                        f"{hyp.statement} ({conf_str})"
+                    )
+                    click.echo(f"   Agent: {hyp.agent_id}")
+                    click.echo(f"   Status: {click.style(outcome, fg=color)}")
+                    click.echo(f"   Tests: {len(hyp.disproof_attempts)}")
+                    click.echo(f"   Reasoning: {hyp.confidence_reasoning}\n")
         else:
-            click.echo("⚠️  No hypotheses generated (insufficient observations)\n")
+            # Display untested hypotheses (original behavior when --no-test)
+            if hypotheses:
+                click.echo("🏆 Top Hypotheses (ranked by confidence):\n")
+                for i, hyp in enumerate(hypotheses[:5], 1):
+                    click.echo(f"{i}. [{hyp.agent_id}] {hyp.statement}")
+                    click.echo(f"   Confidence: {hyp.initial_confidence:.2%}\n")
+            else:
+                click.echo("⚠️  No hypotheses generated (insufficient observations)\n")
 
         # Display cost breakdown
         _display_cost_breakdown(orchestrator, budget_decimal)
