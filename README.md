@@ -26,30 +26,92 @@ AI-powered incident investigation platform that reduces MTTR by 67-90% using par
 
 ## Project Status
 
-🚀 **Day 4 Complete** - LLM Integration & Production Quality
+🚀 **Phase 5 Complete** - Multi-Agent Orchestrator (Production-Ready)
 
 **Current Capabilities**:
-- ✅ **Production-grade scientific framework** - Hypothesis testing with 98% test coverage
-- ✅ **LLM integration** - OpenAI & Anthropic providers with cost tracking
-- ✅ **Multi-agent architecture** - ScientificAgent base class ready for specialists
-- ✅ **Quality gates passing** - 170 tests, 96.71% coverage, mypy --strict
-- ✅ **Zero known P0 bugs** - Comprehensive code review completed
-- ✅ **Foundation-first approach** - Built for production from day 1
+- ✅ **Multi-Agent Orchestration** - Sequential dispatch of Application, Database, Network agents
+- ✅ **Production-grade agents** - ApplicationAgent and NetworkAgent with 95%+ test coverage
+- ✅ **CLI Interface** - `investigate-orchestrator` command with budget management
+- ✅ **Cost Control** - Per-agent budget tracking, transparent cost breakdown
+- ✅ **Hypothesis Ranking** - Confidence-based ranking across all agents
+- ✅ **Graceful Degradation** - Continues investigation even if agents fail
+- ✅ **OpenTelemetry Tracing** - Distributed tracing from day 1
 
-**Recent Achievements**:
-- **Day 2**: Scientific framework with quality-weighted confidence scoring ([Report](DAY_2_COMPLETION_REPORT.md))
-- **Day 3**: OpenAI/Anthropic integration, fixed 8 critical bugs ([Report](DAY_3_COMPLETION_REPORT.md))
+**Recent Achievements** (Phase 5):
+- **Orchestrator**: Sequential multi-agent coordination (15/15 tests passing)
+- **Competitive Review**: Agent Beta promoted for architectural simplification
+- **Complexity Reduction**: Removed ThreadPoolExecutor (saved 4 hours, zero threading bugs)
+- **CLI Integration**: Full investigation workflow from command line
+- **Documentation**: Comprehensive decision rationale and design docs
+
+**Previous Achievements**:
 - **Day 4**: Agent LLM/MCP integration, ADR documentation ([Handoff](DAY_4_HANDOFF.md))
+- **Day 3**: OpenAI/Anthropic integration, fixed 8 critical bugs ([Report](DAY_3_COMPLETION_REPORT.md))
+- **Day 2**: Scientific framework with quality-weighted confidence scoring ([Report](DAY_2_COMPLETION_REPORT.md))
 
-**Next**: Database Agent with Prometheus MCP integration
+**Next**: Post-implementation competitive review, then Phase 6 optimization
 
-**Last Updated**: 2025-11-17
+**Last Updated**: 2025-11-21
 
 ---
 
 ## Quick Start
 
-### Try It Now (2 minutes)
+### Multi-Agent Investigation (Phase 5 - Production-Ready)
+
+**Investigate an incident using orchestrated multi-agent system:**
+
+```bash
+# Simple investigation
+python -m compass.cli.main investigate-orchestrator INC-12345
+
+# With budget and affected services
+python -m compass.cli.main investigate-orchestrator INC-12345 \
+  --budget 15.00 \
+  --affected-services payment,checkout \
+  --severity critical
+```
+
+**What you get**:
+- Sequential dispatch of Application, Database, and Network agents
+- Observations consolidated from all agents
+- Top 5 hypotheses ranked by confidence
+- Per-agent cost breakdown with budget utilization
+
+**Example Output**:
+```
+🔍 Initializing investigation for INC-12345
+💰 Budget: $15.00
+📊 Affected Services: payment, checkout
+⚠️  Severity: critical
+
+📊 Observing incident (sequential agent dispatch)...
+✅ Collected 12 observations
+
+🧠 Generating hypotheses...
+✅ Generated 5 hypotheses
+
+🏆 Top Hypotheses (ranked by confidence):
+
+1. [network] DNS resolution timeout detected
+   Confidence: 92.00%
+
+2. [application] High error rate in payment service
+   Confidence: 85.00%
+
+3. [database] Connection pool nearing exhaustion
+   Confidence: 78.00%
+
+💰 Cost Breakdown:
+  Application: $2.1500
+  Database:    $1.8500
+  Network:     $0.9500
+  ─────────────────────────
+  Total:       $4.9500 / $15.00
+  Utilization: 33.0%
+```
+
+### Try It with Demo Environment (Full Stack)
 
 **Complete demo environment with real observability stack:**
 
@@ -60,18 +122,12 @@ AI-powered incident investigation platform that reduces MTTR by 67-90% using par
 # 2. Trigger an incident (missing index, lock contention, or pool exhaustion)
 ./scripts/trigger-incident.sh missing_index
 
-# 3. Investigate with COMPASS
+# 3. Investigate with COMPASS (classic mode)
 poetry run compass investigate \
   --service payment-service \
   --symptom "slow database queries and high latency" \
   --severity high
 ```
-
-**What you get**:
-- Real Prometheus/Loki/Tempo observability stack
-- Sample payment service generating realistic database incidents
-- DatabaseAgent querying live metrics/logs/traces
-- Automatic post-mortem markdown document
 
 **Full demo guide**: [DEMO.md](DEMO.md) (~10 minutes first run)
 
