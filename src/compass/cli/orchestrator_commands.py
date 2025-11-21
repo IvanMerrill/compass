@@ -69,6 +69,9 @@ def investigate_with_orchestrator(
     # Initialize agents (split budget equally: $10 / 3 = $3.33 per agent)
     agent_budget = budget_decimal / 3
 
+    # P0-3 FIX: Initialize orchestrator to None for error handling
+    orchestrator = None
+
     try:
         # Initialize data source clients
         # Note: In production, these would come from config/environment
@@ -137,11 +140,14 @@ def investigate_with_orchestrator(
 
     except BudgetExceededError as e:
         click.echo(f"❌ Budget exceeded: {e}", err=True)
-        # Still show cost breakdown
-        try:
-            _display_cost_breakdown(orchestrator, budget_decimal)
-        except:
-            pass
+        # P0-3 FIX: Only show cost breakdown if orchestrator exists
+        if orchestrator is not None:
+            try:
+                _display_cost_breakdown(orchestrator, budget_decimal)
+            except Exception as breakdown_error:
+                # Don't fail on cost breakdown errors, but inform user (P1-5 fix)
+                click.echo(f"⚠️  Could not display cost breakdown: {breakdown_error}", err=True)
+                logger.warning("cost_breakdown_failed", error=str(breakdown_error))
         raise click.exceptions.Exit(1)
     except Exception as e:
         click.echo(f"❌ Investigation failed: {e}", err=True)

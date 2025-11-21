@@ -177,16 +177,19 @@ def test_orchestrator_collects_hypotheses_from_all_agents():
     mock_app.generate_hypothesis.return_value = [
         Hypothesis(agent_id="app", statement="App hyp", initial_confidence=0.85)
     ]
+    mock_app._total_cost = Decimal("1.00")  # P0-2 fix requires cost tracking
 
     mock_db = Mock()
     mock_db.generate_hypothesis.return_value = [
         Hypothesis(agent_id="db", statement="DB hyp", initial_confidence=0.75)
     ]
+    mock_db._total_cost = Decimal("1.50")  # P0-2 fix requires cost tracking
 
     mock_net = Mock()
     mock_net.generate_hypothesis.return_value = [
         Hypothesis(agent_id="net", statement="Net hyp", initial_confidence=0.90)
     ]
+    mock_net._total_cost = Decimal("0.75")  # P0-2 fix requires cost tracking
 
     orchestrator = Orchestrator(
         budget_limit=Decimal("10.00"),
@@ -220,12 +223,15 @@ def test_orchestrator_ranks_hypotheses_by_confidence():
 
     mock_app = Mock()
     mock_app.generate_hypothesis.return_value = [hyp_low]
+    mock_app._total_cost = Decimal("1.00")  # P0-2 fix requires cost tracking
 
     mock_db = Mock()
     mock_db.generate_hypothesis.return_value = [hyp_mid]
+    mock_db._total_cost = Decimal("1.50")  # P0-2 fix requires cost tracking
 
     mock_net = Mock()
     mock_net.generate_hypothesis.return_value = [hyp_high]
+    mock_net._total_cost = Decimal("0.75")  # P0-2 fix requires cost tracking
 
     orchestrator = Orchestrator(
         budget_limit=Decimal("10.00"),
@@ -327,3 +333,33 @@ def test_orchestrator_handles_missing_agents(sample_incident):
     assert costs["application"] == Decimal("1.00")
     assert costs["database"] == Decimal("0.0000")
     assert costs["network"] == Decimal("0.0000")
+
+
+def test_orchestrator_checks_budget_during_hypothesis_generation():
+    """
+    Test budget enforcement during hypothesis generation (not just observation).
+
+    P0-2 FIX (Agent Gamma): Hypothesis generation can incur LLM costs,
+    so budget must be checked after each agent's generate_hypothesis() call.
+    """
+    observations = [Mock(spec=Observation) for _ in range(5)]
+
+    # Agent that exceeds budget during hypothesis generation
+    def expensive_hypothesis_generation(obs):
+        mock_app._total_cost = Decimal("11.00")  # Exceeds $10 budget
+        return [Hypothesis(agent_id="app", statement="Expensive", initial_confidence=0.8)]
+
+    mock_app = Mock()
+    mock_app.generate_hypothesis.side_effect = expensive_hypothesis_generation
+    mock_app._total_cost = Decimal("3.00")  # Within budget after observe
+
+    orchestrator = Orchestrator(
+        budget_limit=Decimal("10.00"),
+        application_agent=mock_app,
+        database_agent=None,
+        network_agent=None,
+    )
+
+    # Should raise BudgetExceededError during hypothesis generation
+    with pytest.raises(BudgetExceededError):
+        orchestrator.generate_hypotheses(observations)

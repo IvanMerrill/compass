@@ -98,3 +98,52 @@ def test_investigate_default_values():
     # Check defaults in help text
     assert 'default: 10.00' in result.output or 'default="10.00"' in result.output
     assert 'default: high' in result.output or 'default=high' in result.output
+
+
+@patch('compass.cli.orchestrator_commands.NetworkAgent')
+@patch('compass.cli.orchestrator_commands.ApplicationAgent')
+def test_investigate_handles_agent_initialization_failure(mock_app, mock_net):
+    """Test CLI handles agent initialization errors gracefully (P0-3 fix validation)."""
+    # Mock ApplicationAgent to fail during initialization
+    mock_app.side_effect = ValueError("Failed to connect to Loki")
+
+    runner = CliRunner()
+    result = runner.invoke(investigate_with_orchestrator, [
+        'INC-12345',
+        '--budget', '10.00',
+    ])
+
+    # Should handle gracefully with proper error message
+    assert result.exit_code == 1
+    assert 'Investigation failed' in result.output or 'Failed to connect' in result.output
+    # Should NOT crash with "name 'orchestrator' is not defined"
+    assert 'orchestrator' not in result.output.lower() or 'not defined' not in result.output.lower()
+
+
+@patch('compass.cli.orchestrator_commands.Orchestrator')
+@patch('compass.cli.orchestrator_commands.NetworkAgent')
+@patch('compass.cli.orchestrator_commands.ApplicationAgent')
+def test_investigate_handles_budget_error_before_orchestrator_created(mock_app, mock_net, mock_orch):
+    """Test CLI handles BudgetExceededError before orchestrator is created (P0-3 specific case)."""
+    from compass.agents.workers.application_agent import BudgetExceededError
+
+    # Mock ApplicationAgent initialization to succeed
+    mock_app_instance = Mock()
+    mock_app.return_value = mock_app_instance
+
+    # But orchestrator initialization fails with budget error
+    mock_orch.side_effect = BudgetExceededError("Budget validation failed")
+
+    runner = CliRunner()
+    result = runner.invoke(investigate_with_orchestrator, [
+        'INC-12345',
+        '--budget', '1.00',
+    ])
+
+    # Should handle gracefully
+    assert result.exit_code == 1
+    assert 'Budget exceeded' in result.output
+    # Should NOT crash trying to display cost breakdown with undefined orchestrator
+    # The output should not contain Python error traces about undefined variables
+    assert 'NameError' not in result.output
+    assert 'not defined' not in result.output

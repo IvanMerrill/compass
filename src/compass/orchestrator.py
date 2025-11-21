@@ -218,8 +218,19 @@ class Orchestrator:
                     app_hyp = self.application_agent.generate_hypothesis(observations)
                     hypotheses.extend(app_hyp)
                     logger.info("application_agent_hypotheses", count=len(app_hyp))
+                except BudgetExceededError as e:
+                    # P0-2 & P1-3 FIX: Don't swallow budget errors during hypothesis generation
+                    logger.error("application_agent_budget_exceeded_during_hypothesis", error=str(e))
+                    raise
                 except Exception as e:
                     logger.warning("application_agent_hypothesis_failed", error=str(e))
+
+                # P0-2 FIX: Check budget after EACH agent's hypothesis generation
+                if self.get_total_cost() > self.budget_limit:
+                    raise BudgetExceededError(
+                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"after application agent hypothesis generation"
+                    )
 
             # Database agent
             if self.database_agent:
@@ -227,8 +238,19 @@ class Orchestrator:
                     db_hyp = self.database_agent.generate_hypothesis(observations)
                     hypotheses.extend(db_hyp)
                     logger.info("database_agent_hypotheses", count=len(db_hyp))
+                except BudgetExceededError as e:
+                    # P0-2 & P1-3 FIX: Don't swallow budget errors during hypothesis generation
+                    logger.error("database_agent_budget_exceeded_during_hypothesis", error=str(e))
+                    raise
                 except Exception as e:
                     logger.warning("database_agent_hypothesis_failed", error=str(e))
+
+                # P0-2 FIX: Check budget after EACH agent's hypothesis generation
+                if self.get_total_cost() > self.budget_limit:
+                    raise BudgetExceededError(
+                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"after database agent hypothesis generation"
+                    )
 
             # Network agent
             if self.network_agent:
@@ -236,8 +258,19 @@ class Orchestrator:
                     net_hyp = self.network_agent.generate_hypothesis(observations)
                     hypotheses.extend(net_hyp)
                     logger.info("network_agent_hypotheses", count=len(net_hyp))
+                except BudgetExceededError as e:
+                    # P0-2 & P1-3 FIX: Don't swallow budget errors during hypothesis generation
+                    logger.error("network_agent_budget_exceeded_during_hypothesis", error=str(e))
+                    raise
                 except Exception as e:
                     logger.warning("network_agent_hypothesis_failed", error=str(e))
+
+                # P0-2 FIX: Check budget after EACH agent's hypothesis generation
+                if self.get_total_cost() > self.budget_limit:
+                    raise BudgetExceededError(
+                        f"Investigation cost ${self.get_total_cost()} exceeds budget ${self.budget_limit} "
+                        f"after network agent hypothesis generation"
+                    )
 
             # Rank by confidence (highest first) - NO DEDUPLICATION
             ranked = sorted(hypotheses, key=lambda h: h.initial_confidence, reverse=True)
