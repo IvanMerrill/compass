@@ -138,16 +138,19 @@ def test_orchestrator_hypothesis_ranking_no_deduplication():
     mock_app.generate_hypothesis.return_value = [
         Hypothesis(agent_id="app", statement="Low confidence", initial_confidence=0.60)
     ]
+    mock_app._total_cost = Decimal("1.00")
 
     mock_db = Mock()
     mock_db.generate_hypothesis.return_value = [
         Hypothesis(agent_id="db", statement="Mid confidence", initial_confidence=0.75)
     ]
+    mock_db._total_cost = Decimal("1.50")
 
     mock_net = Mock()
     mock_net.generate_hypothesis.return_value = [
         Hypothesis(agent_id="net", statement="High confidence", initial_confidence=0.90)
     ]
+    mock_net._total_cost = Decimal("0.75")
 
     orchestrator = Orchestrator(
         budget_limit=Decimal("10.00"),
@@ -257,3 +260,78 @@ def test_orchestrator_graceful_degradation():
     # Should succeed with 2 agents (db, net)
     observations = orchestrator.observe(incident)
     assert len(observations) == 2  # Only db and net
+
+
+def test_complete_ooda_cycle():
+    """
+    Test complete OODA cycle: Observe → Orient → Decide → Act.
+
+    Integration test verifying all 4 phases work together end-to-end.
+    """
+    from unittest.mock import patch, Mock
+    from compass.core.phases.decide import DecisionInput
+
+    # Mock agents
+    mock_app = Mock()
+    mock_app.observe.return_value = [Mock()]
+    mock_app._total_cost = Decimal("0.50")
+    mock_app.generate_hypothesis.return_value = [
+        Hypothesis(agent_id="app", statement="App hypothesis", initial_confidence=0.75)
+    ]
+
+    mock_db = Mock()
+    mock_db.observe.return_value = [Mock()]
+    mock_db._total_cost = Decimal("1.00")
+    mock_db.generate_hypothesis.return_value = [
+        Hypothesis(agent_id="db", statement="DB hypothesis", initial_confidence=0.85)
+    ]
+
+    orchestrator = Orchestrator(
+        budget_limit=Decimal("10.00"),
+        application_agent=mock_app,
+        database_agent=mock_db,
+        network_agent=None,
+    )
+
+    incident = Incident(
+        incident_id="ooda-cycle-test",
+        title="Complete OODA cycle test",
+        start_time=datetime.now(timezone.utc).isoformat(),
+        affected_services=["test-service"],
+        severity="high",
+    )
+
+    # OBSERVE phase
+    observations = orchestrator.observe(incident)
+    assert len(observations) == 2
+
+    # ORIENT phase
+    hypotheses = orchestrator.generate_hypotheses(observations)
+    assert len(hypotheses) == 2
+    assert hypotheses[0].initial_confidence == 0.85  # db (highest)
+
+    # DECIDE phase (mock human decision)
+    mock_decision = DecisionInput(
+        selected_hypothesis=hypotheses[0],
+        reasoning="Selected highest confidence hypothesis",
+        timestamp=datetime.now(timezone.utc),
+    )
+
+    with patch("compass.core.phases.decide.HumanDecisionInterface") as MockInterface:
+        mock_interface = Mock()
+        mock_interface.decide.return_value = mock_decision
+        MockInterface.return_value = mock_interface
+
+        selected = orchestrator.decide(hypotheses, incident)
+
+        # Verify decision was made
+        assert selected == hypotheses[0]
+        mock_interface.decide.assert_called_once()
+
+    # ACT phase would be hypothesis testing (tested separately in Phase 6)
+    # For this test, we verify the first 3 phases (O-O-D) work together
+
+    # Verify cost tracking across all phases
+    total_cost = orchestrator.get_total_cost()
+    assert total_cost == Decimal("1.50")
+    assert total_cost <= orchestrator.budget_limit

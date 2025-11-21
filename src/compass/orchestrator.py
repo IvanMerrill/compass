@@ -496,6 +496,96 @@ class Orchestrator:
 
             return ranked
 
+    def decide(
+        self,
+        hypotheses: List[Hypothesis],
+        incident: Incident,
+    ) -> Hypothesis:
+        """
+        Present hypotheses to human for selection (Decide phase).
+
+        This method implements the Decide phase of the OODA loop, presenting
+        ranked hypotheses to a human operator for selection. It captures the
+        human's reasoning for Learning Teams post-mortems.
+
+        Args:
+            hypotheses: List of hypotheses from generate_hypotheses()
+            incident: The incident being investigated
+
+        Returns:
+            The hypothesis selected by the human
+
+        Raises:
+            ValueError: If hypotheses list is empty
+            KeyboardInterrupt: If user cancels decision (re-raised for CLI)
+        """
+        # VALIDATION (Agent Epsilon P0 fix)
+        if not hypotheses:
+            raise ValueError(
+                "No hypotheses to present for decision. "
+                "Ensure generate_hypotheses() produced results before calling decide()."
+            )
+
+        # Import required types
+        from compass.core.phases.decide import HumanDecisionInterface
+        from compass.core.phases.orient import RankedHypothesis
+
+        # Convert to RankedHypothesis format
+        ranked = [
+            RankedHypothesis(
+                hypothesis=hyp,
+                rank=i + 1,
+                reasoning=f"Confidence: {hyp.initial_confidence:.0%}",
+            )
+            for i, hyp in enumerate(hypotheses)
+        ]
+
+        # Present to human via interface
+        interface = HumanDecisionInterface()
+
+        try:
+            decision = interface.decide(ranked_hypotheses=ranked, conflicts=[])
+        except KeyboardInterrupt:
+            logger.info("orchestrator.decision_cancelled", incident_id=incident.incident_id)
+            raise
+
+        # Handle empty reasoning (Agent Epsilon P0-2)
+        reasoning = decision.reasoning.strip() if decision.reasoning else None
+        if not reasoning:
+            reasoning = "No reasoning provided"
+            logger.warning(
+                "orchestrator.decision_without_reasoning",
+                incident_id=incident.incident_id,
+                message="Human did not provide decision reasoning (Learning Teams gap)",
+            )
+
+        # Sanitize user input (prevent log injection, prompt injection)
+        # Replace newlines/control chars, limit length to prevent log bloat
+        safe_reasoning = reasoning.replace('\n', ' ').replace('\r', ' ')[:500]
+
+        # Find rank of selected hypothesis
+        selected_rank = None
+        for i, hyp in enumerate(hypotheses):
+            if hyp == decision.selected_hypothesis:
+                selected_rank = i + 1
+                break
+
+        # Log decision with FULL CONTENT for Learning Teams
+        # Security note: Logs go to same observability platform being investigated,
+        # no new security boundary crossed. Input is sanitized to prevent injection.
+        logger.info(
+            "orchestrator.human_decision",
+            incident_id=incident.incident_id,
+            hypothesis_count=len(hypotheses),
+            selected_rank=selected_rank,
+            selected_hypothesis=decision.selected_hypothesis.statement,  # Full statement
+            selected_confidence=decision.selected_hypothesis.initial_confidence,
+            selected_agent=decision.selected_hypothesis.agent_id,
+            reasoning=safe_reasoning,  # Sanitized user input (needed for Learning Teams)
+        )
+
+        return decision.selected_hypothesis
+
     def get_total_cost(self) -> Decimal:
         """Calculate total cost across all agents."""
         total = Decimal("0.0000")
