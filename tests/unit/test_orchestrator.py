@@ -363,3 +363,42 @@ def test_orchestrator_checks_budget_during_hypothesis_generation():
     # Should raise BudgetExceededError during hypothesis generation
     with pytest.raises(BudgetExceededError):
         orchestrator.generate_hypotheses(observations)
+
+
+def test_orchestrator_handles_agent_timeout(sample_incident):
+    """
+    Test orchestrator handles agent timeout gracefully.
+
+    P0-4 FIX (Agent Gamma): Agent calls should have timeouts to prevent
+    hung investigations when agents don't respond.
+    """
+    import time
+
+    # Agent that hangs
+    def slow_observe(incident):
+        time.sleep(5)  # Hangs for 5 seconds
+        return []
+
+    mock_app = Mock()
+    mock_app.observe.side_effect = slow_observe
+    mock_app._total_cost = Decimal("0.00")
+
+    # Agent that works normally
+    mock_net = Mock()
+    mock_net.observe.return_value = [Mock(spec=Observation)]
+    mock_net._total_cost = Decimal("1.00")
+
+    orchestrator = Orchestrator(
+        budget_limit=Decimal("10.00"),
+        application_agent=mock_app,
+        database_agent=None,
+        network_agent=mock_net,
+        agent_timeout=1,  # 1 second timeout
+    )
+
+    # Should continue with other agents after app agent times out
+    observations = orchestrator.observe(sample_incident)
+
+    # Should have 1 observation from network agent (app timed out)
+    assert len(observations) == 1
+    mock_net.observe.assert_called_once()

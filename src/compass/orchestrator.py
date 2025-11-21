@@ -13,7 +13,9 @@ Design decisions from competitive agent review:
 - Agent Beta P1-1: Per-agent cost breakdown (transparency)
 - Agent Beta P1-2: Structured exception handling (BudgetExceededError stops investigation)
 - Agent Beta P1-3: OpenTelemetry from day 1 (production-first)
+- Agent Gamma P0-4: Per-agent timeouts to prevent hung investigations
 """
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from decimal import Decimal
 from typing import List, Optional, Dict
 import structlog
@@ -51,6 +53,7 @@ class Orchestrator:
         application_agent: Optional[ApplicationAgent] = None,
         database_agent: Optional[DatabaseAgent] = None,
         network_agent: Optional[NetworkAgent] = None,
+        agent_timeout: int = 120,  # P0-4 FIX: 2 minutes per agent (conservative)
     ):
         """
         Initialize Orchestrator.
@@ -60,21 +63,58 @@ class Orchestrator:
             application_agent: Application-level specialist
             database_agent: Database-level specialist
             network_agent: Network-level specialist
+            agent_timeout: Timeout in seconds for each agent call (default: 120s)
         """
         self.budget_limit = budget_limit
         self.application_agent = application_agent
         self.database_agent = database_agent
         self.network_agent = network_agent
+        self.agent_timeout = agent_timeout  # P0-4 FIX: Store timeout value
 
         logger.info(
             "orchestrator_initialized",
             budget_limit=str(budget_limit),
+            agent_timeout=agent_timeout,
             agent_count=sum([
                 application_agent is not None,
                 database_agent is not None,
                 network_agent is not None,
             ]),
         )
+
+    def _call_agent_with_timeout(self, agent_name: str, agent_method, *args):
+        """
+        Call agent method with timeout handling (P0-4 FIX).
+
+        Uses ThreadPoolExecutor to enforce timeout without signal complexity.
+        This is for timeout enforcement only, NOT for parallelization.
+
+        Args:
+            agent_name: Name of agent for logging (e.g., "application")
+            agent_method: Method to call (e.g., agent.observe)
+            *args: Arguments to pass to agent_method
+
+        Returns:
+            Result from agent_method
+
+        Raises:
+            FutureTimeoutError: If agent exceeds timeout
+            BudgetExceededError: If agent raises budget error
+            Exception: Any other exception from agent
+        """
+        # Use ThreadPoolExecutor with single worker for timeout enforcement
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(agent_method, *args)
+            try:
+                result = future.result(timeout=self.agent_timeout)
+                return result
+            except FutureTimeoutError:
+                logger.error(
+                    "agent_timeout",
+                    agent=agent_name,
+                    timeout=self.agent_timeout,
+                )
+                raise  # Re-raise to be caught by caller
 
     def observe(self, incident: Incident) -> List[Observation]:
         """
@@ -100,7 +140,12 @@ class Orchestrator:
             if self.application_agent:
                 try:
                     with emit_span("orchestrator.observe.application"):
-                        app_obs = self.application_agent.observe(incident)
+                        # P0-4 FIX: Call with timeout
+                        app_obs = self._call_agent_with_timeout(
+                            "application",
+                            self.application_agent.observe,
+                            incident
+                        )
                         observations.extend(app_obs)
                         logger.info("application_agent_completed", observation_count=len(app_obs))
                 except BudgetExceededError as e:
@@ -111,6 +156,13 @@ class Orchestrator:
                         agent="application",
                     )
                     raise  # Stop investigation immediately
+                except FutureTimeoutError:
+                    # P0-4 FIX: Timeout is recoverable - continue with other agents
+                    logger.warning(
+                        "application_agent_timeout",
+                        agent="application",
+                        timeout=self.agent_timeout,
+                    )
                 except Exception as e:
                     # P1-2 FIX: Structured exception handling
                     logger.warning(
@@ -131,7 +183,12 @@ class Orchestrator:
             if self.database_agent:
                 try:
                     with emit_span("orchestrator.observe.database"):
-                        db_obs = self.database_agent.observe(incident)
+                        # P0-4 FIX: Call with timeout
+                        db_obs = self._call_agent_with_timeout(
+                            "database",
+                            self.database_agent.observe,
+                            incident
+                        )
                         observations.extend(db_obs)
                         logger.info("database_agent_completed", observation_count=len(db_obs))
                 except BudgetExceededError as e:
@@ -141,6 +198,13 @@ class Orchestrator:
                         agent="database",
                     )
                     raise
+                except FutureTimeoutError:
+                    # P0-4 FIX: Timeout is recoverable - continue with other agents
+                    logger.warning(
+                        "database_agent_timeout",
+                        agent="database",
+                        timeout=self.agent_timeout,
+                    )
                 except Exception as e:
                     logger.warning(
                         "database_agent_failed",
@@ -160,7 +224,12 @@ class Orchestrator:
             if self.network_agent:
                 try:
                     with emit_span("orchestrator.observe.network"):
-                        net_obs = self.network_agent.observe(incident)
+                        # P0-4 FIX: Call with timeout
+                        net_obs = self._call_agent_with_timeout(
+                            "network",
+                            self.network_agent.observe,
+                            incident
+                        )
                         observations.extend(net_obs)
                         logger.info("network_agent_completed", observation_count=len(net_obs))
                 except BudgetExceededError as e:
@@ -170,6 +239,13 @@ class Orchestrator:
                         agent="network",
                     )
                     raise
+                except FutureTimeoutError:
+                    # P0-4 FIX: Timeout is recoverable - continue with other agents
+                    logger.warning(
+                        "network_agent_timeout",
+                        agent="network",
+                        timeout=self.agent_timeout,
+                    )
                 except Exception as e:
                     logger.warning(
                         "network_agent_failed",
