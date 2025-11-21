@@ -19,6 +19,7 @@ from compass.cli.factory import (
     create_investigation_runner,
     create_llm_provider_from_settings,
 )
+from compass.cli.orchestrator_commands import investigate_with_orchestrator
 from compass.config import settings
 from compass.core.investigation import InvestigationContext
 from compass.integrations.llm.base import ValidationError
@@ -30,6 +31,10 @@ logger = structlog.get_logger(__name__)
 def cli() -> None:
     """COMPASS - AI-powered incident investigation tool."""
     pass
+
+
+# Register orchestrator command
+cli.add_command(investigate_with_orchestrator, name="investigate-orchestrator")
 
 
 @cli.command()
