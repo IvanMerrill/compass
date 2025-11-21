@@ -124,16 +124,57 @@ def investigate_with_orchestrator(
         observations = orchestrator.observe(incident)
         click.echo(f"✅ Collected {len(observations)} observations\n")
 
-        # Generate hypotheses
+        # Generate hypotheses (Orient phase)
         click.echo(f"🧠 Generating hypotheses...")
         hypotheses = orchestrator.generate_hypotheses(observations)
         click.echo(f"✅ Generated {len(hypotheses)} hypotheses\n")
 
-        # Test hypotheses (Phase 6 - NEW)
-        if test and hypotheses:
-            click.echo(f"🔬 Testing top hypotheses...")
-            tested = orchestrator.test_hypotheses(hypotheses, incident)
-            click.echo(f"✅ Tested {len(tested)} hypotheses\n")
+        # Decide phase - human selects hypothesis
+        hypotheses_to_test = []
+        if hypotheses:
+            click.echo(f"🤔 Human decision point (Decide phase)...")
+            try:
+                selected = orchestrator.decide(hypotheses, incident)
+                click.echo(f"✅ Selected: {selected.statement} ({selected.initial_confidence:.0%} confidence)\n")
+                hypotheses_to_test = [selected]
+            except KeyboardInterrupt:
+                # User pressed Ctrl+C during decision
+                click.echo("\n⚠️  Investigation cancelled by user")
+                _display_cost_breakdown(orchestrator, budget_decimal)
+                raise click.exceptions.Exit(130)  # Standard Ctrl+C exit code
+            except RuntimeError as e:
+                # Non-interactive environment (CI/CD, script, no TTY)
+                if "non-interactive" in str(e).lower():
+                    click.echo(f"\n❌ Cannot run interactive decision in non-interactive environment", err=True)
+                    click.echo(f"💡 Tip: Run in a terminal with TTY support\n")
+                    # Show what was generated before failure
+                    click.echo("📋 Generated hypotheses (for manual review):")
+                    for i, hyp in enumerate(hypotheses[:5], 1):
+                        click.echo(f"  {i}. [{hyp.agent_id}] {hyp.statement}")
+                        click.echo(f"     Confidence: {hyp.initial_confidence:.0%}\n")
+                    _display_cost_breakdown(orchestrator, budget_decimal)
+                    raise click.exceptions.Exit(1)
+                raise
+            except Exception as e:
+                # Unexpected decide() failure - show context
+                click.echo(f"\n❌ Decision phase failed: {e}", err=True)
+                click.echo(f"⚠️  Investigation stopped after hypothesis generation\n")
+                # Show hypotheses so user can see what was generated
+                click.echo("📋 Generated hypotheses before failure:")
+                for i, hyp in enumerate(hypotheses[:5], 1):
+                    click.echo(f"  {i}. [{hyp.agent_id}] {hyp.statement}")
+                    click.echo(f"     Confidence: {hyp.initial_confidence:.0%}\n")
+                _display_cost_breakdown(orchestrator, budget_decimal)
+                logger.exception("decide_phase_failed", error=str(e), hypothesis_count=len(hypotheses))
+                raise click.exceptions.Exit(1)
+        else:
+            click.echo("⚠️  No hypotheses generated (insufficient observations)\n")
+
+        # Test hypotheses (Act phase)
+        if test and hypotheses_to_test:
+            click.echo(f"🔬 Testing selected hypothesis...")
+            tested = orchestrator.test_hypotheses(hypotheses_to_test, incident)
+            click.echo(f"✅ Tested {len(tested)} hypothesis\n")
 
             # Display tested hypotheses with confidence updates
             if tested:
@@ -171,8 +212,14 @@ def investigate_with_orchestrator(
                     click.echo(f"   Tests: {len(hyp.disproof_attempts)}")
                     click.echo(f"   Reasoning: {hyp.confidence_reasoning}\n")
         else:
-            # Display untested hypotheses (original behavior when --no-test)
-            if hypotheses:
+            # Display selected hypothesis (when --no-test)
+            if hypotheses_to_test:
+                click.echo("🏆 Selected Hypothesis (not tested):\n")
+                hyp = hypotheses_to_test[0]
+                click.echo(f"1. [{hyp.agent_id}] {hyp.statement}")
+                click.echo(f"   Confidence: {hyp.initial_confidence:.2%}\n")
+            elif hypotheses:
+                # No decision was made, show all
                 click.echo("🏆 Top Hypotheses (ranked by confidence):\n")
                 for i, hyp in enumerate(hypotheses[:5], 1):
                     click.echo(f"{i}. [{hyp.agent_id}] {hyp.statement}")
@@ -183,6 +230,9 @@ def investigate_with_orchestrator(
         # Display cost breakdown
         _display_cost_breakdown(orchestrator, budget_decimal)
 
+    except click.exceptions.Exit:
+        # Re-raise Exit exceptions (from decide() cancellation, etc.)
+        raise
     except BudgetExceededError as e:
         click.echo(f"❌ Budget exceeded: {e}", err=True)
         # P0-3 FIX: Only show cost breakdown if orchestrator exists
